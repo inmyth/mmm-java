@@ -19,9 +19,11 @@ public class Main {
 		MyLogger.setup();
 		Config config = Config.build(args[0]);
 		Counter.newInstance(config);
-		Common.newInstance();
+		Common.newInstance(config);
 		WebSocketClient webSocketClient = new WebSocketClient(config);
 		webSocketClient.start();
+		
+	
 	}
 	
 
