@@ -1,0 +1,865 @@
+Place order : 33DCF66ED1F8686A172A116E54E05ADEE74BCE4929A40CFC323A45218856F17A 
+Cancel order : 5085FE3B435181463DB9EB2F8F3E6D54D6238F295642EA5CE69FDED75D80A539 
+
+FINER: {"engine_result":"tesSUCCESS","engine_result_code":0,"engine_result_message":"The transaction was applied. Only final in a validated ledger.","ledger_hash":"85339900B617350C28EDF3B10CB0F64EED0F075541378AA6EE7D5F3F3563DF80","ledger_index":30757991,"meta":{"AffectedNodes":[{"ModifiedNode":{"FinalFields":{"Account":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","Balance":"6061125121","Flags":0,"OwnerCount":9,"Sequence":4757},"LedgerEntryType":"AccountRoot","LedgerIndex":"72A59CDF8FFBF65C20D01D3A3D5DA5BAE3158A3881E7AEE525A01B1CC73D32DD","PreviousFields":{"Balance":"6061125133","OwnerCount":10,"Sequence":4756},"PreviousTxnID":"47E6555E37785E8DF0B07997C36A0E722C54BDBB7BC8F2A18628118BB6585632","PreviousTxnLgrSeq":30757950}},{"DeletedNode":{"FinalFields":{"Account":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","BookDirectory":"7E984AD10069041B9B957C73D05AF2AB3D117C0CCAF7FDA5500AD4D985F947CE","BookNode":"0000000000000000","Flags":0,"OwnerNode":"000000000000000F","PreviousTxnID":"47E6555E37785E8DF0B07997C36A0E722C54BDBB7BC8F2A18628118BB6585632","PreviousTxnLgrSeq":30757950,"Sequence":4755,"TakerGets":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"3280"},"TakerPays":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0.1"}},"LedgerEntryType":"Offer","LedgerIndex":"73E0AC98D7A164B31D603EFACB19D4328FA68F2CAF019220577BA2421559F02F"}},{"DeletedNode":{"FinalFields":{"ExchangeRate":"500AD4D985F947CE","Flags":0,"RootIndex":"7E984AD10069041B9B957C73D05AF2AB3D117C0CCAF7FDA5500AD4D985F947CE","TakerGetsCurrency":"0000000000000000000000004A50590000000000","TakerGetsIssuer":"6F2531F2B8CDB96D6D986D9D75CC0156DF2C5387","TakerPaysCurrency":"000000000000000000000000524A500000000000","TakerPaysIssuer":"6F2531F2B8CDB96D6D986D9D75CC0156DF2C5387"},"LedgerEntryType":"DirectoryNode","LedgerIndex":"7E984AD10069041B9B957C73D05AF2AB3D117C0CCAF7FDA5500AD4D985F947CE"}},{"ModifiedNode":{"FinalFields":{"Flags":0,"IndexPrevious":"0000000000000006","Owner":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","RootIndex":"C5383B94DDE4BE2A184757D80837080C4D1EAB80789FE39F7D7AECFB0D0304BB"},"LedgerEntryType":"DirectoryNode","LedgerIndex":"91565E4F1A8282718C8D6ED8EFEE2B5DC18101FC76D0AE436F46194F4567EF5E"}}],"TransactionIndex":4,"TransactionResult":"tesSUCCESS"},"status":"closed","transaction":{"Account":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","Fee":"12","Flags":2147483648,"LastLedgerSequence":30757993,"Memos":[{"Memo":{"MemoData":"726D2D312E322E33","MemoType":"636C69656E74"}}],"OfferSequence":4755,"Sequence":4756,"SigningPubKey":"02E2F1208D1715E18B0957FC819546FA7434B4A19EE38321932D2ED28FA090678E","TransactionType":"OfferCancel","TxnSignature":"3045022100E10D99C0AE939994480770D453FE956048ECA729F9B6DC3C05903CA1DF69A28602207893404E6896492AE2DC79152999514A70CA26CFBD63ADDF92C7F9DD4449AFFD","date":551687221,"hash":"A5D8683D4D1F075BB728E6FDEDC5F84C4B2D062049E2BD5CE512647AA23CA015"},"type":"transaction","validated":true}
+
+****NEW TX****
+---------------------------------------------------------------
+OfferCreate
+---------------------------------------------------------------
+{
+    "TakerPays": {
+        "currency": "RJP",
+        "value": "0.1",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "Account": "raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf",
+    "TransactionType": "OfferCreate",
+    "TxnSignature": "30450221009FEA4DECB2464C77EA3EAC2BF97DC803BDA690C035B611AE490FEAB1C89367C002206C3A701CAE01870CBB6C1F239E437451900884B7C43BC79A3EFA96DFD1571876",
+    "Memos": [{"Memo": {
+        "MemoType": "636C69656E74",
+        "MemoData": "726D2D312E322E33"
+    }}],
+    "SigningPubKey": "02E2F1208D1715E18B0957FC819546FA7434B4A19EE38321932D2ED28FA090678E",
+    "Fee": "12",
+    "TakerGets": {
+        "currency": "JPY",
+        "value": "3280",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "Flags": 2147483648,
+    "Sequence": 4757,
+    "LastLedgerSequence": 30758019,
+    "hash": "ADC40332E34DBA9CA961FC15756965051054AEC3AC6B5A0A73F4DA0EA16B52CE"
+}
+---------------------------------------------------------------
+Offer Created
+---------------------------------------------------------------
+Get/Pay:    JPY/RJP
+Bid:        3.28E+4
+TakerPays:  0.1/RJP/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
+TakerGets:  3280/JPY/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
+---------------------------------------------------------------
+{
+    "TakerPays": {
+        "currency": "RJP",
+        "value": "0.1",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "Account": "raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf",
+    "BookDirectory": "7E984AD10069041B9B957C73D05AF2AB3D117C0CCAF7FDA5500AD4D985F947CE",
+    "LedgerEntryType": "Offer",
+    "OwnerNode": "000000000000000F",
+    "index": "9675489C8FA896DD0FD7880AD9709D51F3432A19C47BB3E5D397825BBCCC2AB5",
+    "TakerGets": {
+        "currency": "JPY",
+        "value": "3280",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "Sequence": 4757
+}
+****END TX****
+
+
+
+
+6 25, 2017 3:28:30 午後 com.mbcu.mmm.sequences.Common lambda$0
+FINER: {"engine_result":"tesSUCCESS","engine_result_code":0,"engine_result_message":"The transaction was applied. Only final in a validated ledger.","ledger_hash":"429F3E66C3D7A40732FC5F06D35A7268B2BB981AA82FDE2B233C23D6675E3B22","ledger_index":30758017,"meta":{"AffectedNodes":[{"ModifiedNode":{"FinalFields":{"Account":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","Balance":"6061125109","Flags":0,"OwnerCount":10,"Sequence":4758},"LedgerEntryType":"AccountRoot","LedgerIndex":"72A59CDF8FFBF65C20D01D3A3D5DA5BAE3158A3881E7AEE525A01B1CC73D32DD","PreviousFields":{"Balance":"6061125121","OwnerCount":9,"Sequence":4757},"PreviousTxnID":"A5D8683D4D1F075BB728E6FDEDC5F84C4B2D062049E2BD5CE512647AA23CA015","PreviousTxnLgrSeq":30757991}},{"CreatedNode":{"LedgerEntryType":"DirectoryNode","LedgerIndex":"7E984AD10069041B9B957C73D05AF2AB3D117C0CCAF7FDA5500AD4D985F947CE","NewFields":{"ExchangeRate":"500AD4D985F947CE","RootIndex":"7E984AD10069041B9B957C73D05AF2AB3D117C0CCAF7FDA5500AD4D985F947CE","TakerGetsCurrency":"0000000000000000000000004A50590000000000","TakerGetsIssuer":"6F2531F2B8CDB96D6D986D9D75CC0156DF2C5387","TakerPaysCurrency":"000000000000000000000000524A500000000000","TakerPaysIssuer":"6F2531F2B8CDB96D6D986D9D75CC0156DF2C5387"}}},{"ModifiedNode":{"FinalFields":{"Flags":0,"IndexPrevious":"0000000000000006","Owner":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","RootIndex":"C5383B94DDE4BE2A184757D80837080C4D1EAB80789FE39F7D7AECFB0D0304BB"},"LedgerEntryType":"DirectoryNode","LedgerIndex":"91565E4F1A8282718C8D6ED8EFEE2B5DC18101FC76D0AE436F46194F4567EF5E"}},{"CreatedNode":{"LedgerEntryType":"Offer","LedgerIndex":"9675489C8FA896DD0FD7880AD9709D51F3432A19C47BB3E5D397825BBCCC2AB5","NewFields":{"Account":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","BookDirectory":"7E984AD10069041B9B957C73D05AF2AB3D117C0CCAF7FDA5500AD4D985F947CE","OwnerNode":"000000000000000F","Sequence":4757,"TakerGets":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"3280"},"TakerPays":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0.1"}}}}],"TransactionIndex":4,"TransactionResult":"tesSUCCESS"},"status":"closed","transaction":{"Account":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","Fee":"12","Flags":2147483648,"LastLedgerSequence":30758019,"Memos":[{"Memo":{"MemoData":"726D2D312E322E33","MemoType":"636C69656E74"}}],"Sequence":4757,"SigningPubKey":"02E2F1208D1715E18B0957FC819546FA7434B4A19EE38321932D2ED28FA090678E","TakerGets":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"3280"},"TakerPays":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0.1"},"TransactionType":"OfferCreate","TxnSignature":"30450221009FEA4DECB2464C77EA3EAC2BF97DC803BDA690C035B611AE490FEAB1C89367C002206C3A701CAE01870CBB6C1F239E437451900884B7C43BC79A3EFA96DFD1571876","date":551687311,"hash":"ADC40332E34DBA9CA961FC15756965051054AEC3AC6B5A0A73F4DA0EA16B52CE","owner_funds":"10620.37016404143"},"type":"transaction","validated":true}
+
+****NEW TX****
+---------------------------------------------------------------
+Payment 
+---------------------------------------------------------------
+{
+    "Account": "r9Gps6fB9YLuZ87rWx7M9TgLAGK2zsz5s6",
+    "Destination": "r9Gps6fB9YLuZ87rWx7M9TgLAGK2zsz5s6",
+    "TransactionType": "Payment",
+    "SigningPubKey": "0399C1D236934748F4A3B51644647B0FC217D9CCBE2372A4A4DB95E0D5429157EB",
+    "Amount": {
+        "currency": "JPY",
+        "value": "878.306943933754",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "Fee": "25000",
+    "SendMax": "28024616",
+    "Flags": 458752,
+    "Sequence": 154942,
+    "LastLedgerSequence": 30758173,
+    "TxnSignature": "304402201DADECB1C09B590C574BAF2DEF4CB5792758693DD71809492312E8F237E5AB2202207F4931B6B76DE885BF0488FA9EFB6FC4BBB70E4035439A1A435A44041A83A369",
+    "Paths": [
+        [
+            {
+                "currency": "RJP",
+                "type": 48,
+                "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+            },
+            {
+                "type": 1,
+                "account": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+            },
+            {
+                "currency": "JPY",
+                "type": 48,
+                "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+            },
+            {
+                "type": 1,
+                "account": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+            }
+        ],
+        [
+            {
+                "currency": "CNY",
+                "type": 48,
+                "issuer": "rKiCet8SdvWxPXnAgYarFUXMh1zCPz432Y"
+            },
+            {
+                "type": 1,
+                "account": "rKiCet8SdvWxPXnAgYarFUXMh1zCPz432Y"
+            },
+            {
+                "currency": "JPY",
+                "type": 48,
+                "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+            },
+            {
+                "type": 1,
+                "account": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+            }
+        ]
+    ],
+    "hash": "F459657B153F78CD0D358F6F420336EA4876356A85EFD785CC1E0274D56B7AD7"
+}
+---------------------------------------------------------------
+Offer Executed
+---------------------------------------------------------------
+Get/Pay: JPY/RJP
+Ask:     0.00003048780487804878
+Paid:    -0.026831206031147/RJP/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
+Got:     -880.063557821621/JPY/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
+---------------------------------------------------------------
+{
+    "Account": "raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf",
+    "FinalFields": {
+        "TakerPays": {
+            "currency": "RJP",
+            "value": "0.073168793968853",
+            "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+        },
+        "TakerGets": {
+            "currency": "JPY",
+            "value": "2399.936442178379",
+            "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+        }
+    },
+    "PreviousTxnLgrSeq": 30758017,
+    "OwnerNode": "000000000000000F",
+    "index": "9675489C8FA896DD0FD7880AD9709D51F3432A19C47BB3E5D397825BBCCC2AB5",
+    "PreviousTxnID": "ADC40332E34DBA9CA961FC15756965051054AEC3AC6B5A0A73F4DA0EA16B52CE",
+    "TakerGets": {
+        "currency": "JPY",
+        "value": "3280",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "Flags": 0,
+    "Sequence": 4757,
+    "TakerPays": {
+        "currency": "RJP",
+        "value": "0.1",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "BookDirectory": "7E984AD10069041B9B957C73D05AF2AB3D117C0CCAF7FDA5500AD4D985F947CE",
+    "LedgerEntryType": "Offer",
+    "BookNode": "0000000000000000"
+}
+---------------------------------------------------------------
+Offer Executed
+---------------------------------------------------------------
+Get/Pay: RJP/XRP
+Ask:     1041.666663754543
+Paid:    -28.005072/XRP
+Got:     -0.02688486844320929/RJP/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
+---------------------------------------------------------------
+{
+    "Account": "rLjDNH9g1AajRT2pxALZmwesd64p4x9XZJ",
+    "FinalFields": {
+        "TakerPays": "31706449",
+        "TakerGets": {
+            "currency": "RJP",
+            "value": "0.03043818971368708",
+            "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+        }
+    },
+    "PreviousTxnLgrSeq": 30757546,
+    "OwnerNode": "0000000000000D35",
+    "index": "49DDE07C77FB964A480CBAD36770DA50A3F9AF8B2992AC0767B0952BF0685750",
+    "PreviousTxnID": "62506344DE1588A314EE7DD3074E82B6F59851931887068437AFB6AF1EBD77A5",
+    "TakerGets": {
+        "currency": "RJP",
+        "value": "0.05732305815689637",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "Flags": 0,
+    "Sequence": 196197,
+    "TakerPays": "59711521",
+    "BookDirectory": "7035F45D0D6677B54720F2A9CBD0EA1155313D0F038A9E5B5E03B363EB77AB2F",
+    "LedgerEntryType": "Offer",
+    "BookNode": "0000000000000000"
+}
+****END TX****
+
+
+
+
+6 25, 2017 3:37:06 午後 com.mbcu.mmm.sequences.Common lambda$0
+FINER: {"engine_result":"tesSUCCESS","engine_result_code":0,"engine_result_message":"The transaction was applied. Only final in a validated ledger.","ledger_hash":"36937E48475E3E713A046BB21E4CF3E8F4ED8EDACD7E18FEFEBFC4C36D69AAF6","ledger_index":30758172,"meta":{"AffectedNodes":[{"ModifiedNode":{"FinalFields":{"Balance":{"currency":"JPY","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"9740.30660621981"},"Flags":1114112,"HighLimit":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"},"HighNode":"0000000000000399","LowLimit":{"currency":"JPY","issuer":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","value":"100000"},"LowNode":"0000000000000001"},"LedgerEntryType":"RippleState","LedgerIndex":"21110D01A36A7EB20188B11D685B847322DE631145C31803E1760550FA399BAD","PreviousFields":{"Balance":{"currency":"JPY","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"10620.37016404143"}},"PreviousTxnID":"5119074CF81B535F92AF56E2202343A5C2896668BFA616D611A303F8E19DEB9E","PreviousTxnLgrSeq":30757891}},{"ModifiedNode":{"FinalFields":{"Account":"rLjDNH9g1AajRT2pxALZmwesd64p4x9XZJ","BookDirectory":"7035F45D0D6677B54720F2A9CBD0EA1155313D0F038A9E5B5E03B363EB77AB2F","BookNode":"0000000000000000","Flags":0,"OwnerNode":"0000000000000D35","Sequence":196197,"TakerGets":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0.03043818971368708"},"TakerPays":"31706449"},"LedgerEntryType":"Offer","LedgerIndex":"49DDE07C77FB964A480CBAD36770DA50A3F9AF8B2992AC0767B0952BF0685750","PreviousFields":{"TakerGets":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0.05732305815689637"},"TakerPays":"59711521"},"PreviousTxnID":"62506344DE1588A314EE7DD3074E82B6F59851931887068437AFB6AF1EBD77A5","PreviousTxnLgrSeq":30757546}},{"ModifiedNode":{"FinalFields":{"Balance":{"currency":"RJP","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"4.902752678808559"},"Flags":1114112,"HighLimit":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"},"HighNode":"00000000000003FB","LowLimit":{"currency":"RJP","issuer":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","value":"10000"},"LowNode":"0000000000000006","LowQualityIn":1000000000},"LedgerEntryType":"RippleState","LedgerIndex":"4A8FE98984B510E3F0223CB8C9110FA370EC545BCD6CE6863C8405E5BC360423","PreviousFields":{"Balance":{"currency":"RJP","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"4.875921472777412"}},"PreviousTxnID":"5119074CF81B535F92AF56E2202343A5C2896668BFA616D611A303F8E19DEB9E","PreviousTxnLgrSeq":30757891}},{"ModifiedNode":{"FinalFields":{"Account":"rLjDNH9g1AajRT2pxALZmwesd64p4x9XZJ","Balance":"1836172114021","Flags":0,"OwnerCount":1127,"Sequence":197048},"LedgerEntryType":"AccountRoot","LedgerIndex":"7F28475BBAE8E0654C4D4C876DFBF7A3C40DEFEB6DF2F4C301F7F7F3514F255F","PreviousFields":{"Balance":"1836144108949"},"PreviousTxnID":"FEFFFB3D498AEADDD2EEA46BEC2A2CF77D6E12DBEE60D01DA11CCB68B2AECFD2","PreviousTxnLgrSeq":30758157}},{"ModifiedNode":{"FinalFields":{"Account":"r9Gps6fB9YLuZ87rWx7M9TgLAGK2zsz5s6","Balance":"29936904494","Flags":0,"OwnerCount":126,"Sequence":154943},"LedgerEntryType":"AccountRoot","LedgerIndex":"8D57DFC0321921B37D6E2E80E01DB3644703B13E0B1F1E0BFEFE3CC42D5E73B6","PreviousFields":{"Balance":"29964934566","Sequence":154942},"PreviousTxnID":"937F8F12286E45538C4786C82121EDC4F356D4C99ED9F2D53D470008B172FDD8","PreviousTxnLgrSeq":30758073}},{"ModifiedNode":{"FinalFields":{"Account":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","BookDirectory":"7E984AD10069041B9B957C73D05AF2AB3D117C0CCAF7FDA5500AD4D985F947CE","BookNode":"0000000000000000","Flags":0,"OwnerNode":"000000000000000F","Sequence":4757,"TakerGets":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"2399.936442178379"},"TakerPays":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0.073168793968853"}},"LedgerEntryType":"Offer","LedgerIndex":"9675489C8FA896DD0FD7880AD9709D51F3432A19C47BB3E5D397825BBCCC2AB5","PreviousFields":{"TakerGets":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"3280"},"TakerPays":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0.1"}},"PreviousTxnID":"ADC40332E34DBA9CA961FC15756965051054AEC3AC6B5A0A73F4DA0EA16B52CE","PreviousTxnLgrSeq":30758017}},{"ModifiedNode":{"FinalFields":{"Balance":{"currency":"JPY","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"878.306943933754"},"Flags":1114112,"HighLimit":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"},"HighNode":"0000000000000198","LowLimit":{"currency":"JPY","issuer":"r9Gps6fB9YLuZ87rWx7M9TgLAGK2zsz5s6","value":"1000000000"},"LowNode":"0000000000000003"},"LedgerEntryType":"RippleState","LedgerIndex":"BB919FEA19C2F386F7F0ADBE9E75668B544813D4E66EE4DB6BA385000657C9F4","PreviousFields":{"Balance":{"currency":"JPY","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"0"}},"PreviousTxnID":"CA80CA88BF74A126002A7DF21A868AD8E2A316939CAB1A7A064862C0BF412279","PreviousTxnLgrSeq":30732215}},{"ModifiedNode":{"FinalFields":{"Balance":{"currency":"RJP","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"-258.164704833011"},"Flags":2228224,"HighLimit":{"currency":"RJP","issuer":"rLjDNH9g1AajRT2pxALZmwesd64p4x9XZJ","value":"10000000000"},"HighNode":"0000000000000009","LowLimit":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"},"LowNode":"0000000000000012"},"LedgerEntryType":"RippleState","LedgerIndex":"FAE9C113C6BAFF7BAD167E5D3B88F4DA967EC1E33FBB48CC0611B7E050FFA231","PreviousFields":{"Balance":{"currency":"RJP","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"-258.1915897014542"}},"PreviousTxnID":"62506344DE1588A314EE7DD3074E82B6F59851931887068437AFB6AF1EBD77A5","PreviousTxnLgrSeq":30757546}}],"TransactionIndex":2,"TransactionResult":"tesSUCCESS"},"status":"closed","transaction":{"Account":"r9Gps6fB9YLuZ87rWx7M9TgLAGK2zsz5s6","Amount":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"878.306943933754"},"Destination":"r9Gps6fB9YLuZ87rWx7M9TgLAGK2zsz5s6","Fee":"25000","Flags":458752,"LastLedgerSequence":30758173,"Paths":[[{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","type":48,"type_hex":"0000000000000030"},{"account":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","type":1,"type_hex":"0000000000000001"},{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","type":48,"type_hex":"0000000000000030"},{"account":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","type":1,"type_hex":"0000000000000001"}],[{"currency":"CNY","issuer":"rKiCet8SdvWxPXnAgYarFUXMh1zCPz432Y","type":48,"type_hex":"0000000000000030"},{"account":"rKiCet8SdvWxPXnAgYarFUXMh1zCPz432Y","type":1,"type_hex":"0000000000000001"},{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","type":48,"type_hex":"0000000000000030"},{"account":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","type":1,"type_hex":"0000000000000001"}]],"SendMax":"28024616","Sequence":154942,"SigningPubKey":"0399C1D236934748F4A3B51644647B0FC217D9CCBE2372A4A4DB95E0D5429157EB","TransactionType":"Payment","TxnSignature":"304402201DADECB1C09B590C574BAF2DEF4CB5792758693DD71809492312E8F237E5AB2202207F4931B6B76DE885BF0488FA9EFB6FC4BBB70E4035439A1A435A44041A83A369","date":551687830,"hash":"F459657B153F78CD0D358F6F420336EA4876356A85EFD785CC1E0274D56B7AD7"},"type":"transaction","validated":true}
+
+****NEW TX****
+---------------------------------------------------------------
+Payment 
+---------------------------------------------------------------
+{
+    "Account": "r9Gps6fB9YLuZ87rWx7M9TgLAGK2zsz5s6",
+    "Destination": "r9Gps6fB9YLuZ87rWx7M9TgLAGK2zsz5s6",
+    "TransactionType": "Payment",
+    "SigningPubKey": "0399C1D236934748F4A3B51644647B0FC217D9CCBE2372A4A4DB95E0D5429157EB",
+    "Amount": {
+        "currency": "JPY",
+        "value": "2851.015039702674",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "Fee": "25000",
+    "SendMax": "90971790",
+    "Flags": 458752,
+    "Sequence": 154944,
+    "LastLedgerSequence": 30758590,
+    "TxnSignature": "3045022100AC1D69D03328564C8B2E820DFFCDFE1AAA00214A7B47942FD64BAB561D7754CD02202BA240913475BB5A2CEB25B5C6BF07F601B0D5664CB449AE0CAA3AE5953477FB",
+    "Paths": [
+        [
+            {
+                "currency": "RJP",
+                "type": 48,
+                "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+            },
+            {
+                "type": 1,
+                "account": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+            },
+            {
+                "currency": "JPY",
+                "type": 48,
+                "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+            },
+            {
+                "type": 1,
+                "account": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+            }
+        ],
+        [
+            {
+                "currency": "CNY",
+                "type": 48,
+                "issuer": "razqQKzJRdB4UxFPWf5NEpEG3WMkmwgcXA"
+            },
+            {
+                "type": 1,
+                "account": "razqQKzJRdB4UxFPWf5NEpEG3WMkmwgcXA"
+            },
+            {
+                "currency": "JPY",
+                "type": 48,
+                "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+            },
+            {
+                "type": 1,
+                "account": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+            }
+        ],
+        [
+            {
+                "currency": "CNY",
+                "type": 48,
+                "issuer": "rKiCet8SdvWxPXnAgYarFUXMh1zCPz432Y"
+            },
+            {
+                "type": 1,
+                "account": "rKiCet8SdvWxPXnAgYarFUXMh1zCPz432Y"
+            },
+            {
+                "currency": "JPY",
+                "type": 48,
+                "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+            },
+            {
+                "type": 1,
+                "account": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+            }
+        ]
+    ],
+    "hash": "74E82DEA120E5ECD67F0A8BC854B53EB699CAC86A9F74177C570E21F2C894D36"
+}
+---------------------------------------------------------------
+Offer Executed
+---------------------------------------------------------------
+Get/Pay: JPY/RJP
+Ask:     0.00003048780487804878
+Paid:    -0.073168793968853/RJP/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
+Got:     -2399.936442178379/JPY/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
+---------------------------------------------------------------
+{
+    "Account": "raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf",
+    "FinalFields": {
+        "TakerPays": {
+            "currency": "RJP",
+            "value": "0",
+            "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+        },
+        "TakerGets": {
+            "currency": "JPY",
+            "value": "0",
+            "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+        }
+    },
+    "PreviousTxnLgrSeq": 30758172,
+    "OwnerNode": "000000000000000F",
+    "index": "9675489C8FA896DD0FD7880AD9709D51F3432A19C47BB3E5D397825BBCCC2AB5",
+    "PreviousTxnID": "F459657B153F78CD0D358F6F420336EA4876356A85EFD785CC1E0274D56B7AD7",
+    "TakerGets": {
+        "currency": "JPY",
+        "value": "2399.936442178379",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "Flags": 0,
+    "Sequence": 4757,
+    "TakerPays": {
+        "currency": "RJP",
+        "value": "0.073168793968853",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "BookDirectory": "7E984AD10069041B9B957C73D05AF2AB3D117C0CCAF7FDA5500AD4D985F947CE",
+    "LedgerEntryType": "Offer",
+    "BookNode": "0000000000000000"
+}
+---------------------------------------------------------------
+Offer Executed
+---------------------------------------------------------------
+Get/Pay: RJP/XRP
+Ask:     1041.666663754543
+Paid:    -31.706449/XRP
+Got:     -0.03043818971368708/RJP/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
+---------------------------------------------------------------
+{
+    "Account": "rLjDNH9g1AajRT2pxALZmwesd64p4x9XZJ",
+    "FinalFields": {
+        "TakerPays": "0",
+        "TakerGets": {
+            "currency": "RJP",
+            "value": "0",
+            "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+        }
+    },
+    "PreviousTxnLgrSeq": 30758172,
+    "OwnerNode": "0000000000000D35",
+    "index": "49DDE07C77FB964A480CBAD36770DA50A3F9AF8B2992AC0767B0952BF0685750",
+    "PreviousTxnID": "F459657B153F78CD0D358F6F420336EA4876356A85EFD785CC1E0274D56B7AD7",
+    "TakerGets": {
+        "currency": "RJP",
+        "value": "0.03043818971368708",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "Flags": 0,
+    "Sequence": 196197,
+    "TakerPays": "31706449",
+    "BookDirectory": "7035F45D0D6677B54720F2A9CBD0EA1155313D0F038A9E5B5E03B363EB77AB2F",
+    "LedgerEntryType": "Offer",
+    "BookNode": "0000000000000000"
+}
+---------------------------------------------------------------
+Offer Executed
+---------------------------------------------------------------
+Get/Pay: RJP/XRP
+Ask:     1041.666664617668
+Paid:    -44.663481/XRP
+Got:     -0.04287694184310363/RJP/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
+---------------------------------------------------------------
+{
+    "Account": "rLjDNH9g1AajRT2pxALZmwesd64p4x9XZJ",
+    "FinalFields": {
+        "TakerPays": "38560904",
+        "TakerGets": {
+            "currency": "RJP",
+            "value": "0.03701846781759357",
+            "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+        }
+    },
+    "PreviousTxnLgrSeq": 30753477,
+    "OwnerNode": "0000000000000D21",
+    "index": "71F15114DE3069161784310693089E9102EAA00EF3E6651582E83642EE07E097",
+    "PreviousTxnID": "4CE0839CE8208F81C23B3948B348FE66BDC1B400E61CB31564657CAD38DF1134",
+    "TakerGets": {
+        "currency": "RJP",
+        "value": "0.0798954096606972",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "Flags": 0,
+    "Sequence": 195449,
+    "TakerPays": "83224385",
+    "BookDirectory": "7035F45D0D6677B54720F2A9CBD0EA1155313D0F038A9E5B5E03B363EB84D6C4",
+    "LedgerEntryType": "Offer",
+    "BookNode": "0000000000000000"
+}
+****END TX****
+
+
+
+
+6 25, 2017 4:00:57 午後 com.mbcu.mmm.sequences.Common lambda$0
+FINER: {"engine_result":"tesSUCCESS","engine_result_code":0,"engine_result_message":"The transaction was applied. Only final in a validated ledger.","ledger_hash":"232E3CC24ACB81772D2E2B42C85162EDC03E6FD07D34062204BBB2687EF24F34","ledger_index":30758590,"meta":{"AffectedNodes":[{"ModifiedNode":{"FinalFields":{"Balance":{"currency":"JPY","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"7340.370164041431"},"Flags":1114112,"HighLimit":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"},"HighNode":"0000000000000399","LowLimit":{"currency":"JPY","issuer":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","value":"100000"},"LowNode":"0000000000000001"},"LedgerEntryType":"RippleState","LedgerIndex":"21110D01A36A7EB20188B11D685B847322DE631145C31803E1760550FA399BAD","PreviousFields":{"Balance":{"currency":"JPY","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"9740.30660621981"}},"PreviousTxnID":"F459657B153F78CD0D358F6F420336EA4876356A85EFD785CC1E0274D56B7AD7","PreviousTxnLgrSeq":30758172}},{"DeletedNode":{"FinalFields":{"Account":"rLjDNH9g1AajRT2pxALZmwesd64p4x9XZJ","BookDirectory":"7035F45D0D6677B54720F2A9CBD0EA1155313D0F038A9E5B5E03B363EB77AB2F","BookNode":"0000000000000000","Flags":0,"OwnerNode":"0000000000000D35","PreviousTxnID":"F459657B153F78CD0D358F6F420336EA4876356A85EFD785CC1E0274D56B7AD7","PreviousTxnLgrSeq":30758172,"Sequence":196197,"TakerGets":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"},"TakerPays":"0"},"LedgerEntryType":"Offer","LedgerIndex":"49DDE07C77FB964A480CBAD36770DA50A3F9AF8B2992AC0767B0952BF0685750","PreviousFields":{"TakerGets":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0.03043818971368708"},"TakerPays":"31706449"}}},{"ModifiedNode":{"FinalFields":{"Balance":{"currency":"RJP","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"4.975921472777411"},"Flags":1114112,"HighLimit":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"},"HighNode":"00000000000003FB","LowLimit":{"currency":"RJP","issuer":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","value":"10000"},"LowNode":"0000000000000006","LowQualityIn":1000000000},"LedgerEntryType":"RippleState","LedgerIndex":"4A8FE98984B510E3F0223CB8C9110FA370EC545BCD6CE6863C8405E5BC360423","PreviousFields":{"Balance":{"currency":"RJP","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"4.902752678808559"}},"PreviousTxnID":"F459657B153F78CD0D358F6F420336EA4876356A85EFD785CC1E0274D56B7AD7","PreviousTxnLgrSeq":30758172}},{"DeletedNode":{"FinalFields":{"ExchangeRate":"5E03B363EB77AB2F","Flags":0,"RootIndex":"7035F45D0D6677B54720F2A9CBD0EA1155313D0F038A9E5B5E03B363EB77AB2F","TakerGetsCurrency":"000000000000000000000000524A500000000000","TakerGetsIssuer":"6F2531F2B8CDB96D6D986D9D75CC0156DF2C5387","TakerPaysCurrency":"0000000000000000000000000000000000000000","TakerPaysIssuer":"0000000000000000000000000000000000000000"},"LedgerEntryType":"DirectoryNode","LedgerIndex":"7035F45D0D6677B54720F2A9CBD0EA1155313D0F038A9E5B5E03B363EB77AB2F"}},{"ModifiedNode":{"FinalFields":{"Account":"rLjDNH9g1AajRT2pxALZmwesd64p4x9XZJ","BookDirectory":"7035F45D0D6677B54720F2A9CBD0EA1155313D0F038A9E5B5E03B363EB84D6C4","BookNode":"0000000000000000","Flags":0,"OwnerNode":"0000000000000D21","Sequence":195449,"TakerGets":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0.03701846781759357"},"TakerPays":"38560904"},"LedgerEntryType":"Offer","LedgerIndex":"71F15114DE3069161784310693089E9102EAA00EF3E6651582E83642EE07E097","PreviousFields":{"TakerGets":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0.0798954096606972"},"TakerPays":"83224385"},"PreviousTxnID":"4CE0839CE8208F81C23B3948B348FE66BDC1B400E61CB31564657CAD38DF1134","PreviousTxnLgrSeq":30753477}},{"ModifiedNode":{"FinalFields":{"Account":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","Balance":"6061125109","Flags":0,"OwnerCount":9,"Sequence":4758},"LedgerEntryType":"AccountRoot","LedgerIndex":"72A59CDF8FFBF65C20D01D3A3D5DA5BAE3158A3881E7AEE525A01B1CC73D32DD","PreviousFields":{"OwnerCount":10},"PreviousTxnID":"ADC40332E34DBA9CA961FC15756965051054AEC3AC6B5A0A73F4DA0EA16B52CE","PreviousTxnLgrSeq":30758017}},{"ModifiedNode":{"FinalFields":{"Flags":0,"IndexNext":"0000000000000D36","IndexPrevious":"0000000000000D34","Owner":"rLjDNH9g1AajRT2pxALZmwesd64p4x9XZJ","RootIndex":"718BBB28EE36A3AC1DCBC75790357E2057015302DBA637DFD7851E820B5583BA"},"LedgerEntryType":"DirectoryNode","LedgerIndex":"764A293181FE7639B1D37BBEBB854AF562913F03F47B36598F3D2EEA92688783"}},{"DeletedNode":{"FinalFields":{"ExchangeRate":"500AD4D985F947CE","Flags":0,"RootIndex":"7E984AD10069041B9B957C73D05AF2AB3D117C0CCAF7FDA5500AD4D985F947CE","TakerGetsCurrency":"0000000000000000000000004A50590000000000","TakerGetsIssuer":"6F2531F2B8CDB96D6D986D9D75CC0156DF2C5387","TakerPaysCurrency":"000000000000000000000000524A500000000000","TakerPaysIssuer":"6F2531F2B8CDB96D6D986D9D75CC0156DF2C5387"},"LedgerEntryType":"DirectoryNode","LedgerIndex":"7E984AD10069041B9B957C73D05AF2AB3D117C0CCAF7FDA5500AD4D985F947CE"}},{"ModifiedNode":{"FinalFields":{"Account":"rLjDNH9g1AajRT2pxALZmwesd64p4x9XZJ","Balance":"1836435754692","Flags":0,"OwnerCount":1128,"Sequence":197054},"LedgerEntryType":"AccountRoot","LedgerIndex":"7F28475BBAE8E0654C4D4C876DFBF7A3C40DEFEB6DF2F4C301F7F7F3514F255F","PreviousFields":{"Balance":"1836359384762","OwnerCount":1129},"PreviousTxnID":"A752131D138B06D8B9CEFEAC9B4FD7EBC6AEA9569F14A0BBA9BF2EC6088A2AF4","PreviousTxnLgrSeq":30758218}},{"ModifiedNode":{"FinalFields":{"Account":"r9Gps6fB9YLuZ87rWx7M9TgLAGK2zsz5s6","Balance":"29888506489","Flags":0,"OwnerCount":126,"Sequence":154945},"LedgerEntryType":"AccountRoot","LedgerIndex":"8D57DFC0321921B37D6E2E80E01DB3644703B13E0B1F1E0BFEFE3CC42D5E73B6","PreviousFields":{"Balance":"29964901419","Sequence":154944},"PreviousTxnID":"221E37FF3C1BD1FB84976E6A17D795C605D0353E45A001490F4647234A727E25","PreviousTxnLgrSeq":30758172}},{"ModifiedNode":{"FinalFields":{"Flags":0,"IndexPrevious":"0000000000000006","Owner":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","RootIndex":"C5383B94DDE4BE2A184757D80837080C4D1EAB80789FE39F7D7AECFB0D0304BB"},"LedgerEntryType":"DirectoryNode","LedgerIndex":"91565E4F1A8282718C8D6ED8EFEE2B5DC18101FC76D0AE436F46194F4567EF5E"}},{"DeletedNode":{"FinalFields":{"Account":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","BookDirectory":"7E984AD10069041B9B957C73D05AF2AB3D117C0CCAF7FDA5500AD4D985F947CE","BookNode":"0000000000000000","Flags":0,"OwnerNode":"000000000000000F","PreviousTxnID":"F459657B153F78CD0D358F6F420336EA4876356A85EFD785CC1E0274D56B7AD7","PreviousTxnLgrSeq":30758172,"Sequence":4757,"TakerGets":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"},"TakerPays":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"}},"LedgerEntryType":"Offer","LedgerIndex":"9675489C8FA896DD0FD7880AD9709D51F3432A19C47BB3E5D397825BBCCC2AB5","PreviousFields":{"TakerGets":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"2399.936442178379"},"TakerPays":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0.073168793968853"}}}},{"ModifiedNode":{"FinalFields":{"Balance":{"currency":"JPY","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"2395.146149878622"},"Flags":1114112,"HighLimit":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"},"HighNode":"0000000000000198","LowLimit":{"currency":"JPY","issuer":"r9Gps6fB9YLuZ87rWx7M9TgLAGK2zsz5s6","value":"1000000000"},"LowNode":"0000000000000003"},"LedgerEntryType":"RippleState","LedgerIndex":"BB919FEA19C2F386F7F0ADBE9E75668B544813D4E66EE4DB6BA385000657C9F4","PreviousFields":{"Balance":{"currency":"JPY","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"0"}},"PreviousTxnID":"221E37FF3C1BD1FB84976E6A17D795C605D0353E45A001490F4647234A727E25","PreviousTxnLgrSeq":30758172}},{"ModifiedNode":{"FinalFields":{"Balance":{"currency":"RJP","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"-258.0913897014543"},"Flags":2228224,"HighLimit":{"currency":"RJP","issuer":"rLjDNH9g1AajRT2pxALZmwesd64p4x9XZJ","value":"10000000000"},"HighNode":"0000000000000009","LowLimit":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"},"LowNode":"0000000000000012"},"LedgerEntryType":"RippleState","LedgerIndex":"FAE9C113C6BAFF7BAD167E5D3B88F4DA967EC1E33FBB48CC0611B7E050FFA231","PreviousFields":{"Balance":{"currency":"RJP","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"-258.164704833011"}},"PreviousTxnID":"F459657B153F78CD0D358F6F420336EA4876356A85EFD785CC1E0274D56B7AD7","PreviousTxnLgrSeq":30758172}}],"DeliveredAmount":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"2395.146149878622"},"TransactionIndex":1,"TransactionResult":"tesSUCCESS"},"status":"closed","transaction":{"Account":"r9Gps6fB9YLuZ87rWx7M9TgLAGK2zsz5s6","Amount":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"2851.015039702674"},"Destination":"r9Gps6fB9YLuZ87rWx7M9TgLAGK2zsz5s6","Fee":"25000","Flags":458752,"LastLedgerSequence":30758590,"Paths":[[{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","type":48,"type_hex":"0000000000000030"},{"account":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","type":1,"type_hex":"0000000000000001"},{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","type":48,"type_hex":"0000000000000030"},{"account":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","type":1,"type_hex":"0000000000000001"}],[{"currency":"CNY","issuer":"razqQKzJRdB4UxFPWf5NEpEG3WMkmwgcXA","type":48,"type_hex":"0000000000000030"},{"account":"razqQKzJRdB4UxFPWf5NEpEG3WMkmwgcXA","type":1,"type_hex":"0000000000000001"},{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","type":48,"type_hex":"0000000000000030"},{"account":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","type":1,"type_hex":"0000000000000001"}],[{"currency":"CNY","issuer":"rKiCet8SdvWxPXnAgYarFUXMh1zCPz432Y","type":48,"type_hex":"0000000000000030"},{"account":"rKiCet8SdvWxPXnAgYarFUXMh1zCPz432Y","type":1,"type_hex":"0000000000000001"},{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","type":48,"type_hex":"0000000000000030"},{"account":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","type":1,"type_hex":"0000000000000001"}]],"SendMax":"90971790","Sequence":154944,"SigningPubKey":"0399C1D236934748F4A3B51644647B0FC217D9CCBE2372A4A4DB95E0D5429157EB","TransactionType":"Payment","TxnSignature":"3045022100AC1D69D03328564C8B2E820DFFCDFE1AAA00214A7B47942FD64BAB561D7754CD02202BA240913475BB5A2CEB25B5C6BF07F601B0D5664CB449AE0CAA3AE5953477FB","date":551689260,"hash":"74E82DEA120E5ECD67F0A8BC854B53EB699CAC86A9F74177C570E21F2C894D36"},"type":"transaction","validated":true}
+
+****NEW TX****
+---------------------------------------------------------------
+OfferCreate
+---------------------------------------------------------------
+{
+    "TakerPays": {
+        "currency": "JPY",
+        "value": "3186",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "Account": "raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf",
+    "TransactionType": "OfferCreate",
+    "TxnSignature": "3044022022AD03B6DA400BB3B220B32AD847A4E825A22BF56DAD73059D3815C707478DBF022072B159620C4EC153EA1DEB6F45A786F195217002510FEA8D581CA668AFD1D648",
+    "Memos": [{"Memo": {
+        "MemoType": "636C69656E74",
+        "MemoData": "726D2D312E322E33"
+    }}],
+    "SigningPubKey": "02E2F1208D1715E18B0957FC819546FA7434B4A19EE38321932D2ED28FA090678E",
+    "Fee": "12",
+    "TakerGets": {
+        "currency": "RJP",
+        "value": "0.1",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "Flags": 2148007936,
+    "Sequence": 4758,
+    "LastLedgerSequence": 30764851,
+    "hash": "326DCCB5373A3D588E1870F3840CB4B3B62988D1C667389D9B63F6EE0E990A29"
+}
+---------------------------------------------------------------
+Offer Created
+---------------------------------------------------------------
+Get/Pay:    RJP/JPY
+Bid:        0.00003138731952291273679549973308637078
+TakerPays:  3075.421551039386/JPY/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
+TakerGets:  0.09652923889012509/RJP/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
+---------------------------------------------------------------
+{
+    "TakerPays": {
+        "currency": "JPY",
+        "value": "3075.421551039386",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "Account": "raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf",
+    "BookDirectory": "DCAAC0CDAC8DA851AC8E225CA9ED9305CB4BBE7E4E255AB3590B51A66E412000",
+    "LedgerEntryType": "Offer",
+    "OwnerNode": "000000000000000F",
+    "index": "121E7C39F62C053F0D66496A086573EA84DAFF022F3CC033998656B12D384C4C",
+    "TakerGets": {
+        "currency": "RJP",
+        "value": "0.09652923889012509",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "Flags": 131072,
+    "Sequence": 4758
+}
+---------------------------------------------------------------
+Offer Executed
+---------------------------------------------------------------
+Get/Pay: XRP/RJP
+Ask:     0.0009699972589844161
+Paid:    -0.0002121878704001/RJP/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
+Got:     -0.218751/XRP
+---------------------------------------------------------------
+{
+    "Account": "rLjDNH9g1AajRT2pxALZmwesd64p4x9XZJ",
+    "FinalFields": {
+        "TakerPays": {
+            "currency": "RJP",
+            "value": "0",
+            "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+        },
+        "TakerGets": "0"
+    },
+    "PreviousTxnLgrSeq": 30754971,
+    "OwnerNode": "0000000000000D39",
+    "index": "B29EB905B08F58FFB0991828BD7BC2FF15FB47A53222C42F4C56A5C5F6E60257",
+    "PreviousTxnID": "485404766EAC25FFF203F9AB83C34136E22ABC9B3A1F506B4327B792070E3FC6",
+    "TakerGets": "218751",
+    "Flags": 131072,
+    "Sequence": 196325,
+    "TakerPays": {
+        "currency": "RJP",
+        "value": "0.0002121878704001",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "BookDirectory": "59E6C90874EE6DE9C3187C89BE98BA49ADFCD5411C40488A4B227612DC8C76C1",
+    "LedgerEntryType": "Offer",
+    "BookNode": "0000000000000000"
+}
+---------------------------------------------------------------
+Offer Executed
+---------------------------------------------------------------
+Get/Pay: XRP/RJP
+Ask:     0.0009699999581689857
+Paid:    -0.00325857323947481/RJP/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
+Got:     -3.359354/XRP
+---------------------------------------------------------------
+{
+    "Account": "rLjDNH9g1AajRT2pxALZmwesd64p4x9XZJ",
+    "FinalFields": {
+        "TakerPays": {
+            "currency": "RJP",
+            "value": "0.02749668096421227",
+            "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+        },
+        "TakerGets": "28347095"
+    },
+    "PreviousTxnLgrSeq": 30758592,
+    "OwnerNode": "0000000000000D48",
+    "index": "8C056F72B619F8A12110787B1F92BB7477C26C998C2D04473C70C58528F27238",
+    "PreviousTxnID": "685B040E4FC2C5AC1FD078D5F00BC2F5CBF9217B0C76797DE250C1075B3F9F32",
+    "TakerGets": "31706449",
+    "Flags": 131072,
+    "Sequence": 197054,
+    "TakerPays": {
+        "currency": "RJP",
+        "value": "0.03075525420368708",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "BookDirectory": "59E6C90874EE6DE9C3187C89BE98BA49ADFCD5411C40488A4B22761925635801",
+    "LedgerEntryType": "Offer",
+    "BookNode": "0000000000000000"
+}
+---------------------------------------------------------------
+Offer Executed
+---------------------------------------------------------------
+Get/Pay: JPY/XRP
+Ask:     0.03235472408974229
+Paid:    -3.578105/XRP
+Got:     -110.589878315/JPY/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
+---------------------------------------------------------------
+{
+    "Account": "rG7eucYLyK39JjptdTksiKKdGEPGSFPeW3",
+    "FinalFields": {
+        "TakerPays": "0",
+        "TakerGets": {
+            "currency": "JPY",
+            "value": "0",
+            "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+        }
+    },
+    "PreviousTxnLgrSeq": 30764827,
+    "OwnerNode": "0000000000000000",
+    "index": "D8966F2235A965A5E4A96457101AC7A61217C4030AA3C56AF0F8AC139DAAE0BA",
+    "PreviousTxnID": "75D48E52E01BBCBF30CDAF324B9EC2AD6E39458EEC06C671348BC1A5FF9FCBBF",
+    "TakerGets": {
+        "currency": "JPY",
+        "value": "110.589878315",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "Flags": 131072,
+    "Sequence": 20358,
+    "TakerPays": "3578105",
+    "BookDirectory": "A7A2258942BF79A1C2A55DA88560879DC312966AFDD1CD05590B7EA51F9E1395",
+    "LedgerEntryType": "Offer",
+    "BookNode": "0000000000000000"
+}
+****END TX****
+
+
+
+
+6 25, 2017 9:51:32 午後 com.mbcu.mmm.sequences.Common lambda$0
+FINER: {"engine_result":"tesSUCCESS","engine_result_code":0,"engine_result_message":"The transaction was applied. Only final in a validated ledger.","ledger_hash":"E2FB35FD82F59DF0825EC647335ABC6EE8B567743F47B9D4F36BF4F3A9C84C3E","ledger_index":30764849,"meta":{"AffectedNodes":[{"CreatedNode":{"LedgerEntryType":"Offer","LedgerIndex":"121E7C39F62C053F0D66496A086573EA84DAFF022F3CC033998656B12D384C4C","NewFields":{"Account":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","BookDirectory":"DCAAC0CDAC8DA851AC8E225CA9ED9305CB4BBE7E4E255AB3590B51A66E412000","Flags":131072,"OwnerNode":"000000000000000F","Sequence":4758,"TakerGets":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0.09652923889012509"},"TakerPays":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"3075.421551039386"}}}},{"ModifiedNode":{"FinalFields":{"Balance":{"currency":"JPY","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"7450.96004235643"},"Flags":1114112,"HighLimit":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"},"HighNode":"0000000000000399","LowLimit":{"currency":"JPY","issuer":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","value":"100000"},"LowNode":"0000000000000001"},"LedgerEntryType":"RippleState","LedgerIndex":"21110D01A36A7EB20188B11D685B847322DE631145C31803E1760550FA399BAD","PreviousFields":{"Balance":{"currency":"JPY","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"7340.370164041431"}},"PreviousTxnID":"74E82DEA120E5ECD67F0A8BC854B53EB699CAC86A9F74177C570E21F2C894D36","PreviousTxnLgrSeq":30758590}},{"ModifiedNode":{"FinalFields":{"Flags":0,"IndexNext":"0000000000000D3D","IndexPrevious":"0000000000000D38","Owner":"rLjDNH9g1AajRT2pxALZmwesd64p4x9XZJ","RootIndex":"718BBB28EE36A3AC1DCBC75790357E2057015302DBA637DFD7851E820B5583BA"},"LedgerEntryType":"DirectoryNode","LedgerIndex":"292CEA8F420D30FF42E263F96ADC9E91B4461339E3FFD69F696350DD91F0094A"}},{"ModifiedNode":{"FinalFields":{"Balance":{"currency":"RJP","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"4.972443770145318"},"Flags":1114112,"HighLimit":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"},"HighNode":"00000000000003FB","LowLimit":{"currency":"RJP","issuer":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","value":"10000"},"LowNode":"0000000000000006","LowQualityIn":1000000000},"LedgerEntryType":"RippleState","LedgerIndex":"4A8FE98984B510E3F0223CB8C9110FA370EC545BCD6CE6863C8405E5BC360423","PreviousFields":{"Balance":{"currency":"RJP","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"4.975921472777411"}},"PreviousTxnID":"74E82DEA120E5ECD67F0A8BC854B53EB699CAC86A9F74177C570E21F2C894D36","PreviousTxnLgrSeq":30758590}},{"DeletedNode":{"FinalFields":{"ExchangeRate":"4B227612DC8C76C1","Flags":0,"RootIndex":"59E6C90874EE6DE9C3187C89BE98BA49ADFCD5411C40488A4B227612DC8C76C1","TakerGetsCurrency":"0000000000000000000000000000000000000000","TakerGetsIssuer":"0000000000000000000000000000000000000000","TakerPaysCurrency":"000000000000000000000000524A500000000000","TakerPaysIssuer":"6F2531F2B8CDB96D6D986D9D75CC0156DF2C5387"},"LedgerEntryType":"DirectoryNode","LedgerIndex":"59E6C90874EE6DE9C3187C89BE98BA49ADFCD5411C40488A4B227612DC8C76C1"}},{"ModifiedNode":{"FinalFields":{"Balance":{"currency":"JPY","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"-110.36869855831"},"Flags":2228224,"HighLimit":{"currency":"JPY","issuer":"rG7eucYLyK39JjptdTksiKKdGEPGSFPeW3","value":"0"},"HighNode":"0000000000000000","LowLimit":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"},"LowNode":"0000000000000434"},"LedgerEntryType":"RippleState","LedgerIndex":"601AA9619F786BFA936D2B438F863D98D8755DFF72AA3ADA1D0F33DCAFC26884","PreviousFields":{"Balance":{"currency":"JPY","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"-221.17975662994"}},"PreviousTxnID":"58052ED0990EDD73CEB57FA3963993AC4282CD1C3C03FA9BFD5C0FBBF1CB87BF","PreviousTxnLgrSeq":30764617}},{"ModifiedNode":{"FinalFields":{"Account":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","Balance":"6061125097","Flags":0,"OwnerCount":10,"Sequence":4759},"LedgerEntryType":"AccountRoot","LedgerIndex":"72A59CDF8FFBF65C20D01D3A3D5DA5BAE3158A3881E7AEE525A01B1CC73D32DD","PreviousFields":{"Balance":"6061125109","OwnerCount":9,"Sequence":4758},"PreviousTxnID":"74E82DEA120E5ECD67F0A8BC854B53EB699CAC86A9F74177C570E21F2C894D36","PreviousTxnLgrSeq":30758590}},{"ModifiedNode":{"FinalFields":{"Account":"rLjDNH9g1AajRT2pxALZmwesd64p4x9XZJ","Balance":"1853067187006","Flags":0,"OwnerCount":1310,"Sequence":198235},"LedgerEntryType":"AccountRoot","LedgerIndex":"7F28475BBAE8E0654C4D4C876DFBF7A3C40DEFEB6DF2F4C301F7F7F3514F255F","PreviousFields":{"Balance":"1853070765111","OwnerCount":1311},"PreviousTxnID":"E7542C0A7029E323AF626320D516AE477F2E220F66066E00DD509FADB80602A6","PreviousTxnLgrSeq":30764796}},{"ModifiedNode":{"FinalFields":{"Account":"rLjDNH9g1AajRT2pxALZmwesd64p4x9XZJ","BookDirectory":"59E6C90874EE6DE9C3187C89BE98BA49ADFCD5411C40488A4B22761925635801","BookNode":"0000000000000000","Flags":131072,"OwnerNode":"0000000000000D48","Sequence":197054,"TakerGets":"28347095","TakerPays":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0.02749668096421227"}},"LedgerEntryType":"Offer","LedgerIndex":"8C056F72B619F8A12110787B1F92BB7477C26C998C2D04473C70C58528F27238","PreviousFields":{"TakerGets":"31706449","TakerPays":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0.03075525420368708"}},"PreviousTxnID":"685B040E4FC2C5AC1FD078D5F00BC2F5CBF9217B0C76797DE250C1075B3F9F32","PreviousTxnLgrSeq":30758592}},{"ModifiedNode":{"FinalFields":{"Flags":0,"IndexPrevious":"0000000000000006","Owner":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","RootIndex":"C5383B94DDE4BE2A184757D80837080C4D1EAB80789FE39F7D7AECFB0D0304BB"},"LedgerEntryType":"DirectoryNode","LedgerIndex":"91565E4F1A8282718C8D6ED8EFEE2B5DC18101FC76D0AE436F46194F4567EF5E"}},{"ModifiedNode":{"FinalFields":{"Flags":0,"Owner":"rG7eucYLyK39JjptdTksiKKdGEPGSFPeW3","RootIndex":"97065B0341198D1BF2661855C84BB85B08350CBD02AA87B68095409768629974"},"LedgerEntryType":"DirectoryNode","LedgerIndex":"97065B0341198D1BF2661855C84BB85B08350CBD02AA87B68095409768629974"}},{"ModifiedNode":{"FinalFields":{"Account":"rG7eucYLyK39JjptdTksiKKdGEPGSFPeW3","Balance":"2134234666","Flags":0,"OwnerCount":3,"Sequence":20359},"LedgerEntryType":"AccountRoot","LedgerIndex":"A1A60AF78F370DA28CF59719A480A9063D663883461EF62DA061486812C22D6E","PreviousFields":{"Balance":"2130656561","OwnerCount":4},"PreviousTxnID":"75D48E52E01BBCBF30CDAF324B9EC2AD6E39458EEC06C671348BC1A5FF9FCBBF","PreviousTxnLgrSeq":30764827}},{"DeletedNode":{"FinalFields":{"ExchangeRate":"590B7EA51F9E1395","Flags":0,"RootIndex":"A7A2258942BF79A1C2A55DA88560879DC312966AFDD1CD05590B7EA51F9E1395","TakerGetsCurrency":"0000000000000000000000004A50590000000000","TakerGetsIssuer":"6F2531F2B8CDB96D6D986D9D75CC0156DF2C5387","TakerPaysCurrency":"0000000000000000000000000000000000000000","TakerPaysIssuer":"0000000000000000000000000000000000000000"},"LedgerEntryType":"DirectoryNode","LedgerIndex":"A7A2258942BF79A1C2A55DA88560879DC312966AFDD1CD05590B7EA51F9E1395"}},{"DeletedNode":{"FinalFields":{"Account":"rLjDNH9g1AajRT2pxALZmwesd64p4x9XZJ","BookDirectory":"59E6C90874EE6DE9C3187C89BE98BA49ADFCD5411C40488A4B227612DC8C76C1","BookNode":"0000000000000000","Flags":131072,"OwnerNode":"0000000000000D39","PreviousTxnID":"485404766EAC25FFF203F9AB83C34136E22ABC9B3A1F506B4327B792070E3FC6","PreviousTxnLgrSeq":30754971,"Sequence":196325,"TakerGets":"0","TakerPays":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"}},"LedgerEntryType":"Offer","LedgerIndex":"B29EB905B08F58FFB0991828BD7BC2FF15FB47A53222C42F4C56A5C5F6E60257","PreviousFields":{"TakerGets":"218751","TakerPays":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0.0002121878704001"}}}},{"DeletedNode":{"FinalFields":{"Account":"rG7eucYLyK39JjptdTksiKKdGEPGSFPeW3","BookDirectory":"A7A2258942BF79A1C2A55DA88560879DC312966AFDD1CD05590B7EA51F9E1395","BookNode":"0000000000000000","Flags":131072,"OwnerNode":"0000000000000000","PreviousTxnID":"75D48E52E01BBCBF30CDAF324B9EC2AD6E39458EEC06C671348BC1A5FF9FCBBF","PreviousTxnLgrSeq":30764827,"Sequence":20358,"TakerGets":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"},"TakerPays":"0"},"LedgerEntryType":"Offer","LedgerIndex":"D8966F2235A965A5E4A96457101AC7A61217C4030AA3C56AF0F8AC139DAAE0BA","PreviousFields":{"TakerGets":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"110.589878315"},"TakerPays":"3578105"}}},{"CreatedNode":{"LedgerEntryType":"DirectoryNode","LedgerIndex":"DCAAC0CDAC8DA851AC8E225CA9ED9305CB4BBE7E4E255AB3590B51A66E412000","NewFields":{"ExchangeRate":"590B51A66E412000","RootIndex":"DCAAC0CDAC8DA851AC8E225CA9ED9305CB4BBE7E4E255AB3590B51A66E412000","TakerGetsCurrency":"000000000000000000000000524A500000000000","TakerGetsIssuer":"6F2531F2B8CDB96D6D986D9D75CC0156DF2C5387","TakerPaysCurrency":"0000000000000000000000004A50590000000000","TakerPaysIssuer":"6F2531F2B8CDB96D6D986D9D75CC0156DF2C5387"}}},{"ModifiedNode":{"FinalFields":{"Balance":{"currency":"RJP","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"-258.0948604625641"},"Flags":2228224,"HighLimit":{"currency":"RJP","issuer":"rLjDNH9g1AajRT2pxALZmwesd64p4x9XZJ","value":"10000000000"},"HighNode":"0000000000000009","LowLimit":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"},"LowNode":"0000000000000012"},"LedgerEntryType":"RippleState","LedgerIndex":"FAE9C113C6BAFF7BAD167E5D3B88F4DA967EC1E33FBB48CC0611B7E050FFA231","PreviousFields":{"Balance":{"currency":"RJP","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"-258.0913897014543"}},"PreviousTxnID":"74E82DEA120E5ECD67F0A8BC854B53EB699CAC86A9F74177C570E21F2C894D36","PreviousTxnLgrSeq":30758590}}],"TransactionIndex":1,"TransactionResult":"tesSUCCESS"},"status":"closed","transaction":{"Account":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","Fee":"12","Flags":2148007936,"LastLedgerSequence":30764851,"Memos":[{"Memo":{"MemoData":"726D2D312E322E33","MemoType":"636C69656E74"}}],"Sequence":4758,"SigningPubKey":"02E2F1208D1715E18B0957FC819546FA7434B4A19EE38321932D2ED28FA090678E","TakerGets":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0.1"},"TakerPays":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"3186"},"TransactionType":"OfferCreate","TxnSignature":"3044022022AD03B6DA400BB3B220B32AD847A4E825A22BF56DAD73059D3815C707478DBF022072B159620C4EC153EA1DEB6F45A786F195217002510FEA8D581CA668AFD1D648","date":551710292,"hash":"326DCCB5373A3D588E1870F3840CB4B3B62988D1C667389D9B63F6EE0E990A29","owner_funds":"4.972443770145318"},"type":"transaction","validated":true}
+
+****NEW TX****
+---------------------------------------------------------------
+OfferCreate
+---------------------------------------------------------------
+{
+    "TakerPays": {
+        "currency": "RJP",
+        "value": "1.173162764054729",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "Account": "rsPrWzpYp5jj278vHVgp1tMvbKdHAZGFbi",
+    "TransactionType": "OfferCreate",
+    "TxnSignature": "304502210081DFD7601B57813543FEF52F83818492704794D4E4C025C3CBF45CF63D8E741502206964B15D3D5912E284BC85D9ECD52600B6A3DA544D91A8A53E69360D472C4C42",
+    "SigningPubKey": "031161F2602A6746CA817D3EE4419F29641690CD613B015B923A2B8146BDEA7028",
+    "Fee": "25000",
+    "TakerGets": {
+        "currency": "JPY",
+        "value": "37391.9164490488",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "Flags": 131072,
+    "Sequence": 6864594,
+    "LastLedgerSequence": 30764871,
+    "hash": "47B4F8DD0DE3D49AA47196C1CE6DB50231B90EA34A7D720F3AAE9CCE956624E9"
+}
+---------------------------------------------------------------
+Offer Executed
+---------------------------------------------------------------
+Get/Pay: RJP/JPY
+Ask:     31860
+Paid:    -3075.421551039386/JPY/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
+Got:     -0.09652923889012509/RJP/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
+---------------------------------------------------------------
+{
+    "Account": "raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf",
+    "FinalFields": {
+        "TakerPays": {
+            "currency": "JPY",
+            "value": "0",
+            "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+        },
+        "TakerGets": {
+            "currency": "RJP",
+            "value": "0",
+            "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+        }
+    },
+    "PreviousTxnLgrSeq": 30764849,
+    "OwnerNode": "000000000000000F",
+    "index": "121E7C39F62C053F0D66496A086573EA84DAFF022F3CC033998656B12D384C4C",
+    "PreviousTxnID": "326DCCB5373A3D588E1870F3840CB4B3B62988D1C667389D9B63F6EE0E990A29",
+    "TakerGets": {
+        "currency": "RJP",
+        "value": "0.09652923889012509",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "Flags": 131072,
+    "Sequence": 4758,
+    "TakerPays": {
+        "currency": "JPY",
+        "value": "3075.421551039386",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "BookDirectory": "DCAAC0CDAC8DA851AC8E225CA9ED9305CB4BBE7E4E255AB3590B51A66E412000",
+    "LedgerEntryType": "Offer",
+    "BookNode": "0000000000000000"
+}
+****END TX****
+
+
+
+
+6 25, 2017 9:52:34 午後 com.mbcu.mmm.sequences.Common lambda$0
+FINER: {"engine_result":"tesSUCCESS","engine_result_code":0,"engine_result_message":"The transaction was applied. Only final in a validated ledger.","ledger_hash":"9193A88F249093A33D0DA5603A4762B1C4E4F8611BF8BBF091E1BC99CC19A79E","ledger_index":30764869,"meta":{"AffectedNodes":[{"DeletedNode":{"FinalFields":{"Account":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","BookDirectory":"DCAAC0CDAC8DA851AC8E225CA9ED9305CB4BBE7E4E255AB3590B51A66E412000","BookNode":"0000000000000000","Flags":131072,"OwnerNode":"000000000000000F","PreviousTxnID":"326DCCB5373A3D588E1870F3840CB4B3B62988D1C667389D9B63F6EE0E990A29","PreviousTxnLgrSeq":30764849,"Sequence":4758,"TakerGets":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"},"TakerPays":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"}},"LedgerEntryType":"Offer","LedgerIndex":"121E7C39F62C053F0D66496A086573EA84DAFF022F3CC033998656B12D384C4C","PreviousFields":{"TakerGets":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0.09652923889012509"},"TakerPays":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"3075.421551039386"}}}},{"ModifiedNode":{"FinalFields":{"Balance":{"currency":"JPY","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"10526.38159339581"},"Flags":1114112,"HighLimit":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"},"HighNode":"0000000000000399","LowLimit":{"currency":"JPY","issuer":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","value":"100000"},"LowNode":"0000000000000001"},"LedgerEntryType":"RippleState","LedgerIndex":"21110D01A36A7EB20188B11D685B847322DE631145C31803E1760550FA399BAD","PreviousFields":{"Balance":{"currency":"JPY","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"7450.96004235643"}},"PreviousTxnID":"326DCCB5373A3D588E1870F3840CB4B3B62988D1C667389D9B63F6EE0E990A29","PreviousTxnLgrSeq":30764849}},{"ModifiedNode":{"FinalFields":{"Balance":{"currency":"RJP","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"4.875721472777413"},"Flags":1114112,"HighLimit":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"},"HighNode":"00000000000003FB","LowLimit":{"currency":"RJP","issuer":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","value":"10000"},"LowNode":"0000000000000006","LowQualityIn":1000000000},"LedgerEntryType":"RippleState","LedgerIndex":"4A8FE98984B510E3F0223CB8C9110FA370EC545BCD6CE6863C8405E5BC360423","PreviousFields":{"Balance":{"currency":"RJP","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"4.972443770145318"}},"PreviousTxnID":"326DCCB5373A3D588E1870F3840CB4B3B62988D1C667389D9B63F6EE0E990A29","PreviousTxnLgrSeq":30764849}},{"ModifiedNode":{"FinalFields":{"Account":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","Balance":"6061125097","Flags":0,"OwnerCount":9,"Sequence":4759},"LedgerEntryType":"AccountRoot","LedgerIndex":"72A59CDF8FFBF65C20D01D3A3D5DA5BAE3158A3881E7AEE525A01B1CC73D32DD","PreviousFields":{"OwnerCount":10},"PreviousTxnID":"326DCCB5373A3D588E1870F3840CB4B3B62988D1C667389D9B63F6EE0E990A29","PreviousTxnLgrSeq":30764849}},{"ModifiedNode":{"FinalFields":{"Balance":{"currency":"RJP","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"0.09652923889012509"},"Flags":1114112,"HighLimit":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"},"HighNode":"0000000000000338","LowLimit":{"currency":"RJP","issuer":"rsPrWzpYp5jj278vHVgp1tMvbKdHAZGFbi","value":"1000000000"},"LowNode":"0000000000000001"},"LedgerEntryType":"RippleState","LedgerIndex":"7BE65D79F3087B4870A4E8596F1533D9761D53C05B0C51C1DEB5B0DA6A58C27C","PreviousFields":{"Balance":{"currency":"RJP","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"0"}},"PreviousTxnID":"B97E75D1336FA0455F3090A6653330879684420C50EBA3E4A34FE49E6C245095","PreviousTxnLgrSeq":30572935}},{"ModifiedNode":{"FinalFields":{"Account":"rsPrWzpYp5jj278vHVgp1tMvbKdHAZGFbi","Balance":"13973364092","Flags":0,"OwnerCount":37,"Sequence":6864595},"LedgerEntryType":"AccountRoot","LedgerIndex":"8881335E10619D1D17D4EB1FEF2647C232C892D377D9A34998C361FFFC9C4CCC","PreviousFields":{"Balance":"13973389092","Sequence":6864594},"PreviousTxnID":"E7A9F315481A83F3CCE308298D0DEEC5A8AFEB3BE347E3046BFDFE0FB69DAF9A","PreviousTxnLgrSeq":30764869}},{"ModifiedNode":{"FinalFields":{"Flags":0,"IndexPrevious":"0000000000000006","Owner":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","RootIndex":"C5383B94DDE4BE2A184757D80837080C4D1EAB80789FE39F7D7AECFB0D0304BB"},"LedgerEntryType":"DirectoryNode","LedgerIndex":"91565E4F1A8282718C8D6ED8EFEE2B5DC18101FC76D0AE436F46194F4567EF5E"}},{"ModifiedNode":{"FinalFields":{"Balance":{"currency":"JPY","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"656.124172136904"},"Flags":1114112,"HighLimit":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"},"HighNode":"0000000000000232","LowLimit":{"currency":"JPY","issuer":"rsPrWzpYp5jj278vHVgp1tMvbKdHAZGFbi","value":"1000000000"},"LowNode":"0000000000000000"},"LedgerEntryType":"RippleState","LedgerIndex":"ADCD69C9DAFD1076DA7075D0E53667CB67EDD58675BD653162A7EA483E392851","PreviousFields":{"Balance":{"currency":"JPY","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"3737.696566278369"}},"PreviousTxnID":"7504557145245B931556B275388001423ACFA2EC886D8C5253B7D565550B2A4A","PreviousTxnLgrSeq":30764868}},{"DeletedNode":{"FinalFields":{"ExchangeRate":"590B51A66E412000","Flags":0,"RootIndex":"DCAAC0CDAC8DA851AC8E225CA9ED9305CB4BBE7E4E255AB3590B51A66E412000","TakerGetsCurrency":"000000000000000000000000524A500000000000","TakerGetsIssuer":"6F2531F2B8CDB96D6D986D9D75CC0156DF2C5387","TakerPaysCurrency":"0000000000000000000000004A50590000000000","TakerPaysIssuer":"6F2531F2B8CDB96D6D986D9D75CC0156DF2C5387"},"LedgerEntryType":"DirectoryNode","LedgerIndex":"DCAAC0CDAC8DA851AC8E225CA9ED9305CB4BBE7E4E255AB3590B51A66E412000"}}],"TransactionIndex":7,"TransactionResult":"tesSUCCESS"},"status":"closed","transaction":{"Account":"rsPrWzpYp5jj278vHVgp1tMvbKdHAZGFbi","Fee":"25000","Flags":131072,"LastLedgerSequence":30764871,"Sequence":6864594,"SigningPubKey":"031161F2602A6746CA817D3EE4419F29641690CD613B015B923A2B8146BDEA7028","TakerGets":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"37391.9164490488"},"TakerPays":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"1.173162764054729"},"TransactionType":"OfferCreate","TxnSignature":"304502210081DFD7601B57813543FEF52F83818492704794D4E4C025C3CBF45CF63D8E741502206964B15D3D5912E284BC85D9ECD52600B6A3DA544D91A8A53E69360D472C4C42","date":551710353,"hash":"47B4F8DD0DE3D49AA47196C1CE6DB50231B90EA34A7D720F3AAE9CCE956624E9","owner_funds":"656.124172136904"},"type":"transaction","validated":true}
+
+****NEW TX****
+---------------------------------------------------------------
+OfferCreate
+---------------------------------------------------------------
+{
+    "TakerPays": {
+        "currency": "RJP",
+        "value": "0.1",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "Account": "raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf",
+    "TransactionType": "OfferCreate",
+    "TxnSignature": "3045022100CF787F9A5E5A6B0B5851B30B45AD8E012DA65506FB39CC5415025BCDE09E3EB6022009E132ED6F3BB2A42BF1F9505E3994037DD3D174CCFC526DC154BBFC64135188",
+    "Memos": [{"Memo": {
+        "MemoType": "636C69656E74",
+        "MemoData": "726D2D312E322E33"
+    }}],
+    "SigningPubKey": "02E2F1208D1715E18B0957FC819546FA7434B4A19EE38321932D2ED28FA090678E",
+    "Fee": "12",
+    "TakerGets": {
+        "currency": "JPY",
+        "value": "3360",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "Flags": 2147483648,
+    "Sequence": 4759,
+    "LastLedgerSequence": 30768128,
+    "hash": "F74753ABE6A1115287803143C27CC320D0604D553981FD19827B6ACDD25D87BC"
+}
+---------------------------------------------------------------
+Offer Executed
+---------------------------------------------------------------
+Get/Pay: XRP/JPY
+Ask:     31.22
+Paid:    -3138.43361482/JPY/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
+Got:     -100.526381/XRP
+---------------------------------------------------------------
+{
+    "Account": "rQ3gug9hNAAh6fJ3MEiH5hKXcD5waDjPYn",
+    "FinalFields": {
+        "TakerPays": {
+            "currency": "JPY",
+            "value": "312.206326881972",
+            "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+        },
+        "TakerGets": "10000204"
+    },
+    "PreviousTxnLgrSeq": 30767981,
+    "OwnerNode": "0000000000000000",
+    "index": "9BD0FEE5E2A22CD7490A8804F07F658DDD7130867BB01E6E7AA3E7A8DA1F3F1A",
+    "PreviousTxnID": "3419A7EB155D1B7548061FCFFCCEE6B631B574E54D9337DA9D52EBCA2A35DC06",
+    "TakerGets": "110526585",
+    "Flags": 131072,
+    "Sequence": 200,
+    "TakerPays": {
+        "currency": "JPY",
+        "value": "3450.639941701972",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "BookDirectory": "11EEBF7DFC0076D299322039F1493C921CAAEFE85B322E5D500B177144FD2000",
+    "LedgerEntryType": "Offer",
+    "BookNode": "0000000000000000"
+}
+---------------------------------------------------------------
+Offer Executed
+---------------------------------------------------------------
+Get/Pay: XRP/JPY
+Ask:     31.228192
+Paid:    -218.612958096/JPY/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
+Got:     -7.0005/XRP
+---------------------------------------------------------------
+{
+    "Account": "r9UHF94PhXd2D8Brx2unDkm66L1k1VU9MX",
+    "FinalFields": {
+        "TakerPays": {
+            "currency": "JPY",
+            "value": "24045.379943984",
+            "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+        },
+        "TakerGets": "769989500"
+    },
+    "PreviousTxnLgrSeq": 30767204,
+    "OwnerNode": "0000000000000000",
+    "index": "3A6BCFFF668134F30E1417158F0EA96B5722F6C156859FEE6BC663E9E681C706",
+    "PreviousTxnID": "21DE36343CE711AAA049513A89D2DAD977DB4880646AED6141F8405B7B8753FB",
+    "TakerGets": "776990000",
+    "Flags": 131072,
+    "Sequence": 4,
+    "TakerPays": {
+        "currency": "JPY",
+        "value": "24263.99290208",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "BookDirectory": "11EEBF7DFC0076D299322039F1493C921CAAEFE85B322E5D500B1830011D2000",
+    "LedgerEntryType": "Offer",
+    "BookNode": "0000000000000000"
+}
+---------------------------------------------------------------
+Offer Executed
+---------------------------------------------------------------
+Get/Pay: RJP/XRP
+Ask:     1075.2688172043
+Paid:    -107.526881/XRP
+Got:     -0.1/RJP/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
+---------------------------------------------------------------
+{
+    "Account": "rLjDNH9g1AajRT2pxALZmwesd64p4x9XZJ",
+    "FinalFields": {
+        "TakerPays": "612596215",
+        "TakerGets": {
+            "currency": "RJP",
+            "value": "0.5697144792549085",
+            "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+        }
+    },
+    "PreviousTxnLgrSeq": 30765314,
+    "OwnerNode": "0000000000000CDC",
+    "index": "4C2D8782229049FA37E92F7D341B14D9F842616F50EA9ECC2E5B5522D98A38FA",
+    "PreviousTxnID": "52E225E0F34C78BCE73D1EA8DF6DEEECAB41F7633AF87D82B1B3E236F509436C",
+    "TakerGets": {
+        "currency": "RJP",
+        "value": "0.6697144792549085",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "Flags": 0,
+    "Sequence": 192736,
+    "TakerPays": "720123096",
+    "BookDirectory": "7035F45D0D6677B54720F2A9CBD0EA1155313D0F038A9E5B5E03D1F387E3344C",
+    "LedgerEntryType": "Offer",
+    "BookNode": "0000000000000000"
+}
+****END TX****
+
+
+
+
+6 26, 2017 12:56:20 午前 com.mbcu.mmm.sequences.Common lambda$0
+FINER: {"engine_result":"tesSUCCESS","engine_result_code":0,"engine_result_message":"The transaction was applied. Only final in a validated ledger.","ledger_hash":"7E26A57D94B38EAE8DB2F8B332A0F1BA2864262232CB2A4E575A4398DBD13250","ledger_index":30768126,"meta":{"AffectedNodes":[{"DeletedNode":{"FinalFields":{"ExchangeRate":"500B177144FD2000","Flags":0,"RootIndex":"11EEBF7DFC0076D299322039F1493C921CAAEFE85B322E5D500B177144FD2000","TakerGetsCurrency":"0000000000000000000000000000000000000000","TakerGetsIssuer":"0000000000000000000000000000000000000000","TakerPaysCurrency":"0000000000000000000000004A50590000000000","TakerPaysIssuer":"6F2531F2B8CDB96D6D986D9D75CC0156DF2C5387"},"LedgerEntryType":"DirectoryNode","LedgerIndex":"11EEBF7DFC0076D299322039F1493C921CAAEFE85B322E5D500B177144FD2000"}},{"ModifiedNode":{"FinalFields":{"Flags":0,"Owner":"rQ3gug9hNAAh6fJ3MEiH5hKXcD5waDjPYn","RootIndex":"1A51DC9C8017DF2D5F3153A2B426701A514C1AD10A7F542AD31589292F6805DC"},"LedgerEntryType":"DirectoryNode","LedgerIndex":"1A51DC9C8017DF2D5F3153A2B426701A514C1AD10A7F542AD31589292F6805DC"}},{"ModifiedNode":{"FinalFields":{"Balance":{"currency":"JPY","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"7162.620927333978"},"Flags":1114112,"HighLimit":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"},"HighNode":"0000000000000399","LowLimit":{"currency":"JPY","issuer":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","value":"100000"},"LowNode":"0000000000000001"},"LedgerEntryType":"RippleState","LedgerIndex":"21110D01A36A7EB20188B11D685B847322DE631145C31803E1760550FA399BAD","PreviousFields":{"Balance":{"currency":"JPY","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"10526.38159339581"}},"PreviousTxnID":"47B4F8DD0DE3D49AA47196C1CE6DB50231B90EA34A7D720F3AAE9CCE956624E9","PreviousTxnLgrSeq":30764869}},{"ModifiedNode":{"FinalFields":{"Account":"r9UHF94PhXd2D8Brx2unDkm66L1k1VU9MX","BookDirectory":"11EEBF7DFC0076D299322039F1493C921CAAEFE85B322E5D500B1830011D2000","BookNode":"0000000000000000","Flags":131072,"OwnerNode":"0000000000000000","Sequence":4,"TakerGets":"769989500","TakerPays":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"24045.379943984"}},"LedgerEntryType":"Offer","LedgerIndex":"3A6BCFFF668134F30E1417158F0EA96B5722F6C156859FEE6BC663E9E681C706","PreviousFields":{"TakerGets":"776990000","TakerPays":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"24263.99290208"}},"PreviousTxnID":"21DE36343CE711AAA049513A89D2DAD977DB4880646AED6141F8405B7B8753FB","PreviousTxnLgrSeq":30767204}},{"ModifiedNode":{"FinalFields":{"Balance":{"currency":"RJP","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"4.975721472777413"},"Flags":1114112,"HighLimit":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"},"HighNode":"00000000000003FB","LowLimit":{"currency":"RJP","issuer":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","value":"10000"},"LowNode":"0000000000000006","LowQualityIn":1000000000},"LedgerEntryType":"RippleState","LedgerIndex":"4A8FE98984B510E3F0223CB8C9110FA370EC545BCD6CE6863C8405E5BC360423","PreviousFields":{"Balance":{"currency":"RJP","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"4.875721472777413"}},"PreviousTxnID":"47B4F8DD0DE3D49AA47196C1CE6DB50231B90EA34A7D720F3AAE9CCE956624E9","PreviousTxnLgrSeq":30764869}},{"ModifiedNode":{"FinalFields":{"Account":"rLjDNH9g1AajRT2pxALZmwesd64p4x9XZJ","BookDirectory":"7035F45D0D6677B54720F2A9CBD0EA1155313D0F038A9E5B5E03D1F387E3344C","BookNode":"0000000000000000","Flags":0,"OwnerNode":"0000000000000CDC","Sequence":192736,"TakerGets":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0.5697144792549085"},"TakerPays":"612596215"},"LedgerEntryType":"Offer","LedgerIndex":"4C2D8782229049FA37E92F7D341B14D9F842616F50EA9ECC2E5B5522D98A38FA","PreviousFields":{"TakerGets":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0.6697144792549085"},"TakerPays":"720123096"},"PreviousTxnID":"52E225E0F34C78BCE73D1EA8DF6DEEECAB41F7633AF87D82B1B3E236F509436C","PreviousTxnLgrSeq":30765314}},{"ModifiedNode":{"FinalFields":{"Account":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","Balance":"6061125085","Flags":0,"OwnerCount":9,"Sequence":4760},"LedgerEntryType":"AccountRoot","LedgerIndex":"72A59CDF8FFBF65C20D01D3A3D5DA5BAE3158A3881E7AEE525A01B1CC73D32DD","PreviousFields":{"Balance":"6061125097","Sequence":4759},"PreviousTxnID":"47B4F8DD0DE3D49AA47196C1CE6DB50231B90EA34A7D720F3AAE9CCE956624E9","PreviousTxnLgrSeq":30764869}},{"ModifiedNode":{"FinalFields":{"Balance":{"currency":"JPY","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"218.612958096"},"Flags":1114112,"HighLimit":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"},"HighNode":"00000000000003B2","LowLimit":{"currency":"JPY","issuer":"r9UHF94PhXd2D8Brx2unDkm66L1k1VU9MX","value":"10000000000"},"LowNode":"0000000000000000"},"LedgerEntryType":"RippleState","LedgerIndex":"782CFE827433870C962B68361694B46F16E8103E2426D5A22C175D022AC24A5A","PreviousFields":{"Balance":{"currency":"JPY","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"0"}},"PreviousTxnID":"EFA024BF467F6820B415375B90F7406EFDF94A0931011412E19E5A690FFD6452","PreviousTxnLgrSeq":30327983}},{"ModifiedNode":{"FinalFields":{"Account":"r9UHF94PhXd2D8Brx2unDkm66L1k1VU9MX","Balance":"769999452","Flags":0,"OwnerCount":3,"Sequence":5},"LedgerEntryType":"AccountRoot","LedgerIndex":"7A0189A36D23F738EFEC66D263F4732621166C49D1D78930A5D6B57B5A3E67FF","PreviousFields":{"Balance":"776999952"},"PreviousTxnID":"21DE36343CE711AAA049513A89D2DAD977DB4880646AED6141F8405B7B8753FB","PreviousTxnLgrSeq":30767204}},{"ModifiedNode":{"FinalFields":{"Account":"rLjDNH9g1AajRT2pxALZmwesd64p4x9XZJ","Balance":"1858641691762","Flags":0,"OwnerCount":1327,"Sequence":198373},"LedgerEntryType":"AccountRoot","LedgerIndex":"7F28475BBAE8E0654C4D4C876DFBF7A3C40DEFEB6DF2F4C301F7F7F3514F255F","PreviousFields":{"Balance":"1858534164881"},"PreviousTxnID":"6D96FEBEA71A2DE2BE6DB858A6C931F923B54308190AD91918F32873B45941AF","PreviousTxnLgrSeq":30767983}},{"DeletedNode":{"FinalFields":{"Account":"rQ3gug9hNAAh6fJ3MEiH5hKXcD5waDjPYn","BookDirectory":"11EEBF7DFC0076D299322039F1493C921CAAEFE85B322E5D500B177144FD2000","BookNode":"0000000000000000","Flags":131072,"OwnerNode":"0000000000000000","PreviousTxnID":"3419A7EB155D1B7548061FCFFCCEE6B631B574E54D9337DA9D52EBCA2A35DC06","PreviousTxnLgrSeq":30767981,"Sequence":200,"TakerGets":"10000204","TakerPays":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"312.206326881972"}},"LedgerEntryType":"Offer","LedgerIndex":"9BD0FEE5E2A22CD7490A8804F07F658DDD7130867BB01E6E7AA3E7A8DA1F3F1A","PreviousFields":{"TakerGets":"110526585","TakerPays":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"3450.639941701972"}}}},{"ModifiedNode":{"FinalFields":{"Balance":{"currency":"JPY","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"-125739.9786384977"},"Flags":2228224,"HighLimit":{"currency":"JPY","issuer":"rQ3gug9hNAAh6fJ3MEiH5hKXcD5waDjPYn","value":"10000000000"},"HighNode":"0000000000000000","LowLimit":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"},"LowNode":"00000000000003F0"},"LedgerEntryType":"RippleState","LedgerIndex":"B67D273B740DA83B301A0FCA2356DB5B7FC22CB9255065E41E3B339E6248DAB0","PreviousFields":{"Balance":{"currency":"JPY","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"-122601.5450236777"}},"PreviousTxnID":"3419A7EB155D1B7548061FCFFCCEE6B631B574E54D9337DA9D52EBCA2A35DC06","PreviousTxnLgrSeq":30767981}},{"ModifiedNode":{"FinalFields":{"Account":"rQ3gug9hNAAh6fJ3MEiH5hKXcD5waDjPYn","Balance":"155000000","Flags":0,"OwnerCount":26,"Sequence":201},"LedgerEntryType":"AccountRoot","LedgerIndex":"C6833F3D70E9A4E6F99E1714891DFB40D4239916BD6E6024CA3C1DB18EE4C833","PreviousFields":{"Balance":"255526381","OwnerCount":27},"PreviousTxnID":"3419A7EB155D1B7548061FCFFCCEE6B631B574E54D9337DA9D52EBCA2A35DC06","PreviousTxnLgrSeq":30767981}},{"ModifiedNode":{"FinalFields":{"Balance":{"currency":"RJP","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"-257.0889970283234"},"Flags":2228224,"HighLimit":{"currency":"RJP","issuer":"rLjDNH9g1AajRT2pxALZmwesd64p4x9XZJ","value":"10000000000"},"HighNode":"0000000000000009","LowLimit":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0"},"LowNode":"0000000000000012"},"LedgerEntryType":"RippleState","LedgerIndex":"FAE9C113C6BAFF7BAD167E5D3B88F4DA967EC1E33FBB48CC0611B7E050FFA231","PreviousFields":{"Balance":{"currency":"RJP","issuer":"rrrrrrrrrrrrrrrrrrrrBZbvji","value":"-257.1891970283233"}},"PreviousTxnID":"52E225E0F34C78BCE73D1EA8DF6DEEECAB41F7633AF87D82B1B3E236F509436C","PreviousTxnLgrSeq":30765314}}],"TransactionIndex":3,"TransactionResult":"tesSUCCESS"},"status":"closed","transaction":{"Account":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","Fee":"12","Flags":2147483648,"LastLedgerSequence":30768128,"Memos":[{"Memo":{"MemoData":"726D2D312E322E33","MemoType":"636C69656E74"}}],"Sequence":4759,"SigningPubKey":"02E2F1208D1715E18B0957FC819546FA7434B4A19EE38321932D2ED28FA090678E","TakerGets":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"3360"},"TakerPays":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0.1"},"TransactionType":"OfferCreate","TxnSignature":"3045022100CF787F9A5E5A6B0B5851B30B45AD8E012DA65506FB39CC5415025BCDE09E3EB6022009E132ED6F3BB2A42BF1F9505E3994037DD3D174CCFC526DC154BBFC64135188","date":551721381,"hash":"F74753ABE6A1115287803143C27CC320D0604D553981FD19827B6ACDD25D87BC","owner_funds":"7162.620927333978"},"type":"transaction","validated":true}
+
+****NEW TX****
+---------------------------------------------------------------
+OfferCreate
+---------------------------------------------------------------
+{
+    "TakerPays": {
+        "currency": "JPY",
+        "value": "3260",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "Account": "raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf",
+    "TransactionType": "OfferCreate",
+    "TxnSignature": "3045022100A0CA9AB6FED1A586D1D3DB4E89917F76B3027D34459072A9225208D97DA8CF51022064BB3870D8D34BFB6FD66E6539F4FC4F7E59190E76383555BD6D99DE1509250A",
+    "Memos": [{"Memo": {
+        "MemoType": "636C69656E74",
+        "MemoData": "726D2D312E322E33"
+    }}],
+    "SigningPubKey": "02E2F1208D1715E18B0957FC819546FA7434B4A19EE38321932D2ED28FA090678E",
+    "Fee": "12",
+    "TakerGets": {
+        "currency": "RJP",
+        "value": "0.1",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "Flags": 2148007936,
+    "Sequence": 4760,
+    "LastLedgerSequence": 30768426,
+    "hash": "33DCF66ED1F8686A172A116E54E05ADEE74BCE4929A40CFC323A45218856F17A"
+}
+---------------------------------------------------------------
+Offer Created
+---------------------------------------------------------------
+Get/Pay:    RJP/JPY
+Bid:        0.00003067484662576687116564417177914110
+TakerPays:  3260/JPY/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
+TakerGets:  0.1/RJP/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
+---------------------------------------------------------------
+{
+    "TakerPays": {
+        "currency": "JPY",
+        "value": "3260",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "Account": "raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf",
+    "BookDirectory": "DCAAC0CDAC8DA851AC8E225CA9ED9305CB4BBE7E4E255AB3590B94F3E5F7C000",
+    "LedgerEntryType": "Offer",
+    "OwnerNode": "000000000000000F",
+    "index": "9DB0B8F71858A62C677B34D96EC98F766AEDFE97DEC01C09B74FA302ED4B11CB",
+    "TakerGets": {
+        "currency": "RJP",
+        "value": "0.1",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+    "Flags": 131072,
+    "Sequence": 4760
+}
+****END TX****
+
+
+
+
+6 26, 2017 1:13:24 午前 com.mbcu.mmm.sequences.Common lambda$0
+FINER: {"engine_result":"tesSUCCESS","engine_result_code":0,"engine_result_message":"The transaction was applied. Only final in a validated ledger.","ledger_hash":"D589C36DCA09E748F354F5D082B3DD6D3B0D90D85D1F1D1C088C7EB1ED5FD786","ledger_index":30768423,"meta":{"AffectedNodes":[{"ModifiedNode":{"FinalFields":{"Account":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","Balance":"6061125073","Flags":0,"OwnerCount":10,"Sequence":4761},"LedgerEntryType":"AccountRoot","LedgerIndex":"72A59CDF8FFBF65C20D01D3A3D5DA5BAE3158A3881E7AEE525A01B1CC73D32DD","PreviousFields":{"Balance":"6061125085","OwnerCount":9,"Sequence":4760},"PreviousTxnID":"F74753ABE6A1115287803143C27CC320D0604D553981FD19827B6ACDD25D87BC","PreviousTxnLgrSeq":30768126}},{"ModifiedNode":{"FinalFields":{"Flags":0,"IndexPrevious":"0000000000000006","Owner":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","RootIndex":"C5383B94DDE4BE2A184757D80837080C4D1EAB80789FE39F7D7AECFB0D0304BB"},"LedgerEntryType":"DirectoryNode","LedgerIndex":"91565E4F1A8282718C8D6ED8EFEE2B5DC18101FC76D0AE436F46194F4567EF5E"}},{"CreatedNode":{"LedgerEntryType":"Offer","LedgerIndex":"9DB0B8F71858A62C677B34D96EC98F766AEDFE97DEC01C09B74FA302ED4B11CB","NewFields":{"Account":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","BookDirectory":"DCAAC0CDAC8DA851AC8E225CA9ED9305CB4BBE7E4E255AB3590B94F3E5F7C000","Flags":131072,"OwnerNode":"000000000000000F","Sequence":4760,"TakerGets":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0.1"},"TakerPays":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"3260"}}}},{"CreatedNode":{"LedgerEntryType":"DirectoryNode","LedgerIndex":"DCAAC0CDAC8DA851AC8E225CA9ED9305CB4BBE7E4E255AB3590B94F3E5F7C000","NewFields":{"ExchangeRate":"590B94F3E5F7C000","RootIndex":"DCAAC0CDAC8DA851AC8E225CA9ED9305CB4BBE7E4E255AB3590B94F3E5F7C000","TakerGetsCurrency":"000000000000000000000000524A500000000000","TakerGetsIssuer":"6F2531F2B8CDB96D6D986D9D75CC0156DF2C5387","TakerPaysCurrency":"0000000000000000000000004A50590000000000","TakerPaysIssuer":"6F2531F2B8CDB96D6D986D9D75CC0156DF2C5387"}}}],"TransactionIndex":18,"TransactionResult":"tesSUCCESS"},"status":"closed","transaction":{"Account":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","Fee":"12","Flags":2148007936,"LastLedgerSequence":30768426,"Memos":[{"Memo":{"MemoData":"726D2D312E322E33","MemoType":"636C69656E74"}}],"Sequence":4760,"SigningPubKey":"02E2F1208D1715E18B0957FC819546FA7434B4A19EE38321932D2ED28FA090678E","TakerGets":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0.1"},"TakerPays":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"3260"},"TransactionType":"OfferCreate","TxnSignature":"3045022100A0CA9AB6FED1A586D1D3DB4E89917F76B3027D34459072A9225208D97DA8CF51022064BB3870D8D34BFB6FD66E6539F4FC4F7E59190E76383555BD6D99DE1509250A","date":551722402,"hash":"33DCF66ED1F8686A172A116E54E05ADEE74BCE4929A40CFC323A45218856F17A","owner_funds":"4.975721472777413"},"type":"transaction","validated":true}
+
+6 26, 2017 1:13:34 午前 com.mbcu.mmm.sequences.Common lambda$0
+FINER: {"engine_result":"tesSUCCESS","engine_result_code":0,"engine_result_message":"The transaction was applied. Only final in a validated ledger.","ledger_hash":"0C17904F7C94170FF60F3E761F477B32388D524C7D21446150FE9153F14A396C","ledger_index":30768426,"meta":{"AffectedNodes":[{"ModifiedNode":{"FinalFields":{"Account":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","Balance":"6061125061","Flags":0,"OwnerCount":9,"Sequence":4762},"LedgerEntryType":"AccountRoot","LedgerIndex":"72A59CDF8FFBF65C20D01D3A3D5DA5BAE3158A3881E7AEE525A01B1CC73D32DD","PreviousFields":{"Balance":"6061125073","OwnerCount":10,"Sequence":4761},"PreviousTxnID":"33DCF66ED1F8686A172A116E54E05ADEE74BCE4929A40CFC323A45218856F17A","PreviousTxnLgrSeq":30768423}},{"ModifiedNode":{"FinalFields":{"Flags":0,"IndexPrevious":"0000000000000006","Owner":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","RootIndex":"C5383B94DDE4BE2A184757D80837080C4D1EAB80789FE39F7D7AECFB0D0304BB"},"LedgerEntryType":"DirectoryNode","LedgerIndex":"91565E4F1A8282718C8D6ED8EFEE2B5DC18101FC76D0AE436F46194F4567EF5E"}},{"DeletedNode":{"FinalFields":{"Account":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","BookDirectory":"DCAAC0CDAC8DA851AC8E225CA9ED9305CB4BBE7E4E255AB3590B94F3E5F7C000","BookNode":"0000000000000000","Flags":131072,"OwnerNode":"000000000000000F","PreviousTxnID":"33DCF66ED1F8686A172A116E54E05ADEE74BCE4929A40CFC323A45218856F17A","PreviousTxnLgrSeq":30768423,"Sequence":4760,"TakerGets":{"currency":"RJP","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"0.1"},"TakerPays":{"currency":"JPY","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"3260"}},"LedgerEntryType":"Offer","LedgerIndex":"9DB0B8F71858A62C677B34D96EC98F766AEDFE97DEC01C09B74FA302ED4B11CB"}},{"DeletedNode":{"FinalFields":{"ExchangeRate":"590B94F3E5F7C000","Flags":0,"RootIndex":"DCAAC0CDAC8DA851AC8E225CA9ED9305CB4BBE7E4E255AB3590B94F3E5F7C000","TakerGetsCurrency":"000000000000000000000000524A500000000000","TakerGetsIssuer":"6F2531F2B8CDB96D6D986D9D75CC0156DF2C5387","TakerPaysCurrency":"0000000000000000000000004A50590000000000","TakerPaysIssuer":"6F2531F2B8CDB96D6D986D9D75CC0156DF2C5387"},"LedgerEntryType":"DirectoryNode","LedgerIndex":"DCAAC0CDAC8DA851AC8E225CA9ED9305CB4BBE7E4E255AB3590B94F3E5F7C000"}}],"TransactionIndex":33,"TransactionResult":"tesSUCCESS"},"status":"closed","transaction":{"Account":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","Fee":"12","Flags":2147483648,"LastLedgerSequence":30768429,"Memos":[{"Memo":{"MemoData":"726D2D312E322E33","MemoType":"636C69656E74"}}],"OfferSequence":4760,"Sequence":4761,"SigningPubKey":"02E2F1208D1715E18B0957FC819546FA7434B4A19EE38321932D2ED28FA090678E","TransactionType":"OfferCancel","TxnSignature":"304402201FEB825F9EBEB08AB28143124677D105D1EBDA56792EB504D0F35594D9FB8E4602205C45EB9C598D45AB2B94A9BA07B85A2185306690F9C4474D7B898C842F2DFF3F","date":551722412,"hash":"5085FE3B435181463DB9EB2F8F3E6D54D6238F295642EA5CE69FDED75D80A539"},"type":"transaction","validated":true}
+

@@ -1,0 +1,86 @@
+        // Offer
+        else if (node.entryType === "Offer") {
+
+          // For new and cancelled offers we use "fields"
+          var fieldSet = node.fields;
+
+          // Flags
+          if (node.fields.Flags) {
+            effect.flags = node.fields.Flags;
+            effect.sell = node.fields.Flags & ripple.Remote.flags.offer.Sell;
+          }
+
+          // Current account offer
+          if (node.fields.Account === account) {
+
+            // Partially funded offer [and deleted.. no more funds]
+            /* Offer has been partially funded and deleted (because of the luck of funds)
+             if the node is deleted and the TakerGets/TakerPays field has been changed */
+            if (node.diffType === "ModifiedNode" ||
+                (node.diffType === "DeletedNode"
+                    && node.fieldsPrev.TakerGets
+                    && !ripple.Amount.from_json(node.fieldsFinal.TakerGets).is_zero())) {
+              effect.type = 'offer_partially_funded';
+
+              if (node.diffType !== "DeletedNode") {
+                effect.remaining = effect.sell ?
+                  ripple.Amount.from_json(node.fields.TakerGets) :
+                  ripple.Amount.from_json(node.fields.TakerPays) ;
+              }
+              else {
+                effect.cancelled = true;
+              }
+            }
+            else {
+              // New / Funded / Cancelled offer
+              effect.type = node.diffType === "CreatedNode"
+                  ? 'offer_created'
+                  : node.fieldsPrev.TakerPays
+                  ? 'offer_funded'
+                  : 'offer_cancelled';
+
+              // For funded offers we use "fieldsPrev".
+              if (effect.type === 'offer_funded')
+                fieldSet = node.fieldsPrev;
+
+              // We don't count cancelling an offer as a side effect if it's
+              // already the primary effect of the transaction.
+              if (effect.type === 'offer_cancelled' &&
+                  obj.transaction &&
+                  obj.transaction.type === "offercancel") {
+
+                // Fill in remaining information about offer
+                obj.transaction.gets = ripple.Amount.from_json(fieldSet.TakerGets);
+                obj.transaction.pays = ripple.Amount.from_json(fieldSet.TakerPays);
+                obj.transaction.sell = effect.sell;
+                obj.transaction.price = getPrice(obj.transaction, tx.date);
+              }
+            }
+
+            effect.expiration = +node.fields.Expiration;
+            effect.seq = +node.fields.Sequence;
+          }
+
+          // Another account offer. We care about it only if our transaction changed the offer amount (we bought currency)
+          else if(tx.Account === account && !isEmptyObject(node.fieldsPrev) /* Offer is unfunded if node.fieldsPrev is empty */) {
+            effect.type = 'offer_bought';
+            if (obj.transaction && obj.transaction.type == 'offernew') {
+              effect.ownSell = obj.transaction.sell;
+              effect.sell = !obj.transaction.sell;
+            }
+          }
+
+          if (effect.type) {
+            effect.gets = ripple.Amount.from_json(fieldSet.TakerGets);
+            effect.pays = ripple.Amount.from_json(fieldSet.TakerPays);
+
+            if ('offer_partially_funded' === effect.type || 'offer_bought' === effect.type) {
+              effect.got = ripple.Amount.from_json(node.fieldsPrev.TakerGets).subtract(node.fields.TakerGets);
+              effect.paid = ripple.Amount.from_json(node.fieldsPrev.TakerPays).subtract(node.fields.TakerPays);
+            }
+          }
+
+          if (effect.gets && effect.pays) {
+            effect.price = getPrice(effect, tx.date);
+          }
+        }

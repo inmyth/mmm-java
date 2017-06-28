@@ -1,0 +1,27 @@
+{
+	"net": "wss://s1.ripple.com",
+	"credentials": {
+		"address": "WALLET ADDRESS",
+		"secret": "SECRET KEY"
+	},
+	"bots": [
+	   	{
+			"pair": "XRP/JPY.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
+			"startMiddlePrice": 31.75,
+			"gridSpace": 0.05,
+			"buyGridLevels": 10,
+			"sellGridLevels": 9,
+			"buyOrderQuantity": 2,
+			"sellOrderQuantity": 1.9
+		},
+		{
+			"pair": "XRP/USD.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
+			"startMiddlePrice": 0.2575,
+			"gridSpace": 0.005,
+			"buyGridLevels": 10,
+			"sellGridLevels": 9,
+			"buyOrderQuantity": 2,
+			"sellOrderQuantity": 1.9
+		}
+	]
+}
