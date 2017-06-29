@@ -188,7 +188,7 @@ public class WebSocketClient {
 	}
 
 	private void initBus(){
-		bus.asFlowable().subscribe(o -> {
+		bus.toObservable().subscribe(o -> {
 			if (o instanceof Events.WSRequestSendText){
 				WSRequestSendText event = (WSRequestSendText) o;
 				ws.sendText(event.request);		

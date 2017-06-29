@@ -1,15 +1,15 @@
 package com.mbcu.mmm.rx;
 
-import io.reactivex.BackpressureStrategy;
-import io.reactivex.Flowable;
+import com.jakewharton.rxrelay2.PublishRelay;
+import com.jakewharton.rxrelay2.Relay;
+
 import io.reactivex.Observable;
-import io.reactivex.subjects.PublishSubject;
 
 public final class RxBus {
-	private final PublishSubject<Object> bus = PublishSubject.create();
+	private final Relay<Object> bus = PublishRelay.create().toSerialized();
 
-	public void send(final Object event) {
-		bus.onNext(event);
+	public void send(Object event) {
+		bus.accept(event);
 	}
 
 	public Observable<Object> toObservable() {
@@ -19,11 +19,5 @@ public final class RxBus {
 	public boolean hasObservers() {
 		return bus.hasObservers();
 	}
-	
-
-  public Flowable<Object> asFlowable() {
-    return bus.toFlowable(BackpressureStrategy.LATEST);
-  }
-
 
 }

@@ -1169,6 +1169,7 @@ Bid:        0.00003138731952291273679549973308637078
 TakerPays:  3075.421551039386/JPY/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
 TakerGets:  0.09652923889012509/RJP/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
 ---------------------------------------------------------------
+
 {
     "TakerPays": {
         "currency": "JPY",
@@ -1197,6 +1198,7 @@ Ask:     0.0009699972589844161
 Paid:    -0.0002121878704001/RJP/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
 Got:     -0.218751/XRP
 ---------------------------------------------------------------
+
 {
     "Account": "rLjDNH9g1AajRT2pxALZmwesd64p4x9XZJ",
     "FinalFields": {
@@ -1230,6 +1232,11 @@ Get/Pay: XRP/RJP
 Ask:     0.0009699999581689857
 Paid:    -0.00325857323947481/RJP/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
 Got:     -3.359354/XRP
+
+    sold 0.00325857 RJP.MrRipple at price 1,030.92 XRP
+    sold 0.000212187 RJP.MrRipple at price 1,030.93 XRP
+    sold 3.57810 XRP at price 30.9073 JPY.MrRipple
+    placed new order selling 0.0965292 RJP.MrRipple at price 31,860.0 JPY.MrRipple 
 ---------------------------------------------------------------
 {
     "Account": "rLjDNH9g1AajRT2pxALZmwesd64p4x9XZJ",

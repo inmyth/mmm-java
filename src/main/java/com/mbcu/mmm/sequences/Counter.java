@@ -48,7 +48,7 @@ public class Counter extends Base {
 
 
 
-		bus.asFlowable().subscribe(o -> {
+		bus.toObservable().subscribe(o -> {
 			if (o instanceof Events.WSConnected) {
 
 			} else if (o instanceof Events.WSGotText) {
