@@ -1,8 +1,8 @@
 package com.mbcu.mmm.models.request;
 
-import com.mbcu.mmm.utils.GsonUtils;
+import com.mbcu.mmm.models.Base;
 
-public class Request {
+public class Request extends Base{
 
 	public enum Command {
 		SUBSCRIBE("subscribe"), SUBMIT("submit");
@@ -24,8 +24,6 @@ public class Request {
 		this.command = command.text;
 	}
 
-	protected String stringify(Object object) {
-		return GsonUtils.toJson(object);
-	}
+
 
 }

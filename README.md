@@ -22,7 +22,8 @@ TODOS
 - (offer-executed-bridged.txt) see executed offer response
 - (done see notes/autobridge.txt) get response for autobridge
 - build parser to find previous tx by hash
-- parser returns currency pair, rate, quantity, and tx hash. 
+- (canceled) parser returns currency pair, rate, quantity, and tx hash. 
+- filter returns onEdited, onCanceled, onNewOrder, onOffersConsumed
 - the hash replaces previous hash (partial take, full take, cancel) or insert new (create new)
 - partial take and reduces current offer in orderbook. Edit changes an order. Cancel and Full Take removes an order. 
 - autobridge tx should result in original rate. (Autobridge guarantees that the rate on orderbook will never change)

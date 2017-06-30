@@ -1,5 +1,7 @@
 package com.mbcu.mmm.main;
 
+import com.ripple.core.coretypes.hash.Hash256;
+
 public class Events {
 
 	public static class WSConnected {
@@ -36,5 +38,21 @@ public class Events {
 			this.request = request;
 		}
 
+	}
+	
+	public static class OnResponseOrderCancel {
+		public Hash256 previousTxnId;
+		
+		public OnResponseOrderCancel(Hash256 previousTxnId){
+			this.previousTxnId = previousTxnId;
+		}		
+	}
+	
+	public static class OnResponseNewOrderCreated {
+		
+	}
+	
+	public static class onResponseOrderEdited {
+		
 	}
 }
