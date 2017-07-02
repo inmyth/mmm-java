@@ -2,10 +2,13 @@ package com.mbcu.mmm.models.internal;
 
 import org.parceler.Parcel;
 
+import com.google.gson.annotations.Expose;
+
 @Parcel
 public class Credentials {
 
-	String address, secret;
+	String address;	
+	String secret;
 
 	public Credentials() {
 		// TODO Auto-generated constructor stub

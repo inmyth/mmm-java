@@ -3,6 +3,7 @@ package com.mbcu.mmm.models.internal;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import com.google.gson.annotations.Expose;
 import com.mbcu.mmm.models.Asset;
 
 public class BotConfig {
@@ -10,17 +11,19 @@ public class BotConfig {
 	String pair;
 	float startMiddlePrice;
 	float gridSpace;
-	int buyGridLevels, sellGridLevels;
-	float buyOrderQuantity, sellOrderQuantity;
-	transient Currency base;
-	transient Currency quote;
+	int buyGridLevels;
+	int sellGridLevels;
+	float buyOrderQuantity;
+	float sellOrderQuantity;	
+	transient NameIssuer base;
+	transient NameIssuer quote;
 
 	public static HashMap<String, BotConfig> buildMap(ArrayList<BotConfig> bots)  {
 		HashMap<String, BotConfig> res = new HashMap<>();
 		for (BotConfig bot : bots) {
 			String[] pair = buildBaseAndQuote(bot.getPair());
-			Currency base = buildCurrencyAndIssuer(pair[0]);
-			Currency quote = buildCurrencyAndIssuer(pair[1]);
+			NameIssuer base = buildCurrencyAndIssuer(pair[0]);
+			NameIssuer quote = buildCurrencyAndIssuer(pair[1]);
 			bot.setBase(base);
 			bot.setQuote(quote);
 			res.put(bot.getPair(), bot);
@@ -30,7 +33,7 @@ public class BotConfig {
 	
 	
 
-	public static Currency buildCurrencyAndIssuer(String part) throws IllegalArgumentException {
+	public static NameIssuer buildCurrencyAndIssuer(String part) throws IllegalArgumentException {	
 		String currency = null;
 		String issuer = null;
 		String[] b = part.split("[.]");
@@ -42,7 +45,7 @@ public class BotConfig {
 				issuer = b[1];
 			}
 		}
-		return new Currency(currency, issuer);
+		return new NameIssuer(currency, issuer);
 	}
 
 	public static String[] buildBaseAndQuote(String pair) {
@@ -105,20 +108,39 @@ public class BotConfig {
 		this.sellOrderQuantity = sellOrderQuantity;
 	}
 
-	public Currency getBase() {
+	public NameIssuer getBase() {
 		return base;
 	}
 
-	public void setBase(Currency base) {
+	public void setBase(NameIssuer base) {
 		this.base = base;
 	}
 
-	public Currency getQuote() {
+	public NameIssuer getQuote() {
 		return quote;
 	}
 
-	public void setQuote(Currency quote) {
+	public void setQuote(NameIssuer quote) {
 		this.quote = quote;
 	}
+	
+	public static class NameIssuer {
+		
+		
+		@Expose
+		String currency;
+		@Expose
+		transient String issuer;
+		
+		public NameIssuer(String currency, String issuer) {
+			super();
+			this.currency = currency;
+			this.issuer = issuer;
+		}
+		
+		
+
+	}
+
 
 }

@@ -3,13 +3,13 @@ package com.mbcu.mmm.models.internal;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
-import com.google.gson.reflect.TypeToken;
+import com.google.gson.annotations.Expose;
 import com.mbcu.mmm.utils.GsonUtils;
 import com.mbcu.mmm.utils.MyUtils;
 
 public class Config {
+	
 	private String net;
 	private Credentials credentials;
 	private transient HashMap<String, BotConfig> botConfigMap;

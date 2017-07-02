@@ -1,9 +1,48 @@
 package com.mbcu.mmm.models.internal;
 
-public class RLAmount {
+import com.google.gson.annotations.Expose;
+import com.ripple.core.coretypes.Amount;
 
-	String currency;
-	transient String counterparty;
-	String value;
+public final class RLAmount {
+	
+	private final String currency;
+	transient private final String counterparty;
+	private final String value;
 
+	@Expose(serialize = false, deserialize = false)
+	transient  private final Amount amount;
+
+	public RLAmount(String currency, String counterparty, String value, Amount amount) {
+		super();
+		this.currency = currency;
+		this.counterparty = counterparty;
+		this.value = value;
+		this.amount = amount;
+	}
+
+	public String getCurrency() {
+		return currency;
+	}
+
+	public String getCounterparty() {
+		return counterparty;
+	}
+
+	public String getValue() {
+		return value;
+	}
+
+	public Amount getAmount() {
+		return amount;
+	}
+	
+	
+
+	
+	public static RLAmount newInstance(Amount amount){
+		String currency = amount.currencyString();
+		String issuer = amount.issuerString();
+		String value = amount.value().toPlainString();	
+		return new RLAmount(currency, issuer, value, amount);		
+	}
 }
