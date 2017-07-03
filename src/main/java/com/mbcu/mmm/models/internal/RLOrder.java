@@ -90,14 +90,17 @@ public final class RLOrder {
 		return res;
 	}
 
-	public static RLOrder fromOfferExecuted(Offer offer) {
+	public static RLOrder fromOfferExecuted(Offer offer, boolean isOwn) {
 		// All OE's paid and got are negative and need to be reversed
-		BigDecimal ask = askFrom(offer);
+		BigDecimal ask = isOwn ? BigDecimal.ONE.divide(askFrom(offer), MathContext.DECIMAL64) : askFrom(offer);
+		
 		STObject executed = offer.executed(offer.get(STObject.FinalFields));
 		Amount paid = executed.get(Amount.TakerPays);
 		Amount got = executed.get(Amount.TakerGets);	
-		RLAmount rlGot = RLAmount.newInstance(new Amount(got.value().multiply(new BigDecimal(-1)), got.currency(), got.issuer()));
-		RLAmount rlPaid = RLAmount.newInstance(new Amount(paid.value().multiply(new BigDecimal(-1)), paid.currency(), paid.issuer()));
+		RLAmount rlGot = isOwn ? RLAmount.newInstance(new Amount(paid.value().multiply(new BigDecimal(-1)), paid.currency(), paid.issuer())) 
+				: RLAmount.newInstance(new Amount(got.value().multiply(new BigDecimal(-1)), got.currency(), got.issuer()));
+		RLAmount rlPaid = isOwn ? RLAmount.newInstance(new Amount(got.value().multiply(new BigDecimal(-1)), got.currency(), got.issuer()))
+				: RLAmount.newInstance(new Amount(paid.value().multiply(new BigDecimal(-1)), paid.currency(), paid.issuer())) ;
 		String pair = buildPair(paid, got);
 
 		RLOrder res = new RLOrder(Direction.BUY, rlGot, rlPaid, ask, pair);

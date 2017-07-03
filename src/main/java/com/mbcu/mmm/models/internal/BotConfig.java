@@ -22,8 +22,8 @@ public class BotConfig {
 		HashMap<String, BotConfig> res = new HashMap<>();
 		for (BotConfig bot : bots) {
 			String[] pair = buildBaseAndQuote(bot.getPair());
-			NameIssuer base = buildCurrencyAndIssuer(pair[0]);
-			NameIssuer quote = buildCurrencyAndIssuer(pair[1]);
+			NameIssuer base = NameIssuer.fromDotForm(pair[0]);
+			NameIssuer quote = NameIssuer.fromDotForm(pair[1]);
 			bot.setBase(base);
 			bot.setQuote(quote);
 			res.put(bot.getPair(), bot);
@@ -31,23 +31,6 @@ public class BotConfig {
 		return res;
 	}
 	
-	
-
-	public static NameIssuer buildCurrencyAndIssuer(String part) throws IllegalArgumentException {	
-		String currency = null;
-		String issuer = null;
-		String[] b = part.split("[.]");
-		if (!b[0].equals(Asset.Currency.XRP.text()) && b.length != 2) {
-			throw new IllegalArgumentException("currency pair not formatted in base.issuer/quote.issuer");
-		} else {
-			currency = b[0];
-			if (b.length == 2) {
-				issuer = b[1];
-			}
-		}
-		return new NameIssuer(currency, issuer);
-	}
-
 	public static String[] buildBaseAndQuote(String pair) {
 		return pair.split("[/]");
 	}
@@ -124,23 +107,7 @@ public class BotConfig {
 		this.quote = quote;
 	}
 	
-	public static class NameIssuer {
-		
-		
-		@Expose
-		String currency;
-		@Expose
-		transient String issuer;
-		
-		public NameIssuer(String currency, String issuer) {
-			super();
-			this.currency = currency;
-			this.issuer = issuer;
-		}
-		
-		
 
-	}
 
 
 }

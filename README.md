@@ -11,6 +11,8 @@ How to use:
 ```
 java -jar mmm.jar <path_to_config>
 ```
+v.004
+- improved parser so OE mimic history text response on wallet app
 
 v.003
 - alpha version of parser
@@ -41,7 +43,7 @@ TODOS
 - the hash replaces previous hash (partial take, full take, cancel) or insert new (create new)
 - partial take and reduces current offer in orderbook. Edit changes an order. Cancel and Full Take removes an order. 
 - (done) autobridge tx should result in original rate. (Autobridge guarantees that the rate on orderbook will never change)
-- payment and OC belonging to others will result in many OEs. Find only those belongong for us
+- payment and OC belonging to others will result in many OEs. Find only those belonging for us
 - our OEs should return FinalFields and hash they modify
 - OC should also return sequence
 - define a class to hold sequence, update and get it concurrently.

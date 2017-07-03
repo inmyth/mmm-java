@@ -88,6 +88,7 @@ public class QualityTest {
 	 * total consumed doesn't raise sequence
 	 * Payments can have multiple same account OEs when it consumes.
 	 * OE contains previousTxnId  
+	 * It's possible to create new OC with more funds than the account has
 	 */ 
 	
 	/*

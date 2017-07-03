@@ -11,6 +11,7 @@ import org.json.JSONObject;
 import com.mbcu.mmm.main.Events;
 import com.mbcu.mmm.main.Events.WSGotText;
 import com.mbcu.mmm.models.internal.Config;
+import com.mbcu.mmm.models.internal.RLOrder;
 import com.mbcu.mmm.models.request.Request.Command;
 import com.mbcu.mmm.models.request.Submit;
 import com.mbcu.mmm.models.request.Subscribe;
@@ -63,6 +64,11 @@ public class Counter extends Base {
 	public static Counter newInstance(Config config) {
 		return new Counter(config);
 
+	}
+	
+	
+	public static RLOrder rawCounter(RLOrder orderExecuted, boolean isOwn){
+		return null;
 	}
 
 

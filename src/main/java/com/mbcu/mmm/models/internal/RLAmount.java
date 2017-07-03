@@ -1,15 +1,12 @@
 package com.mbcu.mmm.models.internal;
 
-import com.google.gson.annotations.Expose;
 import com.ripple.core.coretypes.Amount;
 
 public final class RLAmount {
 	
 	private final String currency;
-	transient private final String counterparty;
+	private final String counterparty;
 	private final String value;
-
-	@Expose(serialize = false, deserialize = false)
 	transient  private final Amount amount;
 
 	public RLAmount(String currency, String counterparty, String value, Amount amount) {

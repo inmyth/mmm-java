@@ -1,6 +1,11 @@
 package com.mbcu.mmm.models.request;
 
 import java.util.ArrayList;
+import java.util.List;
+
+import com.mbcu.mmm.models.internal.BotConfig;
+import com.mbcu.mmm.models.internal.Config;
+import com.mbcu.mmm.models.internal.NameIssuer;
 
 public class Subscribe extends Request {
 
@@ -24,6 +29,7 @@ public class Subscribe extends Request {
 
 	ArrayList<String> accounts;
 	ArrayList<String> streams;
+	ArrayList<Book> books;
 
 	public void addAccount(String account) {
 		if (accounts == null) {
@@ -53,6 +59,32 @@ public class Subscribe extends Request {
 		return this;
 	}
 
+	public Subscribe withOrderbook(NameIssuer takerGets, NameIssuer takerPays){
+		if (this.books == null){
+			this.books = new ArrayList<>();
+		}
+		this.books.add(new Book(takerGets, takerPays));
+		return this;
+	}
+	
+	public Subscribe withOrderbookFromConfig(Config config){
+		config.getBotConfigMap().values().forEach(bot ->{
+			this.withOrderbook(bot.getBase(), bot.getQuote());		
+		});
+		return this;
+	}
+		
+	private static class Book{
+		NameIssuer taker_gets, taker_pays;
+		boolean snapshot = true;
+		boolean both = true;
+		public Book(NameIssuer taker_gets, NameIssuer taker_pays) {
+			super();
+			this.taker_gets = taker_gets;
+			this.taker_pays = taker_pays;
+		}
+	}
+	
 	public String stringify() {
 		return super.stringify(this);
 
