@@ -207,44 +207,32 @@ public class Common extends Base {
 
 		List<RLOrder> process() {
 			List<RLOrder> res = new ArrayList<>();
-			if (map.size() <= 1) {
+			if (map.size() <= 1) { // No Autobridge
 				cache.stream().forEach(oe -> {
 					res.add(RLOrder.fromOfferExecuted(oe, false));
 				});
 				return res;
 			}
 
-			if (cache.size() == 2) {
-				/*
-				 * A case where autobridge pairs to one majority. So we can't
-				 * know which is the bridge transaction. Assuming that all one
-				 * to one response shows up in order sell case: XRP/RJP then
-				 * JPY/XRP (buy JPY sell RJP) buy case: XRP/JPY then RJP/XRP
-				 * (buy RJP sell JPY) then we can force direction buy with
-				 * quantity on the second first element.
-				 */
-				res.add(RLOrder.fromAutobridge(cache.get(1), cache.get(0)));
-				return res;
-			}
+			ArrayList<Offer> majorities = null;
+			ArrayList<Offer> minorities = null;
 
-			ArrayList<Offer> majority = null;
-			Offer bridge = null;
-			for (String pair : map.keySet()) {
-				if (majority == null) {
-					majority = map.get(pair);
-				} else {
-					if (majority.size() < map.get(pair).size()) {
-						bridge = majority.get(0);
-						majority = map.get(pair);
-					} else {
-						bridge = map.get(pair).get(0);
+			for (ArrayList<Offer> offers : map.values()){
+				if (majorities == null && minorities == null){
+					majorities = offers;
+					minorities = offers;
+				}else{
+					if (offers.size() > majorities.size()){
+						majorities = offers;
+					}else{
+						minorities = offers;
 					}
 				}
 			}
-			for (Offer oe : majority) {
-				res.add(RLOrder.fromAutobridge(oe, bridge));
-			}
+
+			res.addAll(RLOrder.fromAutobridge(majorities, minorities));
 			return res;
+			
 		}
 	}
 	

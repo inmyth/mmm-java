@@ -2,6 +2,8 @@ package com.mbcu.mmm.models.internal;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.google.gson.annotations.Expose;
 import com.mbcu.mmm.models.ripple.tx.Order;
@@ -38,7 +40,7 @@ public final class RLOrder {
 	private final boolean fillOrKill;
 
 	private final BigDecimal ask;
-	transient private final String pair;
+    private final String pair;
 
 	public RLOrder(Direction direction, RLAmount quantity, RLAmount totalPrice, BigDecimal ask, String pair) {
 		super();
@@ -106,42 +108,46 @@ public final class RLOrder {
 		RLOrder res = new RLOrder(Direction.BUY, rlGot, rlPaid, ask, pair);
 		return res;
 	}
-
-	public static RLOrder fromAutobridge(Offer oe, Offer bridge){
-		Direction direction;
-		String base, baseIssuer, quote, quoteIssuer;
-		STObject oeExecuted = oe.executed(oe.get(STObject.FinalFields));
-		Amount oePaid = oeExecuted.get(Amount.TakerPays);	
-		Amount oeGot = oeExecuted.get(Amount.TakerGets);
+	
+	public static List<RLOrder> fromAutobridge(ArrayList<Offer> majorities, ArrayList<Offer> minorities){
+		List<RLOrder> res = new ArrayList<>();
+		BigDecimal refAsk = oeAvg(minorities);
+		STObject oeExecutedMinor = minorities.get(0).executed(minorities.get(0).get(STObject.FinalFields));
+		boolean isXRPGotInMajority = majorities.get(0).getPayCurrencyPair().startsWith(Currency.XRP.toString());
 		
-		STObject bridgeExecuted = bridge.executed(bridge.get(STObject.FinalFields));
-		Amount bridgePaid = bridgeExecuted.get(Amount.TakerPays);	
-		Amount bridgeGot = bridgeExecuted.get(Amount.TakerGets);
-		Amount quantity= null, totalPrice = null;
-		String pair;
-		BigDecimal ask  = oe.directoryAskQuality().multiply(bridge.directoryAskQuality());
-
-		if (bridgeGot.currencyString().equals(Currency.XRP.toString())){
-			direction = Direction.BUY;
-			base = oeGot.currencyString();
-			baseIssuer = oeGot.issuerString();
-			quote = bridgePaid.currencyString();
-			quoteIssuer = bridgePaid.issuerString();
-			quantity =  new Amount(oeGot.value().multiply(new BigDecimal(-1)), oeGot.currency(), oeGot.issuer());
-			BigDecimal totalPriceValue = oePaid.value().multiply(new BigDecimal(-1)).multiply(bridge.directoryAskQuality(), MathContext.DECIMAL64);
-			totalPrice = new Amount(totalPriceValue, bridgePaid.currency(), bridgePaid.issuer());			
-		}else{
-			direction = Direction.SELL;
-			base = oePaid.currencyString();
-			baseIssuer = oePaid.issuerString();
-			quote = bridgeGot.currencyString();
-			quoteIssuer = bridgeGot.issuerString();
-			totalPrice = new Amount(oePaid.value().multiply(new BigDecimal(-1)), oePaid.currency(), oePaid.issuer());
-			BigDecimal quantityValue = oeGot.value().multiply(new BigDecimal(-1)).divide(bridge.directoryAskQuality(), MathContext.DECIMAL64);
-			quantity = new Amount(quantityValue, bridgeGot.currency(), bridgeGot.issuer());
+		Direction direction = Direction.BUY;		
+		for (Offer oe : majorities){
+			STObject oeExecuted = oe.executed(oe.get(STObject.FinalFields));
+			BigDecimal newAsk = refAsk.multiply(oe.directoryAskQuality(), MathContext.DECIMAL64);			
+			Amount oePaid = oeExecuted.get(Amount.TakerPays);	
+			Amount oeGot = oeExecuted.get(Amount.TakerGets);
+			if(!isXRPGotInMajority){
+				Amount oePaidRef = oeExecutedMinor.get(Amount.TakerPays);			
+				Amount newPaid = new Amount(oePaid.value().multiply(new BigDecimal(-1)).multiply(refAsk, MathContext.DECIMAL64), oePaidRef.currency(), oePaidRef.issuer());
+				String pair = buildPair(newPaid, oeGot);
+				Amount oeGotPositive = new Amount(oeGot.value().multiply(new BigDecimal(-1)), oeGot.currency(), oeGot.issuer());
+				res.add(new RLOrder(direction, RLAmount.newInstance(oeGotPositive), RLAmount.newInstance(newPaid), newAsk, pair));			
+			}
+			else{
+				Amount oeGotRef = oeExecutedMinor.get(Amount.TakerGets);
+				Amount newGot = new Amount(oeGot.value().multiply(new BigDecimal(-1)).divide(refAsk,  MathContext.DECIMAL64), oeGotRef.currency(), oeGotRef.issuer());
+				Amount oePaidPositive = new Amount(oePaid.value().multiply(new BigDecimal(-1)), oePaid.currency(), oePaid.issuer());
+				String pair = buildPair(oePaid, newGot);
+				res.add(new RLOrder(direction, RLAmount.newInstance(newGot), RLAmount.newInstance(oePaidPositive), newAsk, pair));			
+			}
 		}
-		pair = buildPair(base, baseIssuer, quote, quoteIssuer);
-		return new RLOrder(direction, RLAmount.newInstance(quantity), RLAmount.newInstance(totalPrice), ask, pair);	
+		return res;
+	}
+	
+	private static BigDecimal oeAvg(ArrayList<Offer> offers){
+		BigDecimal paids = new BigDecimal(0);
+		BigDecimal gots = new BigDecimal(0);
+		for (Offer oe : offers){
+			STObject executed = oe.executed(oe.get(STObject.FinalFields));
+			paids = paids.add(executed.get(Amount.TakerPays).value(), MathContext.DECIMAL128);
+			gots = gots.add(executed.get(Amount.TakerGets).value(), MathContext.DECIMAL128);
+		}
+		return paids.divide(gots, MathContext.DECIMAL64);	
 	}
 	
 	public static String buildPair(String base, String baseIssuer, String quote, String quoteIssuer) {
