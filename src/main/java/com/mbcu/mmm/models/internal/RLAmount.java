@@ -40,9 +40,6 @@ public final class RLAmount {
 		String currency = amount.currencyString();
 		String issuer = amount.issuerString();
 		String value = amount.value().toPlainString();	
-		if (value.startsWith("-1")){
-			throw new IllegalArgumentException("Amount value cannot be negative");
-		}
 		return new RLAmount(currency, issuer, value, amount);		
 	}
 }

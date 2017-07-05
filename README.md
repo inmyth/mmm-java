@@ -9,8 +9,10 @@ Balancer: maintains the number of orders in our orderbook
 
 How to use:
 ```
-java -jar mmm.jar <path_to_config>
+java -jar mmm.jar <path_to_config_file>
 ```
+v.006
+- completed parser for counter.
 
 v.005
 - parser now parsed Autobridge correctly. 
@@ -35,6 +37,7 @@ NOTES
 -- hash -> DeletedNodes.FinalFields.PreviousTxnID (old hash), hash (new hash) 
 - tested sending 100 offers, all tesSUCCESS, validated=true
 - offer create for RJP/JPY may not have PreviousFields. This causes parse error for FinalFields. It looks creating new offer also cancels some tx which results in this situation. We can saafel ignore it and use transaction information instead. 
+- payment and OC belonging to others will result in many OEs. Find only those belonging for us
 
 
 TODOS
@@ -47,8 +50,9 @@ TODOS
 - the hash replaces previous hash (partial take, full take, cancel) or insert new (create new)
 - partial take and reduces current offer in orderbook. Edit changes an order. Cancel and Full Take removes an order. 
 - (done) autobridge tx should result in original rate. 
-- payment and OC belonging to others will result in many OEs. Find only those belonging for us
 - our OEs should return FinalFields and hash they modify
-- OC should also return sequence
+- (done) OC should also return sequence
 - define a class to hold sequence, update and get it concurrently.
-- move all bus elements to the end of parser
+- (canceled, pointless) move all bus elements to the end of parser
+- update hash for OC. It looks like OC we send doesn't have meta
+- define Counter class

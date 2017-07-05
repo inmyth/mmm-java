@@ -3,10 +3,9 @@ package com.mbcu.mmm.sequences;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Logger;
+import java.util.logging.Level;
 
 import org.json.JSONObject;
 
@@ -38,44 +37,39 @@ import com.ripple.core.types.known.tx.signed.SignedTransaction;
 import com.ripple.core.types.known.tx.txns.OfferCreate;
 
 public class Common extends Base {
-	public enum TxType {
-		CANCEL,
-		EDIT, 
-		OC,
-		OE				
-	}
-	
-	private final static Logger LOGGER = MyLogger.getLogger(Common.class.getName());
 	private RxBus bus = RxBusProvider.getInstance();
 	private Config config;
 
 	private Common(Config config) {
+		super(MyLogger.getLogger(Common.class.getName()));
 		this.config = config;
 		String subscribeRequest = Subscribe.build(Command.SUBSCRIBE).withAccount(config.getCredentials().getAddress())
-				// .withOrderbookFromConfig(config)
 				.stringify();
 
 		bus.toObservable()
 				// .subscribeOn(Schedulers.newThread())
-
+				
 				.subscribe(o -> {
 					if (o instanceof Events.WSConnected) {
-						LOGGER.fine("connected");
-						LOGGER.fine("Sending subsribe request");
-						LOGGER.finer(subscribeRequest);
+						for (int i = 5732; i < 5782; i++){
+							String tx = sign(i, config);
+							bus.send(new Events.WSRequestSendText(tx));
+						}
+						log("connected", Level.FINER);
+						log("Sending subsribe request");
+						log(subscribeRequest);
 						bus.send(new Events.WSRequestSendText(subscribeRequest));
 					} else if (o instanceof Events.WSDisconnected) {
-						LOGGER.fine("disconnected");
+						log("disconnected");
 					} else if (o instanceof Events.WSError) {
 						Events.WSError event = (WSError) o;
-						LOGGER.severe(event.e.getMessage());
+						log(event.e.getMessage(), Level.SEVERE);
 					} else if (o instanceof Events.WSGotText) {
 						Events.WSGotText event = (WSGotText) o;
-						LOGGER.finer(event.raw);
+						log(event.raw, Level.FINER);
 						reroute(event.raw);
 					}
 				});
-
 	}
 
 	public static Common newInstance(Config config) {
@@ -83,28 +77,37 @@ public class Common extends Base {
 	}
 
 	private void reroute(String raw) throws Exception {
-		if (raw.contains("OfferCreate") || raw.contains("Payment") || raw.contains("OfferCancel")) {
-			if (raw.contains(config.getCredentials().getAddress())) {
-				testOfferQuality(raw);
-				filterTx(raw);
+		if (raw.contains("tesSUCCESS")){
+			if (raw.contains("OfferCreate") || raw.contains("Payment") || raw.contains("OfferCancel")) {
+				if (raw.contains(config.getCredentials().getAddress())) {
+	//				testOfferQuality(raw);
+					filterTx(raw);
+				}
 			}
 		}
 	}
 
-	
-
+	/**
+	 * Filter response to gain orders. It redirects to mainly two categories
+	 * Orderbook : orderbook 
+	 * @param raw raw text
+	 */
 	public void filterTx(String raw) {
-		boolean offerCreateFlag;
-		boolean offerCreatedFlag;
-//		boolean offer
-		ArrayList<RLOrder> rawCounters = new ArrayList<>();
-		
+		log(raw);
+
+		ArrayList<RLOrder> oes = new ArrayList<>();
 		Offer offerCreated = null;
 
 		JSONObject transaction = new JSONObject(raw);
+		if (!transaction.has("meta")){
+			return;
+		}
 		JSONObject metaJSON = (JSONObject) transaction.remove("meta");
 		TransactionMeta meta = (TransactionMeta) STObject.fromJSONObject(metaJSON);
 		Transaction txn = (Transaction) STObject.fromJSONObject(transaction.getJSONObject("transaction"));
+		AccountID txnAccId = txn.account();
+		Hash256 txnHash = txn.hash();
+		UInt32 txnSequence = txn.sequence();
 
 		ArrayList<AffectedNode> deletedNodes = new ArrayList<>();
 		ArrayList<Offer> offersExecuteds = new ArrayList<>();
@@ -138,57 +141,64 @@ public class Common extends Base {
 
 		String txType = txn.get(Field.TransactionType).toString();
 		if (txType.equals("OfferCancel")) {
-			System.out.println("CANCELED : " + txn.previousTxnID());
-			bus.send(new Events.OnResponseOfferCancel(txn.previousTxnID()));
+			log("CANCELED Account: " + txn.account().address + " Seq: " + txn.sequence() + "  prevTxnId: " + previousTxnId);
+			bus.send(new OnOfferCanceled(txn.account(), txn.sequence(), previousTxnId));
 			return;
 		}
 
 		if (txType.equals("OfferCreate")) {
-			if (txn.account().address.equals(this.config.getCredentials().getAddress())){
-				if (offerCreated != null) {
-					if (previousTxnId == null) {
-						bus.send(new Events.OnResponseNewOfferCreated(txn.hash(), RLOrder.fromOfferCreated(offerCreated)));					
-					} else {
-						System.out.println("EDITED " + previousTxnId + " to " + txn.hash());
-						bus.send(new Events.onResponseOfferEdited(txn.hash(), previousTxnId, RLOrder.fromOfferCreated(offerCreated)));
-					}				
-				}
-				FilterAutobridged fa = new FilterAutobridged();
+			RLOrder offerCreate = RLOrder.fromOfferCreate(txn);
+			log("OFFER CREATE Account: " + txnAccId + " Hash " + txnHash + " Sequence " + txnSequence + "\n" + GsonUtils.toJson(offerCreate));
+			// OnOfferCreate event is only needed to increment sequence.
+			bus.send(new OnOfferCreate(txnAccId, txnHash, txnSequence));
 
+			if (offerCreated != null) {
+				AccountID ocAccId = offerCreated.account();		
+				RLOrder rlOfferCreated = RLOrder.fromOfferCreated(offerCreated);
+				if (previousTxnId == null) {
+					log("OFFER CREATED OCID " + ocAccId + " TxnID " + txnAccId + " OCPrevTxnId " + previousTxnId );
+					log(GsonUtils.toJson(rlOfferCreated));
+					bus.send(new OnOfferCreated(txnAccId, ocAccId, offerCreated.previousTxnID(), rlOfferCreated));				
+				}else{
+					log("EDITED " + previousTxnId + " to " + txn.hash() + " \n" + GsonUtils.toJson(rlOfferCreated));
+					bus.send(new OnOfferEdited(ocAccId, txnHash, previousTxnId, rlOfferCreated));
+				}
+			}
+			
+			if (txn.account().address.equals(this.config.getCredentials().getAddress())) {
+				FilterAutobridged fa = new FilterAutobridged();
 				for (Offer offer : offersExecuteds) {
 					STObject finalFields = offer.get(STObject.FinalFields);
 					if (finalFields != null) {
 						fa.push(offer);
 					}
-				}			
-				rawCounters.addAll(fa.process());			
+				}
+				oes.addAll(fa.process());
 			}else{
 				for (Offer offer : offersExecuteds) {
 					STObject finalFields = offer.get(STObject.FinalFields);
 					if (finalFields != null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
-						rawCounters.add(RLOrder.fromOfferExecuted(offer, true));
+						oes.add(RLOrder.fromOfferExecuted(offer, true));
 					}
-				}		
-			}							
-			if (!rawCounters.isEmpty()) {
-				rawCounters.forEach(oe -> {
-					System.out.println(GsonUtils.toJson(oe));
-				});
-				bus.send(new Events.onResponseOfferExecuted(rawCounters));
+				}
 			}
 		} else if (txType.equals("Payment") && !txn.account().address.equals(config.getCredentials().getAddress())) {
-			// we only care about payment not from ours. 
+			// we only care about payment not from ours.
 			for (Offer offer : offersExecuteds) {
 				STObject finalFields = offer.get(STObject.FinalFields);
 				if (finalFields != null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
-					rawCounters.add(RLOrder.fromOfferExecuted(offer, false));
+					oes.add(RLOrder.fromOfferExecuted(offer, false));
 				}
-			}				
-			rawCounters.forEach(oe -> {
-				System.out.println(GsonUtils.toJson(oe));
-			});
-			bus.send(new Events.onResponseOfferExecuted(rawCounters));
+			}
 		}
+		
+		final StringBuffer sb = new StringBuffer("OFFER EXECUTEDS");
+		log("OFFER EXECUTEDS ");
+		oes.forEach(oe -> {
+			sb.append(GsonUtils.toJson(oe));
+		});
+		log(sb.toString());
+		bus.send(new OnOfferExecuted(oes));
 	}
 
 	private static class FilterAutobridged {
@@ -213,29 +223,11 @@ public class Common extends Base {
 				});
 				return res;
 			}
-
-			ArrayList<Offer> majorities = null;
-			ArrayList<Offer> minorities = null;
-
-			for (ArrayList<Offer> offers : map.values()){
-				if (majorities == null && minorities == null){
-					majorities = offers;
-					minorities = offers;
-				}else{
-					if (offers.size() > majorities.size()){
-						majorities = offers;
-					}else{
-						minorities = offers;
-					}
-				}
-			}
-
-			res.addAll(RLOrder.fromAutobridge(majorities, minorities));
+			res.addAll(RLOrder.fromAutobridge(map));
 			return res;
-			
 		}
 	}
-	
+
 	public static void testOfferQuality(String raw) throws Exception {
 		System.out.println("\n");
 		System.out.println("\n");
@@ -325,7 +317,7 @@ public class Common extends Base {
 			}
 		});
 
-		Collections.sort(offersExecuted, Offer.qualityAscending);
+		// Collections.sort(offersExecuted, Offer.qualityAscending);
 		for (Offer offer : offersExecuted) {
 			STObject finalFields = offer.get(STObject.FinalFields);
 			if (finalFields == null) {
@@ -333,7 +325,6 @@ public class Common extends Base {
 				// System.out.println(offer.prettyJSON());
 
 			} else {
-
 
 				STObject executed = offer.executed(offer.get(STObject.FinalFields));
 				// This will be computed from the BookDirectory field
@@ -377,5 +368,69 @@ public class Common extends Base {
 
 		return Submit.build(signed.tx_blob).stringify();
 
+	}
+
+	public static class OnOfferCanceled {
+		public AccountID account;
+		public Hash256 previousTxnId;
+		public UInt32 sequence;
+
+		public OnOfferCanceled(AccountID account, UInt32 sequence, Hash256 previousTxnId) {
+			super();
+			this.account = account;
+			this.previousTxnId = previousTxnId;
+			this.sequence = sequence;
+		}
+	}
+
+	public static class OnOfferCreate {
+		public AccountID account;
+		public Hash256 hash;
+		public UInt32 sequence;
+
+		public OnOfferCreate(AccountID account, Hash256 hash, UInt32 sequence) {
+			super();
+			this.account = account;
+			this.hash = hash;
+			this.sequence = sequence;
+		}
+	}
+	
+	public static class OnOfferCreated {
+		public final  AccountID txnAccount, ocAccount;
+		public final  Hash256 prevTxnId;
+		public final  RLOrder order;
+		
+		public OnOfferCreated(AccountID txnAccount, AccountID ocAccount, Hash256 prevTxnId, RLOrder order) {
+			super();
+			this.txnAccount = txnAccount;
+			this.ocAccount = ocAccount;
+			this.prevTxnId = prevTxnId;
+			this.order = order;
+		}
+	}
+	
+	public static class OnOfferEdited {
+		public final AccountID ocAccount;
+		public final Hash256 newHash;
+		public final Hash256 previousTxnId;
+		public final RLOrder newOrder;
+		
+		public OnOfferEdited(AccountID ocAccount, Hash256 newHash, Hash256 previousTxnId, RLOrder newOrder) {
+			super();
+			this.ocAccount = ocAccount;
+			this.newHash = newHash;
+			this.previousTxnId = previousTxnId;
+			this.newOrder = newOrder;
+		}		
+	}
+	
+	public static class OnOfferExecuted{
+		public List<RLOrder> oes;
+
+		public OnOfferExecuted(List<RLOrder> oes) {
+			super();
+			this.oes = oes;
+		}
 	}
 }

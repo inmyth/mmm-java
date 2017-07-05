@@ -41,13 +41,11 @@ import com.ripple.core.types.known.tx.signed.SignedTransaction;
 import com.ripple.core.types.known.tx.txns.OfferCreate;
 
 public class Counter extends Base {
-	private final static Logger LOGGER = MyLogger.getLogger(Counter.class.getName());
 	private RxBus bus = RxBusProvider.getInstance();
 
 	 int count;
 	public Counter(Config config) {
-
-
+		super(MyLogger.getLogger(Counter.class.getName()));
 
 		bus.toObservable().subscribe(o -> {
 			if (o instanceof Events.WSConnected) {
