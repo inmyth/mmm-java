@@ -22,8 +22,8 @@ public class Main {
 		MyLogger.setup();
 		Config config = Config.build(args[0]);
 		State state = StateProvider.getInstance(config);
-		Tester tester = Tester.newInstance(state);
-		tester.loop();
+//		Tester tester = Tester.newInstance(state);
+//		tester.loop();
 		Counter.newInstance(config);
 		Common.newInstance(config);
 		WebSocketClient webSocketClient = new WebSocketClient(config);

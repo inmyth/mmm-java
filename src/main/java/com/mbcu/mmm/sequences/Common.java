@@ -39,11 +39,15 @@ import com.ripple.core.types.known.tx.txns.OfferCreate;
 public class Common extends Base {
 	private RxBus bus = RxBusProvider.getInstance();
 	private Config config;
-
+private boolean isSent = false;
+	
 	private Common(Config config) {
 		super(MyLogger.getLogger(Common.class.getName()));
 		this.config = config;
-		String subscribeRequest = Subscribe.build(Command.SUBSCRIBE).withAccount(config.getCredentials().getAddress())
+		String subscribeRequest = Subscribe
+				.build(Command.SUBSCRIBE)
+				.withOrderbookFromConfig(config)
+//				.withAccount(config.getCredentials().getAddress())
 				.stringify();
 
 		bus.toObservable()
@@ -51,10 +55,7 @@ public class Common extends Base {
 				
 				.subscribe(o -> {
 					if (o instanceof Events.WSConnected) {
-						for (int i = 5732; i < 5782; i++){
-							String tx = sign(i, config);
-							bus.send(new Events.WSRequestSendText(tx));
-						}
+
 						log("connected", Level.FINER);
 						log("Sending subsribe request");
 						log(subscribeRequest);
@@ -66,7 +67,15 @@ public class Common extends Base {
 						log(event.e.getMessage(), Level.SEVERE);
 					} else if (o instanceof Events.WSGotText) {
 						Events.WSGotText event = (WSGotText) o;
-						log(event.raw, Level.FINER);
+//						if (!isSent){
+//							for (int i = 5955; i < 5957; i++){
+//								String tx = sign(i, config);
+//								bus.send(new Events.WSRequestSendText(tx));
+//							}
+//							isSent =true;
+//						}
+
+						log(event.raw, Level.FINER);						
 						reroute(event.raw);
 					}
 				});
@@ -80,8 +89,8 @@ public class Common extends Base {
 		if (raw.contains("tesSUCCESS")){
 			if (raw.contains("OfferCreate") || raw.contains("Payment") || raw.contains("OfferCancel")) {
 				if (raw.contains(config.getCredentials().getAddress())) {
-	//				testOfferQuality(raw);
-					filterTx(raw);
+					testOfferQuality(raw);
+//					filterTx(raw);
 				}
 			}
 		}
@@ -93,8 +102,6 @@ public class Common extends Base {
 	 * @param raw raw text
 	 */
 	public void filterTx(String raw) {
-		log(raw);
-
 		ArrayList<RLOrder> oes = new ArrayList<>();
 		Offer offerCreated = null;
 
@@ -353,9 +360,9 @@ public class Common extends Base {
 	public static String sign(int seq, Config config) {
 
 		OfferCreate offerCreate = new OfferCreate();
-		offerCreate.takerGets(new Amount(new BigDecimal(1.0d), Currency.fromString("JPY"),
-				AccountID.fromString(config.getCredentials().getAddress())));
-		offerCreate.takerPays(new Amount(new BigDecimal(1.0d)));
+		offerCreate.takerGets(new Amount(new BigDecimal(1.0d)));
+		offerCreate.takerPays(new Amount(new BigDecimal(27.0d), Currency.fromString("JPY"),
+				AccountID.fromString("rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS")));
 		offerCreate.sequence(new UInt32(new BigInteger(String.valueOf(seq))));
 		offerCreate.fee(new Amount(new BigDecimal(12)));
 		offerCreate.account(AccountID.fromAddress(config.getCredentials().getAddress()));
