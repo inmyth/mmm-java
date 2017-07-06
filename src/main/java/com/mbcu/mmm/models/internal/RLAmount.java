@@ -1,8 +1,14 @@
 package com.mbcu.mmm.models.internal;
 
-import com.ripple.core.coretypes.Amount;
+import java.math.BigDecimal;
+import java.math.MathContext;
 
-public final class RLAmount {
+import com.mbcu.mmm.models.Base;
+import com.ripple.core.coretypes.AccountID;
+import com.ripple.core.coretypes.Amount;
+import com.ripple.core.coretypes.Currency;
+
+public final class RLAmount extends Base {
 	
 	private final String currency;
 	private final String counterparty;
@@ -16,7 +22,11 @@ public final class RLAmount {
 		this.value = value;
 		this.amount = amount;
 	}
-
+	
+	public RLAmount(String currency, String counterparty, BigDecimal value, Amount amount) {
+		this(currency, counterparty, value.toPlainString(), amount);
+	}
+	
 	public String getCurrency() {
 		return currency;
 	}
@@ -33,8 +43,21 @@ public final class RLAmount {
 		return amount;
 	}
 	
+	public BigDecimal getBigDecimalValue(){		
+		BigDecimal res = new BigDecimal(this.value);
+		return res;	
+	}
 	
+	public BigDecimal getValueXMinOne(){
+		BigDecimal res = new BigDecimal(this.value);
+		return res.multiply(new BigDecimal(-1));
+	}
 
+	@Override
+	public String stringify(){
+		return super.stringify(this);	
+	}
+	
 	
 	public static RLAmount newInstance(Amount amount){
 		String currency = amount.currencyString();
@@ -42,4 +65,16 @@ public final class RLAmount {
 		String value = amount.value().toPlainString();	
 		return new RLAmount(currency, issuer, value, amount);		
 	}
+	
+	public Amount amount(){
+		Amount res;
+		if (currency.equals(Currency.XRP.toString())){
+			 res = new Amount(new BigDecimal(this.value, MathContext.DECIMAL64));
+		}else{
+			 res = new Amount(new BigDecimal(this.value, MathContext.DECIMAL64), Currency.fromString(this.currency), AccountID.fromString(this.counterparty));
+		}
+		return res;	
+	}
+	
+	
 }

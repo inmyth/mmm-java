@@ -24,6 +24,11 @@ public class Request extends Base{
 		this.command = command.text;
 	}
 
+	@Override
+	public String stringify(){
+		return super.stringify(this);	
+	}
+	
 
 
 }

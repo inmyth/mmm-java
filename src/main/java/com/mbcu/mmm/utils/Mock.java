@@ -8,7 +8,7 @@ import org.json.JSONObject;
 import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.models.internal.Credentials;
 import com.mbcu.mmm.sequences.Common;
-import com.mbcu.mmm.sequences.Counter;
+import com.mbcu.mmm.sequences.counters.Yuki;
 import com.ripple.core.coretypes.Amount;
 import com.ripple.core.coretypes.STObject;
 import com.ripple.core.coretypes.hash.Hash256;

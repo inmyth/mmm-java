@@ -11,6 +11,9 @@ How to use:
 ```
 java -jar mmm.jar <path_to_config_file>
 ```
+v.007
+- finalizing alpha counter
+
 v.006
 - completed parser for counter.
 

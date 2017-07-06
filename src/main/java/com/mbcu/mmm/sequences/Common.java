@@ -17,8 +17,6 @@ import com.mbcu.mmm.models.internal.RLOrder;
 import com.mbcu.mmm.models.request.Request.Command;
 import com.mbcu.mmm.models.request.Submit;
 import com.mbcu.mmm.models.request.Subscribe;
-import com.mbcu.mmm.rx.RxBus;
-import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.utils.GsonUtils;
 import com.mbcu.mmm.utils.MyLogger;
 import com.ripple.core.coretypes.AccountID;
@@ -28,6 +26,7 @@ import com.ripple.core.coretypes.STObject;
 import com.ripple.core.coretypes.hash.Hash256;
 import com.ripple.core.coretypes.uint.UInt32;
 import com.ripple.core.fields.Field;
+import com.ripple.core.serialized.enums.EngineResult;
 import com.ripple.core.types.known.sle.LedgerEntry;
 import com.ripple.core.types.known.sle.entries.Offer;
 import com.ripple.core.types.known.tx.Transaction;
@@ -37,17 +36,15 @@ import com.ripple.core.types.known.tx.signed.SignedTransaction;
 import com.ripple.core.types.known.tx.txns.OfferCreate;
 
 public class Common extends Base {
-	private RxBus bus = RxBusProvider.getInstance();
-	private Config config;
-private boolean isSent = false;
+	private boolean isSent = false;
 	
 	private Common(Config config) {
-		super(MyLogger.getLogger(Common.class.getName()));
+		super(MyLogger.getLogger(Common.class.getName()), config);
 		this.config = config;
 		String subscribeRequest = Subscribe
 				.build(Command.SUBSCRIBE)
-				.withOrderbookFromConfig(config)
-//				.withAccount(config.getCredentials().getAddress())
+//				.withOrderbookFromConfig(config)
+				.withAccount(config.getCredentials().getAddress())
 				.stringify();
 
 		bus.toObservable()
@@ -55,7 +52,6 @@ private boolean isSent = false;
 				
 				.subscribe(o -> {
 					if (o instanceof Events.WSConnected) {
-
 						log("connected", Level.FINER);
 						log("Sending subsribe request");
 						log(subscribeRequest);
@@ -66,15 +62,14 @@ private boolean isSent = false;
 						Events.WSError event = (WSError) o;
 						log(event.e.getMessage(), Level.SEVERE);
 					} else if (o instanceof Events.WSGotText) {
-						Events.WSGotText event = (WSGotText) o;
 //						if (!isSent){
-//							for (int i = 5955; i < 5957; i++){
-//								String tx = sign(i, config);
-//								bus.send(new Events.WSRequestSendText(tx));
+//							for (int seq = 5968 ; seq < 5970; seq ++){						
+//								bus.send(new Events.WSRequestSendText(sign(seq, config)));
 //							}
-//							isSent =true;
+//							isSent = true;
 //						}
-
+						
+						Events.WSGotText event = (WSGotText) o;
 						log(event.raw, Level.FINER);						
 						reroute(event.raw);
 					}
@@ -86,29 +81,54 @@ private boolean isSent = false;
 	}
 
 	private void reroute(String raw) throws Exception {
-		if (raw.contains("tesSUCCESS")){
-			if (raw.contains("OfferCreate") || raw.contains("Payment") || raw.contains("OfferCancel")) {
-				if (raw.contains(config.getCredentials().getAddress())) {
-					testOfferQuality(raw);
-//					filterTx(raw);
-				}
-			}
+		if (raw.contains("response")) {
+			filterResponse(raw);
+		} else if (raw.contains("transaction")) {
+			filterStream(raw);
 		}
 	}
+	
+	
+	private void filterResponse(String raw){
+		JSONObject whole = new JSONObject(raw);	
+		JSONObject result = whole.optJSONObject("result");
+		
+		if (result.has("tx_json")){
+			if ((raw.contains("OfferCreate") || raw.contains("OfferCancel"))){
+				Hash256 hash = Hash256.fromHex(result.optJSONObject("tx_json").optString("hash"));
+				AccountID accId = AccountID.fromAddress(result.optJSONObject("tx_json").optString("Account"));
+				String engResult = result.optString("engine_result");					
+				if (engResult.equals(EngineResult.tesSUCCESS.toString())){
+					log("Bot TesSUCCESS " + accId + " ,hash " + hash);
+					bus.send(new OnResponseSuccess(accId, hash));
+				}else{
+					log("Bot NOT TesSUCCESS " + accId + ", " + engResult.toString() +  " ,hash " + hash);
+					bus.send(new OnResponseNotSuccess(accId, hash, engResult));
+				}	
+			}		
+		}else if (result.has("account_data")){
+			UInt32 sequence = new UInt32(result.getString("Sequence"));
+			bus.send(new OnAccountInfoSequence(sequence));	
+		}
 
-	/**
-	 * Filter response to gain orders. It redirects to mainly two categories
-	 * Orderbook : orderbook 
-	 * @param raw raw text
-	 */
-	public void filterTx(String raw) {
-		ArrayList<RLOrder> oes = new ArrayList<>();
-		Offer offerCreated = null;
+	}
 
-		JSONObject transaction = new JSONObject(raw);
-		if (!transaction.has("meta")){
+	public void filterStream(String raw) {
+		if (!raw.contains("tesSUCCESS") && 
+				!(raw.contains("OfferCreate") || raw.contains("Payment") || raw.contains("OfferCancel"))){
+			log("Stream parse condition failed : " + raw, Level.WARNING);
 			return;
 		}
+		
+		if (!raw.contains(config.getCredentials().getAddress())){
+			log("Not related to our order : " + raw, Level.WARNING);
+			return;
+		}
+				
+		ArrayList<RLOrder> oes = new ArrayList<>();
+		Offer offerCreated = null;
+		JSONObject transaction = new JSONObject(raw);
+
 		JSONObject metaJSON = (JSONObject) transaction.remove("meta");
 		TransactionMeta meta = (TransactionMeta) STObject.fromJSONObject(metaJSON);
 		Transaction txn = (Transaction) STObject.fromJSONObject(transaction.getJSONObject("transaction"));
@@ -199,8 +219,7 @@ private boolean isSent = false;
 			}
 		}
 		
-		final StringBuffer sb = new StringBuffer("OFFER EXECUTEDS");
-		log("OFFER EXECUTEDS ");
+		final StringBuffer sb = new StringBuffer("OFFER EXECUTED");
 		oes.forEach(oe -> {
 			sb.append(GsonUtils.toJson(oe));
 		});
@@ -357,8 +376,9 @@ private boolean isSent = false;
 
 	}
 
-	public static String sign(int seq, Config config) {
 
+	
+	public String sign(int seq) {		
 		OfferCreate offerCreate = new OfferCreate();
 		offerCreate.takerGets(new Amount(new BigDecimal(1.0d)));
 		offerCreate.takerPays(new Amount(new BigDecimal(27.0d), Currency.fromString("JPY"),
@@ -376,7 +396,6 @@ private boolean isSent = false;
 		return Submit.build(signed.tx_blob).stringify();
 
 	}
-
 	public static class OnOfferCanceled {
 		public AccountID account;
 		public Hash256 previousTxnId;
@@ -417,6 +436,8 @@ private boolean isSent = false;
 		}
 	}
 	
+	
+	
 	public static class OnOfferEdited {
 		public final AccountID ocAccount;
 		public final Hash256 newHash;
@@ -440,4 +461,42 @@ private boolean isSent = false;
 			this.oes = oes;
 		}
 	}
+	
+	public static class OnResponseSuccess{
+		public AccountID accountID;
+		public Hash256 hash;
+		public OnResponseSuccess(AccountID accountID, Hash256 hash) {
+			super();
+			this.accountID = accountID;
+			this.hash = hash;
+		}
+
+
+	}
+	
+	public static class OnResponseNotSuccess {
+		public AccountID accountID;
+		public Hash256 hash;
+		public String engineResult;
+		
+		public OnResponseNotSuccess(AccountID accountID, Hash256 hash, String engineResult) {
+			super();
+			this.accountID = accountID;
+			this.hash = hash;
+			this.engineResult = engineResult;
+		}
+	}
+	
+	public static class OnAccountInfoSequence {
+		public final UInt32 sequence;
+
+		public OnAccountInfoSequence(UInt32 sequence) {
+			super();
+			this.sequence = sequence;
+		} 
+		
+		
+	}
+	
+	
 }

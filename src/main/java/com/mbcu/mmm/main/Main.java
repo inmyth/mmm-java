@@ -4,8 +4,9 @@ import java.io.IOException;
 
 import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.sequences.Common;
-import com.mbcu.mmm.sequences.Counter;
+import com.mbcu.mmm.sequences.Submitter;
 import com.mbcu.mmm.sequences.Tester;
+import com.mbcu.mmm.sequences.counters.Yuki;
 import com.mbcu.mmm.sequences.state.State;
 import com.mbcu.mmm.sequences.state.StateProvider;
 import com.mbcu.mmm.utils.MyLogger;
@@ -24,8 +25,9 @@ public class Main {
 		State state = StateProvider.getInstance(config);
 //		Tester tester = Tester.newInstance(state);
 //		tester.loop();
-		Counter.newInstance(config);
+		Yuki.newInstance(config);
 		Common.newInstance(config);
+		Submitter.newInstance(config);
 		WebSocketClient webSocketClient = new WebSocketClient(config);
 		webSocketClient.start();			
 	}

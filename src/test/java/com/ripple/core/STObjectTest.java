@@ -10,7 +10,7 @@ import org.json.JSONObject;
 import org.junit.Test;
 
 import com.mbcu.mmm.sequences.Common;
-import com.mbcu.mmm.sequences.Counter;
+import com.mbcu.mmm.sequences.counters.Yuki;
 import com.ripple.core.coretypes.Amount;
 import com.ripple.core.coretypes.STArray;
 import com.ripple.core.coretypes.STObject;

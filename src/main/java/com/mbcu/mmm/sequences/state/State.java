@@ -14,7 +14,7 @@ import io.reactivex.disposables.Disposable;
 
 public class State {
 	
-	AtomicInteger sequence = new AtomicInteger(0);
+	private AtomicInteger sequence = new AtomicInteger(0);
 	
 	private RxBus bus = RxBusProvider.getInstance();
 
@@ -59,14 +59,14 @@ public class State {
 	
 	private void setSequence(UInt32 seq){
 		synchronized (sequence) {
-			sequence.set(seq.intValue());
+			if (this.sequence.get() < seq.intValue()){
+				sequence.set(seq.intValue());
+			}
 		}
 	}
 	
 	public int getSequence(){
-		synchronized (sequence) {
-			return this.sequence.get();
-		}		
+		return this.sequence.get();		
 	}
 
 }

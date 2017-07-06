@@ -1,24 +1,24 @@
 package com.mbcu.mmm.models.internal;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.math.MathContext;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.gson.annotations.Expose;
-import com.mbcu.mmm.models.ripple.tx.Order;
+import com.mbcu.mmm.models.Base;
 import com.ripple.core.coretypes.AccountID;
 import com.ripple.core.coretypes.Amount;
 import com.ripple.core.coretypes.Currency;
 import com.ripple.core.coretypes.STObject;
-import com.ripple.core.coretypes.hash.Hash256;
-import com.ripple.core.fields.STObjectField;
+import com.ripple.core.coretypes.uint.UInt32;
 import com.ripple.core.types.known.sle.entries.Offer;
 import com.ripple.core.types.known.tx.Transaction;
+import com.ripple.core.types.known.tx.signed.SignedTransaction;
+import com.ripple.core.types.known.tx.txns.OfferCreate;
 
-public final class RLOrder {
+public final class RLOrder extends Base{
 
 	private static final String XRP = "XRP";
 
@@ -80,6 +80,14 @@ public final class RLOrder {
 		return pair;
 	}
 
+	public String getReversePair(){
+		String[] p = this.pair.split("[/]");
+		StringBuffer res = new StringBuffer(p[1]);
+		res.append("/");
+		res.append(p[0]);
+		return res.toString();	
+	}
+	
 	public BigDecimal getAsk() {
 		return ask;
 	}
@@ -169,6 +177,13 @@ public final class RLOrder {
 		return res;
 	}
 	
+	public static RLOrder defaultCounter(Direction direction, RLAmount quantity, RLAmount totalPrice){
+		return new RLOrder(direction, quantity, totalPrice, null, null);
+
+	}
+	
+	
+	
 	private static BigDecimal oeAvg(ArrayList<Offer> offers){
 		BigDecimal paids = new BigDecimal(0);
 		BigDecimal gots = new BigDecimal(0);
@@ -204,12 +219,37 @@ public final class RLOrder {
 		return pair;
 	}
 	
+	
+	
 	public static String buildPair(Amount pay, Amount get){
 		return buildPair(get.currencyString(), get.issuerString(), pay.currencyString(), pay.issuerString());
 	}
 
 	private static BigDecimal askFrom(Offer offer) {
 		return offer.directoryAskQuality().stripTrailingZeros();
+	}
+	
+	public SignedTransaction sign(Config config, int sequence, int fees){	
+		OfferCreate offerCreate = new OfferCreate();
+		if (this.direction.equals(Direction.BUY.text())){
+			offerCreate.takerGets(totalPrice.amount());
+			offerCreate.takerPays(quantity.amount());
+		}else if (this.direction.equals(Direction.SELL.text())){
+			offerCreate.takerGets(quantity.amount());
+			offerCreate.takerPays(totalPrice.amount());			
+		}else{
+			throw new IllegalArgumentException("Direction not valid");
+		}
+		offerCreate.sequence(new UInt32(new BigInteger(String.valueOf(sequence))));
+		offerCreate.fee(new Amount(new BigDecimal(fees)));
+		offerCreate.account(AccountID.fromAddress(config.getCredentials().getAddress()));
+		SignedTransaction signed = offerCreate.sign(config.getCredentials().getSecret());
+		return signed;	
+	}
+
+	@Override
+	public String stringify() {
+		return super.stringify(this);
 	}
 
 }
