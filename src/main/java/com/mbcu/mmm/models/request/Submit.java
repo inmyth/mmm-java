@@ -30,7 +30,9 @@ public class Submit extends Request {
 		return submit;
 	}
 
-	public String stringify() {
-		return stringify(this);
+	@Override
+	public String stringify(){
+		return super.stringify(this);	
 	}
+	
 }

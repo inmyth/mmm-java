@@ -85,8 +85,9 @@ public class Subscribe extends Request {
 		}
 	}
 	
-	public String stringify() {
-		return super.stringify(this);
-
+	@Override
+	public String stringify(){
+		return super.stringify(this);	
 	}
+	
 }

@@ -22,14 +22,8 @@ public class Main {
 	private static void start(String[] args) throws IOException, WebSocketException{	
 		MyLogger.setup();
 		Config config = Config.build(args[0]);
-		State state = StateProvider.getInstance(config);
-//		Tester tester = Tester.newInstance(state);
-//		tester.loop();
-		Yuki.newInstance(config);
-		Common.newInstance(config);
-		Submitter.newInstance(config);
-		WebSocketClient webSocketClient = new WebSocketClient(config);
-		webSocketClient.start();			
+
+		
 	}
 	
 	

@@ -2,10 +2,10 @@ package com.mbcu.mmm.models.request;
 
 import com.mbcu.mmm.models.Base;
 
-public class Request extends Base{
+public abstract class  Request extends Base{
 
 	public enum Command {
-		SUBSCRIBE("subscribe"), SUBMIT("submit");
+		SUBSCRIBE("subscribe"), SUBMIT("submit"), ACCOUNT_INFO("account_info");
 
 		private String text;
 
@@ -24,11 +24,7 @@ public class Request extends Base{
 		this.command = command.text;
 	}
 
-	@Override
-	public String stringify(){
-		return super.stringify(this);	
-	}
-	
+
 
 
 }
