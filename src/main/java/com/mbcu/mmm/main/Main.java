@@ -3,12 +3,7 @@ package com.mbcu.mmm.main;
 import java.io.IOException;
 
 import com.mbcu.mmm.models.internal.Config;
-import com.mbcu.mmm.sequences.Common;
-import com.mbcu.mmm.sequences.Submitter;
-import com.mbcu.mmm.sequences.Tester;
-import com.mbcu.mmm.sequences.counters.Yuki;
-import com.mbcu.mmm.sequences.state.State;
-import com.mbcu.mmm.sequences.state.StateProvider;
+import com.mbcu.mmm.sequences.Manager;
 import com.mbcu.mmm.utils.MyLogger;
 import com.neovisionaries.ws.client.WebSocketException;
 
@@ -22,8 +17,8 @@ public class Main {
 	private static void start(String[] args) throws IOException, WebSocketException{	
 		MyLogger.setup();
 		Config config = Config.build(args[0]);
-
-		
+		Manager manager = Manager.newInstance(config);
+		manager.start();	
 	}
 	
 	

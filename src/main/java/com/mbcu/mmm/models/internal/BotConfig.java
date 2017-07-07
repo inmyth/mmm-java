@@ -1,10 +1,18 @@
 package com.mbcu.mmm.models.internal;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.Stack;
+import java.util.stream.IntStream;
 
-import com.google.gson.annotations.Expose;
-import com.mbcu.mmm.models.Asset;
+import com.mbcu.mmm.models.internal.RLOrder.Direction;
+import com.ripple.core.coretypes.AccountID;
+import com.ripple.core.coretypes.Amount;
+import com.ripple.core.coretypes.Currency;
 
 public class BotConfig {
 
@@ -106,8 +114,55 @@ public class BotConfig {
 	public void setQuote(NameIssuer quote) {
 		this.quote = quote;
 	}
+
+	private Queue<Integer> getLevels(int max){
+		Queue<Integer> res = new LinkedList<>();
+		IntStream.range(1, max).forEach(a -> {res.add(a);});
+		return res;
+	}
+
+	public Amount getBuyQuantityAmount(){
+		return base.amountWith(new BigDecimal(buyOrderQuantity));
+	}
 	
-
-
+	public Amount getSellQuantityAmount(){
+		return base.amountWith(new BigDecimal(sellOrderQuantity));
+	}
+	
+	public ArrayList<RLOrder> buildSeed(){
+		ArrayList<RLOrder> res = new ArrayList<>();
+		BigDecimal middlePrice = new BigDecimal(this.startMiddlePrice);
+		BigDecimal margin = new BigDecimal(this.gridSpace);
+		Queue<Integer> buyLevels = getLevels(this.buyGridLevels);
+		Queue<Integer> sellLevels = getLevels(this.sellGridLevels);
+	
+		
+		while (true){
+			if (buyLevels.isEmpty() && sellLevels.isEmpty()){
+				break;
+			}
+			if (!buyLevels.isEmpty()){
+				Amount quantity = getBuyQuantityAmount();				
+				BigDecimal rate = middlePrice.subtract(margin.multiply(new BigDecimal(buyLevels.remove()), MathContext.DECIMAL64));
+				if (rate.compareTo(BigDecimal.ZERO) <= 0){
+					buyLevels.clear();				
+				}else{
+					BigDecimal totalPriceValue = quantity.value().multiply(rate, MathContext.DECIMAL64);
+					Amount totalPrice = new Amount(totalPriceValue, Currency.fromString(quote.currency), AccountID.fromAddress(quote.issuer));
+					RLOrder buy = RLOrder.basic(Direction.BUY, RLAmount.newInstance(quantity), RLAmount.newInstance(totalPrice));
+					res.add(buy);
+				}
+			}
+			if (!sellLevels.isEmpty()){
+				Amount quantity = getSellQuantityAmount();
+				BigDecimal rate = middlePrice.add(margin.multiply(new BigDecimal(sellLevels.remove()), MathContext.DECIMAL64));
+				BigDecimal totalPriceValue = quantity.value().multiply(rate, MathContext.DECIMAL64);
+				Amount totalPrice = new Amount(totalPriceValue, Currency.fromString(quote.currency), AccountID.fromAddress(quote.issuer));
+				RLOrder sell = RLOrder.basic(Direction.SELL, RLAmount.newInstance(quantity), RLAmount.newInstance(totalPrice));
+				res.add(sell);	
+			}			
+		}	
+		return res;
+	}
 
 }

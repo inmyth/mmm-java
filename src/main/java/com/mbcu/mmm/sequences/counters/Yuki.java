@@ -78,7 +78,7 @@ public class Yuki extends Base implements Counter {
 		newTotalPriceValue = newAsk.multiply(newQuantity.getBigDecimalValue());
 		RLAmount newTotalPrice = new RLAmount(oldTotalPrice.getCurrency(), oldTotalPrice.getCounterparty(), newTotalPriceValue, null);
 		
-		RLOrder res = RLOrder.defaultCounter(Direction.BUY, newQuantity, newTotalPrice);
+		RLOrder res = RLOrder.basic(Direction.BUY, newQuantity, newTotalPrice);
 		return res;
 	}
 
@@ -93,7 +93,6 @@ public class Yuki extends Base implements Counter {
 	 * "currency": "XRP", "counterparty": "rrrrrrrrrrrrrrrrrrrrrhoLvTp", "value":
 	 * "-0.962566" }, "passive": false, "fillOrKill": false, "ask":
 	 * 0.035650623885918, "pair": "JPY.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS/XRP" }
-	 * 
 	 */
 
 }

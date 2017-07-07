@@ -177,7 +177,7 @@ public final class RLOrder extends Base{
 		return res;
 	}
 	
-	public static RLOrder defaultCounter(Direction direction, RLAmount quantity, RLAmount totalPrice){
+	public static RLOrder basic(Direction direction, RLAmount quantity, RLAmount totalPrice){
 		return new RLOrder(direction, quantity, totalPrice, null, null);
 
 	}

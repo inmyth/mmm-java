@@ -1,7 +1,11 @@
 package com.mbcu.mmm.models.internal;
 
-import com.google.gson.annotations.Expose;
+import java.math.BigDecimal;
+
 import com.mbcu.mmm.models.Asset;
+import com.ripple.core.coretypes.AccountID;
+import com.ripple.core.coretypes.Amount;
+import com.ripple.core.coretypes.Currency;
 
 public class NameIssuer {
 	
@@ -29,4 +33,12 @@ public class NameIssuer {
 		return new NameIssuer(currency, issuer);
 	}
 
+	public Amount amountWith(BigDecimal value){
+		if (currency.equals(Currency.XRP.toString())){
+			return new Amount(value.setScale(6, BigDecimal.ROUND_HALF_UP));		
+
+		}
+		return new Amount(value, Currency.fromString(this.currency), AccountID.fromAddress(issuer));		
+	}
+	
 }

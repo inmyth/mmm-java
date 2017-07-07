@@ -24,15 +24,15 @@ public class State {
 
 			@Override
 			public void onSubscribe(Disposable d) {
-				// TODO Auto-generated method stub
-				
 			}
 
 			@Override
 			public void onNext(Object o) {
 				if (o instanceof Common.OnOfferCreate){
 					OnOfferCreate event = (OnOfferCreate) o;
-					setSequence(event.sequence);
+					if (event.account.address.equals(config.getCredentials().getAddress())){
+						setSequence(event.sequence);
+					}
 				}
 				
 			}
@@ -57,7 +57,7 @@ public class State {
 		
 	}
 	
-	private void setSequence(UInt32 seq){
+	public void setSequence(UInt32 seq){
 		synchronized (sequence) {
 			if (this.sequence.get() < seq.intValue()){
 				sequence.set(seq.intValue());
@@ -66,7 +66,11 @@ public class State {
 	}
 	
 	public int getSequence(){
-		return this.sequence.get();		
+		return this.sequence.intValue();
+	}
+	
+	public int getApplicableSequence(){
+		return this.sequence.getAndIncrement();		
 	}
 
 }

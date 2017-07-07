@@ -107,7 +107,7 @@ public class Common extends Base {
 				}	
 			}		
 		}else if (result.has("account_data")){
-			UInt32 sequence = new UInt32(result.getString("Sequence"));
+			UInt32 sequence = new UInt32(result.getJSONObject("account_data").getInt("Sequence"));
 			bus.send(new OnAccountInfoSequence(sequence));	
 		}
 
@@ -474,17 +474,21 @@ public class Common extends Base {
 
 	}
 	
-	public static class OnResponseNotSuccess {
+	public static class OnResponseTerPRE_SEQ{
 		public AccountID accountID;
 		public Hash256 hash;
-		public String engineResult;
+		public UInt32 preSeq;
 		
-		public OnResponseNotSuccess(AccountID accountID, Hash256 hash, String engineResult) {
+		public OnResponseTerPRE_SEQ(AccountID accountID, Hash256 hash, UInt32 preSeq) {
 			super();
 			this.accountID = accountID;
 			this.hash = hash;
-			this.engineResult = engineResult;
-		}
+			this.preSeq = preSeq;
+		}		
+	}
+	
+	public static class OnResponseTefPAST_SEQ{
+			
 	}
 	
 	public static class OnAccountInfoSequence {

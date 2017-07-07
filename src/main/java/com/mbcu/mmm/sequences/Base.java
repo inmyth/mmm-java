@@ -8,7 +8,7 @@ import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
 
 public class Base {
-	protected RxBus bus = RxBusProvider.getInstance();
+	protected final RxBus bus = RxBusProvider.getInstance();
 	protected Config config;
 	protected Logger LOGGER;
 	
