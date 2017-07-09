@@ -69,9 +69,9 @@ public final class RLAmount extends Base {
 	public Amount amount(){
 		Amount res;
 		if (currency.equals(Currency.XRP.toString())){
-			 res = new Amount(new BigDecimal(this.value, MathContext.DECIMAL64));
+			 res = new Amount(new BigDecimal(this.value, MathContext.DECIMAL64).setScale(6, BigDecimal.ROUND_DOWN));
 		}else{
-			 res = new Amount(new BigDecimal(this.value, MathContext.DECIMAL64), Currency.fromString(this.currency), AccountID.fromString(this.counterparty));
+			 res = new Amount(new BigDecimal(this.value, MathContext.DECIMAL64).setScale(16, BigDecimal.ROUND_DOWN), Currency.fromString(this.currency), AccountID.fromString(this.counterparty));
 		}
 		return res;	
 	}

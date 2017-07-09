@@ -69,7 +69,7 @@ public class Manager extends Base{
 	}
 	
 	private void postInit(){
-		log("Initiation complete, current sequence is : " + state.getApplicableSequence());	
+		log("Initiation complete, current sequence is : " + state.getSequence());	
 		Yuki.newInstance(config);
 		Submitter.newInstance(config);
 		Balancer.newInstance(config);

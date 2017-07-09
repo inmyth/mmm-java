@@ -1,8 +1,5 @@
 package com.mbcu.mmm.sequences.balancer;
 
-import java.util.Collection;
-import java.util.stream.Stream;
-
 import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.models.internal.RLOrder;
 import com.mbcu.mmm.sequences.Base;
@@ -30,7 +27,7 @@ public class Balancer extends Base{
 		.flatMap(l->l.stream())
 		.forEach(seed -> {
 			System.out.println(seed.stringify());
-				bus.send(new SeedReady(seed));		
+			bus.send(new SeedReady(seed));		
 		});
 	}
 	

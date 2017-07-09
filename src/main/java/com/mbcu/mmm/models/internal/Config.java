@@ -7,6 +7,7 @@ import java.util.HashMap;
 import com.google.gson.annotations.Expose;
 import com.mbcu.mmm.utils.GsonUtils;
 import com.mbcu.mmm.utils.MyUtils;
+import com.ripple.core.coretypes.AccountID;
 
 public class Config {
 	
@@ -63,5 +64,7 @@ public class Config {
 		res.setBots(null);
 		return res;
 	}
+	
+
 
 }

@@ -12,7 +12,6 @@ import com.mbcu.mmm.rx.RxBusProvider;
 import com.neovisionaries.ws.client.ThreadType;
 import com.neovisionaries.ws.client.WebSocket;
 import com.neovisionaries.ws.client.WebSocketException;
-import com.neovisionaries.ws.client.WebSocketExtension;
 import com.neovisionaries.ws.client.WebSocketFactory;
 import com.neovisionaries.ws.client.WebSocketFrame;
 import com.neovisionaries.ws.client.WebSocketListener;
@@ -178,11 +177,11 @@ public class WebSocketClient {
 			}
 
 			@Override
-			public void handleCallbackError(WebSocket arg0, Throwable e) throws Exception {
+			public void handleCallbackError(WebSocket ws, Throwable e) throws Exception {
 				LOGGER.severe(e.getMessage());
 
 			}
-		}).addExtension(WebSocketExtension.PERMESSAGE_DEFLATE);
+		});
 		
 		initBus();
 	}
@@ -192,6 +191,8 @@ public class WebSocketClient {
 			if (o instanceof Events.WSRequestSendText){
 				WSRequestSendText event = (WSRequestSendText) o;
 				ws.sendText(event.request);		
+			}else if (o instanceof Events.WSRequestDisconnect){
+				ws.disconnect();
 			}
 			
 		});

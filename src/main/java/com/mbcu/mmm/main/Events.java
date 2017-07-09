@@ -44,6 +44,8 @@ public class Events {
 
 	}
 	
+	public static class WSRequestDisconnect{}
+	
 
 	
 	public static class OnResponseNewOfferCreated {

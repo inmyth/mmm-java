@@ -38,7 +38,7 @@ public class NameIssuer {
 			return new Amount(value.setScale(6, BigDecimal.ROUND_HALF_UP));		
 
 		}
-		return new Amount(value, Currency.fromString(this.currency), AccountID.fromAddress(issuer));		
+		return new Amount(value.setScale(16,  BigDecimal.ROUND_FLOOR), Currency.fromString(this.currency), AccountID.fromAddress(issuer));		
 	}
 	
 }
