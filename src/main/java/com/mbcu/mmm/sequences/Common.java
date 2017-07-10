@@ -27,6 +27,7 @@ import com.ripple.core.coretypes.hash.Hash256;
 import com.ripple.core.coretypes.uint.UInt32;
 import com.ripple.core.fields.AccountIDField;
 import com.ripple.core.fields.Field;
+import com.ripple.core.fields.Hash256Field;
 import com.ripple.core.serialized.enums.EngineResult;
 import com.ripple.core.types.known.sle.LedgerEntry;
 import com.ripple.core.types.known.sle.entries.Offer;
@@ -87,7 +88,7 @@ public class Common extends Base {
 		if (raw.contains("response")) {
 			filterResponse(raw);
 		} else if (raw.contains("transaction")) {
-			filterStream2(raw);
+			filterStream(raw);
 		}
 	}
 	
@@ -112,7 +113,6 @@ public class Common extends Base {
 			UInt32 sequence = new UInt32(result.getJSONObject("account_data").getInt("Sequence"));
 			bus.send(new OnAccountInfoSequence(sequence));	
 		}
-
 	}
 
 	public void filterStream(String raw) {
@@ -170,69 +170,69 @@ public class Common extends Base {
 
 		String txType = txn.get(Field.TransactionType).toString();
 		if (txType.equals("OfferCancel")) {
-			log("CANCELED Account: " + txn.account().address + " Seq: " + txn.sequence() + "  prevTxnId: " + previousTxnId);
+			log("CANCELED " + txn.account().address + " " + txn.sequence() + " " + previousTxnId);
 			bus.send(new OnOfferCanceled(txn.account(), txn.sequence(), previousTxnId));
 			return;
 		}
 
-		if (txType.equals("OfferCreate")) {
-			RLOrder offerCreate = RLOrder.fromOfferCreate(txn);
-			log("OFFER CREATE Account: " + txnAccId + " Hash " + txnHash + " Sequence " + txnSequence + "\n" + GsonUtils.toJson(offerCreate));
-			// OnOfferCreate event is only needed to increment sequence.
-			bus.send(new OnOfferCreate(txnAccId, txnHash, txnSequence));
+		if (txType.equals("OfferCreate")) {			
+			log("OFFER CREATE " + txn.account() + " " + txn.hash() + " " + txn.sequence() + "\n" + txn.prettyJSON());		
+			bus.send(new OnOfferCreate(txn));
 
 			if (offerCreated != null) {
-				AccountID ocAccId = offerCreated.account();		
-				RLOrder rlOfferCreated = RLOrder.fromOfferCreated(offerCreated);
-				if (previousTxnId == null) {
-					log("OFFER CREATED OCID " + ocAccId + " TxnID " + txnAccId + " OCPrevTxnId " + previousTxnId + " \n" + GsonUtils.toJson(rlOfferCreated) );
-					bus.send(new OnOfferCreated(txnAccId, ocAccId, offerCreated.previousTxnID(), rlOfferCreated));				
+//				RLOrder rlOfferCreated = RLOrder.fromOfferCreated(offerCreated);
+				System.out.println(previousTxnId);
+				if (previousTxnId == null)
+					log("OFFER CREATED \n" + offerCreated.prettyJSON());
+					bus.send(new OnOfferCreated(offerCreated));				
 				}else{
-					log("EDITED " + previousTxnId + " to " + txn.hash() + " \n" + GsonUtils.toJson(rlOfferCreated));
-					bus.send(new OnOfferEdited(ocAccId, txnHash, previousTxnId, rlOfferCreated));
+					
+					log("EDITED " + previousTxnId + " to " + offerCreated.get(Hash256.hash) + " \n" + offerCreated.prettyJSON());
+					bus.send(new OnOfferEdited(previousTxnId, offerCreated));
 				}
 			}
 			
-			if (txn.account().address.equals(this.config.getCredentials().getAddress())) {
-				FilterAutobridged fa = new FilterAutobridged();
-				for (Offer offer : offersExecuteds) {
-					STObject finalFields = offer.get(STObject.FinalFields);
-					if (finalFields != null) {
-						fa.push(offer);
-					}
-				}
-				oes.addAll(fa.process());
-			}else{
-				for (Offer offer : offersExecuteds) {
-					STObject finalFields = offer.get(STObject.FinalFields);
-					
-					if (finalFields != null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
-						oes.add(RLOrder.fromOfferExecuted(offer, true));
-					}
-				}
-			}
-		} else if (txType.equals("Payment") && !txn.account().address.equals(config.getCredentials().getAddress())) {
-			// we only care about payment not from ours.
-			for (Offer offer : offersExecuteds) {
-				STObject finalFields = offer.get(STObject.FinalFields);
-				if (finalFields != null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
-					oes.add(RLOrder.fromOfferExecuted(offer, false));
-				}
-			}
-		}
-		
-		if (!oes.isEmpty()){
-			final StringBuffer sb = new StringBuffer("OFFER EXECUTED");
-			oes.forEach(oe -> {
-				sb.append(GsonUtils.toJson(oe));
-			});
-			log(sb.toString());
-			bus.send(new OnOfferExecuted(oes));
-		}
+//			if (txn.account().address.equals(this.config.getCredentials().getAddress())) {
+//				FilterAutobridged fa = new FilterAutobridged();
+//				for (Offer offer : offersExecuteds) {
+//					STObject finalFields = offer.get(STObject.FinalFields);
+//					if (finalFields != null) {
+//						fa.push(offer);
+//					}
+//				}
+//				oes.addAll(fa.process());
+//			}else{
+//				for (Offer offer : offersExecuteds) {
+//					STObject finalFields = offer.get(STObject.FinalFields);
+//					
+//					if (finalFields != null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
+//						oes.add(RLOrder.fromOfferExecuted(offer, true));
+//					}
+//				}
+//			}
+//		} else if (txType.equals("Payment") && !txn.account().address.equals(config.getCredentials().getAddress())) {
+//			// we only care about payment not from ours.
+//			for (Offer offer : offersExecuteds) {
+//				STObject finalFields = offer.get(STObject.FinalFields);
+//				if (finalFields != null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
+//					oes.add(RLOrder.fromOfferExecuted(offer, false));
+//				}
+//			}
+//		}
+//		
+//		if (!oes.isEmpty()){
+//			final StringBuffer sb = new StringBuffer("OFFER EXECUTED");
+//			oes.forEach(oe -> {
+//				sb.append(GsonUtils.toJson(oe));
+//			});
+//			log(sb.toString());
+//			bus.send(new OnOfferExecuted(oes));
+//		}
 
 	}
 	
-	public void filterStream2(String raw) {
+	public void filterStream2(String raw) throws Exception {
+		testOfferQuality(raw);
 		if (!raw.contains("tesSUCCESS") && 
 				!(raw.contains("OfferCreate") || raw.contains("Payment") || raw.contains("OfferCancel"))){
 			log("Stream parse condition failed : " + raw, Level.WARNING);
@@ -451,19 +451,19 @@ public class Common extends Base {
 					offersExecuted.add((Offer) asPrevious);
 				}
 			} else {
-				LedgerEntry asFinal = (LedgerEntry) node.nodeAsPrevious();
+				LedgerEntry asFinal = (LedgerEntry) node.nodeAsPrevious();			
 				if (asFinal instanceof Offer) {
 					Offer offer = (Offer) asFinal;
 					System.out.println("---------------------------------------------------------------");
 					System.out.println("Offer Created");
 					System.out.println("---------------------------------------------------------------");
-					System.out.println("Final fields taker_pays " + offer.get(Amount.TakerPays));
-					System.out.println("Final fields taker_gets " + offer.get(Amount.TakerGets));
-					System.out.println("---------------------------------------------------------------");
 					System.out.println("Get/Pay:    " + offer.getPayCurrencyPair());
 					System.out.println("Bid:        " + offer.bidQuality());
 					System.out.println("TakerPays:  " + offer.takerPays());
 					System.out.println("TakerGets:  " + offer.takerGets());
+					System.out.println("---------------------------------------------------------------");
+					System.out.println("Final fields taker_pays " + offer.get(Amount.TakerPays));
+					System.out.println("Final fields taker_gets " + offer.get(Amount.TakerGets));
 					System.out.println("---------------------------------------------------------------");
 					System.out.println(offer.prettyJSON());
 				}
@@ -489,20 +489,21 @@ public class Common extends Base {
 				// System.out.println(offer.prettyJSON());
 
 			} else {
-
+				
 				STObject executed = offer.executed(offer.get(STObject.FinalFields));
 				// This will be computed from the BookDirectory field
 				System.out.println("---------------------------------------------------------------");
 				System.out.println("Offer Executed");
 				System.out.println("---------------------------------------------------------------");
-				System.out.println("Final fields taker_pays " + finalFields.get(Amount.TakerPays));
-				System.out.println("Final fields taker_gets " + finalFields.get(Amount.TakerGets));
-				System.out.println("---------------------------------------------------------------");
+
 
 				System.out.println("Get/Pay: " + offer.getPayCurrencyPair());
 				System.out.println("Ask:     " + offer.directoryAskQuality().stripTrailingZeros().toPlainString());
 				System.out.println("Paid:    " + executed.get(Amount.TakerPays));
 				System.out.println("Got:     " + executed.get(Amount.TakerGets));
+				System.out.println("---------------------------------------------------------------");
+				System.out.println("Final fields taker_pays " + finalFields.get(Amount.TakerPays));
+				System.out.println("Final fields taker_gets " + finalFields.get(Amount.TakerGets));
 				System.out.println("---------------------------------------------------------------");
 				System.out.println(offer.prettyJSON());
 			}
@@ -547,47 +548,33 @@ public class Common extends Base {
 		}
 	}
 
-	public static class OnOfferCreate {
-		public AccountID account;
-		public Hash256 hash;
-		public UInt32 sequence;
+	public static final class OnOfferCreate {
+		public final Transaction txn;
 
-		public OnOfferCreate(AccountID account, Hash256 hash, UInt32 sequence) {
+		public OnOfferCreate(Transaction txn) {
 			super();
-			this.account = account;
-			this.hash = hash;
-			this.sequence = sequence;
+			this.txn = txn;
 		}
 	}
 	
-	public static class OnOfferCreated {
-		public final  AccountID txnAccount, ocAccount;
-		public final  Hash256 prevTxnId;
-		public final  RLOrder order;
+	public static final class OnOfferCreated {
+		public final Offer offerCreated;
 		
-		public OnOfferCreated(AccountID txnAccount, AccountID ocAccount, Hash256 prevTxnId, RLOrder order) {
+		public OnOfferCreated(Offer offerCreated) {
 			super();
-			this.txnAccount = txnAccount;
-			this.ocAccount = ocAccount;
-			this.prevTxnId = prevTxnId;
-			this.order = order;
+			this.offerCreated = offerCreated;
 		}
 	}
 	
-	
-	
+
 	public static class OnOfferEdited {
-		public final AccountID ocAccount;
-		public final Hash256 newHash;
 		public final Hash256 previousTxnId;
-		public final RLOrder newOrder;
+		public final Offer offerCreated;
 		
-		public OnOfferEdited(AccountID ocAccount, Hash256 newHash, Hash256 previousTxnId, RLOrder newOrder) {
+		public OnOfferEdited(Hash256 previousTxnId, Offer offerCreated) {
 			super();
-			this.ocAccount = ocAccount;
-			this.newHash = newHash;
 			this.previousTxnId = previousTxnId;
-			this.newOrder = newOrder;
+			this.offerCreated = offerCreated;
 		}		
 	}
 	

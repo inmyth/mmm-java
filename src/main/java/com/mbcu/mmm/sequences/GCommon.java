@@ -175,10 +175,10 @@ public class GCommon extends Base {
 		}
 
 		if (txType.equals("OfferCreate")) {
-			RLOrder offerCreate = RLOrder.fromOfferCreate(txn);
-			log("OFFER CREATE Account: " + txnAccId + " Hash " + txnHash + " Sequence " + txnSequence + "\n" + GsonUtils.toJson(offerCreate));
+//			RLOrder offerCreate = RLOrder.fromOfferCreate(txn);
+//			log("OFFER CREATE Account: " + txnAccId + " Hash " + txnHash + " Sequence " + txnSequence + "\n" + GsonUtils.toJson(offerCreate));
 			// OnOfferCreate event is only needed to increment sequence.
-			bus.send(new OnOfferCreate(txnAccId, txnHash, txnSequence));
+//			bus.send(new OnOfferCreate(txnAccId, txnHash, txnSequence));
 
 			if (offerCreated != null) {
 				AccountID ocAccId = offerCreated.account();		
@@ -254,29 +254,29 @@ public class GCommon extends Base {
 		private boolean flagSizeTwo = false;
 
 		void push(Offer offer) {			
-			String pair = RLOrder.buildPair(offer);
-			if (pair.startsWith(Currency.XRP.toString())){
-				flagXRPfirst = true;
-			}else if (pair.endsWith(Currency.XRP.toString())){
-				flagXRPlast = true;
-			}
-			if (map.get(pair) == null) {
-				map.put(pair, new ArrayList<>());
-			}
-			map.get(pair).add(offer);
-			flagSizeTwo = map.size() == 2; 
-			cache.add(offer);
+//			String pair = RLOrder.buildPair(offer);
+//			if (pair.startsWith(Currency.XRP.toString())){
+//				flagXRPfirst = true;
+//			}else if (pair.endsWith(Currency.XRP.toString())){
+//				flagXRPlast = true;
+//			}
+//			if (map.get(pair) == null) {
+//				map.put(pair, new ArrayList<>());
+//			}
+//			map.get(pair).add(offer);
+//			flagSizeTwo = map.size() == 2; 
+//			cache.add(offer);
 		}
 
 		List<RLOrder> process() {
 			List<RLOrder> res = new ArrayList<>();
-			if (!flagSizeTwo || !flagXRPfirst || !flagXRPlast){
-				cache.stream().forEach(oe -> {
-					res.add(RLOrder.fromOfferExecuted(oe, false));
-				});
-				return res;
-			}
-			res.addAll(RLOrder.fromAutobridge(map));
+//			if (!flagSizeTwo || !flagXRPfirst || !flagXRPlast){
+//				cache.stream().forEach(oe -> {
+//					res.add(RLOrder.fromOfferExecuted(oe, false));
+//				});
+//				return res;
+//			}
+//			res.addAll(RLOrder.fromAutobridge(map));
 			return res;
 		}
 	}

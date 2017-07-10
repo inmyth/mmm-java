@@ -5,6 +5,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
+import org.apache.tomcat.util.file.ConfigFileLoader;
+
 import com.mbcu.mmm.main.Events;
 import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.rx.RxBus;
@@ -12,6 +14,7 @@ import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.sequences.Base;
 import com.mbcu.mmm.sequences.Common;
 import com.mbcu.mmm.sequences.Common.OnOfferCreate;
+import com.mbcu.mmm.sequences.Common.OnOfferCreated;
 import com.mbcu.mmm.sequences.Common.OnResponseFail;
 import com.mbcu.mmm.sequences.Common.OnResponseSuccess;
 import com.mbcu.mmm.sequences.Submitter;
@@ -29,12 +32,8 @@ public class State extends Base {
 	
 	private final AtomicInteger sequence = new AtomicInteger(0);
 	private final ConcurrentHashMap<Integer, SubmitCache> pending = new ConcurrentHashMap<>();
-
 	private RxBus bus = RxBusProvider.getInstance();
-
 	
-	/** Subscribe should run single threaded. 
-	 */
 	public State(Config config) {
 		super(MyLogger.getLogger(Common.class.getName()), config);
 		
@@ -49,19 +48,16 @@ public class State extends Base {
 			@Override
 			public void onNext(Object o) {
 				if (o instanceof Common.OnOfferCreate){
-					OnOfferCreate event = (OnOfferCreate) o;
-					if (config.getCredentials().addressEquals(event.account)){
-						setSequence(event.sequence);
-					}
+//					OnOfferCreate event = (OnOfferCreate) o;
+//					if (config.getCredentials().addressEquals(event.account)){
+//						setSequence(event.sequence);
+//						pending.remove(event.sequence.intValue());
+//						System.out.println("ON RESPONSE SUCCESS REMOVING " + event.sequence.intValue());					
+//					}
 				}else if (o instanceof Submitter.OnSubmitCache){				
 					OnSubmitCache event = (Submitter.OnSubmitCache) o;
 					pending.putIfAbsent(event.sequence, event.cache);
 					bus.send(new Submitter.SubmitTxBlob(event.signed.tx_blob));
-				}else if (o instanceof Common.OnResponseSuccess){
-					OnResponseSuccess event = (OnResponseSuccess) o;
-					System.out.println("ON RESPONSE SUCCESS REMOVING " + event.sequence.intValue());
-					pending.remove(event.sequence.intValue());
-					
 				}else if (o instanceof Common.OnResponseFail){
 					OnResponseFail event = (OnResponseFail) o;
 					if (event.engineResult.equals(EngineResult.terPRE_SEQ.toString()) || event.engineResult.equals(EngineResult.tefPAST_SEQ.toString())){

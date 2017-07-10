@@ -1,9 +1,7 @@
 package com.mbcu.mmm.models.request;
 
 import java.util.ArrayList;
-import java.util.List;
 
-import com.mbcu.mmm.models.internal.BotConfig;
 import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.models.internal.NameIssuer;
 
@@ -76,7 +74,7 @@ public class Subscribe extends Request {
 		
 	private static class Book{
 		NameIssuer taker_gets, taker_pays;
-		boolean snapshot = false;
+		boolean snapshot = true;
 		boolean both = true;
 		public Book(NameIssuer taker_gets, NameIssuer taker_pays) {
 			super();

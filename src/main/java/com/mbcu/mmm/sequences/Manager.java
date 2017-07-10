@@ -10,8 +10,6 @@ import com.mbcu.mmm.models.request.AccountInfo;
 import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.sequences.Common.OnAccountInfoSequence;
-import com.mbcu.mmm.sequences.balancer.Balancer;
-import com.mbcu.mmm.sequences.counters.Yuki;
 import com.mbcu.mmm.sequences.state.State;
 import com.mbcu.mmm.sequences.state.StateProvider;
 import com.mbcu.mmm.utils.MyLogger;
@@ -48,8 +46,6 @@ public class Manager extends Base{
 	
 	
 	public void start() throws IOException, WebSocketException{
-//	Tester tester = Tester.newInstance(state);
-//	tester.loop();
 		log("Initiating ...");
 		Common.newInstance(config);
 		WebSocketClient webSocketClient = new WebSocketClient(super.config);
@@ -59,20 +55,14 @@ public class Manager extends Base{
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
-		
-    try {
-      latch.await();
-	  } catch (InterruptedException e) {
-	      e.printStackTrace();
-	  }
     postInit();
 	}
 	
 	private void postInit(){
 		log("Initiation complete, current sequence is : " + state.getSequence());	
-		Yuki.newInstance(config);
+//		Yuki.newInstance(config);
 		Submitter.newInstance(config);
-		Balancer.newInstance(config);
+//		Balancer.newInstance(config);
 		bus.send(new OnInitiated());	
 	}
 	
