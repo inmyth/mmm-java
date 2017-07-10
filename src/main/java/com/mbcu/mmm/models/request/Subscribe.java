@@ -74,7 +74,7 @@ public class Subscribe extends Request {
 		
 	private static class Book{
 		NameIssuer taker_gets, taker_pays;
-		boolean snapshot = true;
+		boolean snapshot = false;
 		boolean both = true;
 		public Book(NameIssuer taker_gets, NameIssuer taker_pays) {
 			super();

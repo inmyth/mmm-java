@@ -150,7 +150,7 @@ TakerGets:  159.25/JPY/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
   "validated": true
 }
 
-// BOUGHT 1 XRP (SOLD FROM JASON ACCOUNT rHMjZANhquizS74FutV3CNoWfQcoVkBxf)
+//  JASON SOLD 1 XRP (ACCOUNT rHMjZANhquizS74FutV3CNoWfQcoVkBxf)
 
 ---------------------------------------------------------------
 OfferCreate 

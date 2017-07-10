@@ -1,0 +1,47 @@
+
+---------------------------------------------------------------
+OfferCreate
+---------------------------------------------------------------
+    "TakerPays": "2000000",
+    "Account": "raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf",
+    "TakerGets": {
+        "currency": "JPY",
+        "value": "60",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    }
+
+---------------------------------------------------------------
+Offer Executed
+---------------------------------------------------------------
+Get/Pay: XRP/JPY
+Ask:     29.49679510400265
+Paid:    -16.4285939947155/JPY/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
+Got:     -0.556962/XRP
+---------------------------------------------------------------
+    "Account": "rLjDNH9g1AajRT2pxALZmwesd64p4x9XZJ",
+    "FinalFields": {
+        "TakerPays": {
+            "currency": "JPY",
+            "value": "232.6099563824587",
+            "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+        },
+        "TakerGets": "7885940"
+    },
+    "Sequence": 229778,
+    "PreviousTxnID": "5A2B58D139CDEADCD4B1F6DDE2CB766E5C9BECCD893AEB6747558D76E6586785",  
+    "TakerGets": "8442902",   
+    "TakerPays": {
+        "currency": "JPY",
+        "value": "249.0385503771742",
+        "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
+    },
+- from OC's account perspective OE is
+I want to get 2 XRP and I got 1.443038 XRP
+I want to pay 60 JPY and I paid 42.564
+
+- from OE's account perspective OE is
+I want to get 249.03 JPY and got 16.42 JPY
+I want to pay 8.44 XRP and paid 0.55 XRP
+
+- FinalFields Taker Pays, TakerGets = remaining offer
+- TakerPays, TakerGets = original offer

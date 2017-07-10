@@ -27,6 +27,7 @@ import com.ripple.core.coretypes.hash.Hash256;
 import com.ripple.core.coretypes.uint.UInt32;
 import com.ripple.core.fields.AccountIDField;
 import com.ripple.core.fields.Field;
+import com.ripple.core.fields.Hash160Field;
 import com.ripple.core.fields.Hash256Field;
 import com.ripple.core.serialized.enums.EngineResult;
 import com.ripple.core.types.known.sle.LedgerEntry;
@@ -47,8 +48,8 @@ public class Common extends Base {
 		this.config = config;
 		String subscribeRequest = Subscribe
 				.build(Command.SUBSCRIBE)
-//				.withOrderbookFromConfig(config)
-				.withAccount(config.getCredentials().getAddress())
+				.withOrderbookFromConfig(config)
+//				.withAccount(config.getCredentials().getAddress())
 				.stringify();
 
 		bus.toObservable()
@@ -160,9 +161,11 @@ public class Common extends Base {
 		}
 
 		Hash256 previousTxnId = null;
+		UInt32 previousSequence = null;
 		for (AffectedNode deletedNode : deletedNodes) {
 			LedgerEntry le = (LedgerEntry) deletedNode.nodeAsFinal();
 			previousTxnId = le.get(Hash256.PreviousTxnID);
+			previousSequence = le.get(UInt32.Sequence);
 			if (previousTxnId != null) {
 				break;
 			}
@@ -182,14 +185,16 @@ public class Common extends Base {
 			if (offerCreated != null) {
 //				RLOrder rlOfferCreated = RLOrder.fromOfferCreated(offerCreated);
 				System.out.println(previousTxnId);
-				if (previousTxnId == null)
+				if (previousSequence == null){
 					log("OFFER CREATED \n" + offerCreated.prettyJSON());
 					bus.send(new OnOfferCreated(offerCreated));				
-				}else{
-					
-					log("EDITED " + previousTxnId + " to " + offerCreated.get(Hash256.hash) + " \n" + offerCreated.prettyJSON());
+				}else{					
+					log("EDITED " + previousSequence + " " + previousTxnId + " to " + offerCreated.get(UInt32.Sequence) + " " + txn.hash()+ "\n" + offerCreated.prettyJSON());
 					bus.send(new OnOfferEdited(previousTxnId, offerCreated));
 				}
+			}
+			
+			
 			}
 			
 //			if (txn.account().address.equals(this.config.getCredentials().getAddress())) {
@@ -231,118 +236,118 @@ public class Common extends Base {
 
 	}
 	
-	public void filterStream2(String raw) throws Exception {
-		testOfferQuality(raw);
-		if (!raw.contains("tesSUCCESS") && 
-				!(raw.contains("OfferCreate") || raw.contains("Payment") || raw.contains("OfferCancel"))){
-			log("Stream parse condition failed : " + raw, Level.WARNING);
-			return;
-		}
-		
-		if (!raw.contains(config.getCredentials().getAddress())){
-			log("Not related to our order : " + raw, Level.WARNING);
-			return;
-		}
-				
-		ArrayList<RLOrder> oes = new ArrayList<>();
-		Offer offerCreated = null;
-		JSONObject transaction = new JSONObject(raw);
-
-		JSONObject metaJSON = (JSONObject) transaction.remove("meta");
-		TransactionMeta meta = (TransactionMeta) STObject.fromJSONObject(metaJSON);
-		Transaction txn = (Transaction) STObject.fromJSONObject(transaction.getJSONObject("transaction"));
-		AccountID txnAccId = txn.account();
-		Hash256 txnHash = txn.hash();
-		UInt32 txnSequence = txn.sequence();
-
-		ArrayList<AffectedNode> deletedNodes = new ArrayList<>();
-		ArrayList<Offer> offersExecuteds = new ArrayList<>();
-
-		for (AffectedNode node : meta.affectedNodes()) {
-			if (!node.isCreatedNode()) {
-				LedgerEntry asPrevious = (LedgerEntry) node.nodeAsPrevious();
-				if (node.isDeletedNode()) {
-					deletedNodes.add(node);
-				}
-				if (asPrevious instanceof Offer) {
-					offersExecuteds.add((Offer) asPrevious);
-				}
-			} else {
-				LedgerEntry asFinal = (LedgerEntry) node.nodeAsPrevious();
-				if (asFinal instanceof Offer) {
-					Offer offer = (Offer) asFinal;
-					offerCreated = offer;
-				}
-			}
-		}
-
-		Hash256 previousTxnId = null;
-		for (AffectedNode deletedNode : deletedNodes) {
-			LedgerEntry le = (LedgerEntry) deletedNode.nodeAsFinal();
-			previousTxnId = le.get(Hash256.PreviousTxnID);
-			if (previousTxnId != null) {
-				break;
-			}
-		}
-
-		String txType = txn.get(Field.TransactionType).toString();
-		if (txType.equals("OfferCancel")) {
-			log("CANCELED Account: " + txn.account().address + " Seq: " + txn.sequence() + "  prevTxnId: " + previousTxnId);
-			bus.send(new OnOfferCanceled(txn.account(), txn.sequence(), previousTxnId));
-			return;
-		}
-
-		if (txType.equals("OfferCreate")) {
-			RLOrder offerCreate = RLOrder.fromOfferCreate(txn);
-			log("OFFER CREATE Account: " + txnAccId + " Hash " + txnHash + " Sequence " + txnSequence + "\n" + GsonUtils.toJson(offerCreate));
-			// OnOfferCreate event is only needed to increment sequence.
-			bus.send(new OnOfferCreate(txnAccId, txnHash, txnSequence));
-
-			if (offerCreated != null) {
-				AccountID ocAccId = offerCreated.account();		
-				if (previousTxnId == null) {
-					log("OFFER CREATED OCID " + ocAccId + " TxnID " + txnAccId + " OCPrevTxnId " + previousTxnId + " \n" + offerCreated.prettyJSON() );
-//					bus.send(new OnOfferCreated(txnAccId, ocAccId, offerCreated.previousTxnID(), rlOfferCreated));				
-				}else{
-					log("EDITED " + previousTxnId + " to " + txn.hash() + " \n" + offerCreated.prettyJSON());
-//					bus.send(new OnOfferEdited(ocAccId, txnHash, previousTxnId, rlOfferCreated));
-				}
-			}
-			
-
-			
-//			if (txn.account().address.equals(this.config.getCredentials().getAddress())) {
-//				FilterAutobridged fa = new FilterAutobridged();
-//				for (Offer offer : offersExecuteds) {
-//					STObject finalFields = offer.get(STObject.FinalFields);
-//					if (finalFields != null) {
-//						fa.push(offer);
-//					}
+//	public void filterStream2(String raw) throws Exception {
+//		testOfferQuality(raw);
+//		if (!raw.contains("tesSUCCESS") && 
+//				!(raw.contains("OfferCreate") || raw.contains("Payment") || raw.contains("OfferCancel"))){
+//			log("Stream parse condition failed : " + raw, Level.WARNING);
+//			return;
+//		}
+//		
+//		if (!raw.contains(config.getCredentials().getAddress())){
+//			log("Not related to our order : " + raw, Level.WARNING);
+//			return;
+//		}
+//				
+//		ArrayList<RLOrder> oes = new ArrayList<>();
+//		Offer offerCreated = null;
+//		JSONObject transaction = new JSONObject(raw);
+//
+//		JSONObject metaJSON = (JSONObject) transaction.remove("meta");
+//		TransactionMeta meta = (TransactionMeta) STObject.fromJSONObject(metaJSON);
+//		Transaction txn = (Transaction) STObject.fromJSONObject(transaction.getJSONObject("transaction"));
+//		AccountID txnAccId = txn.account();
+//		Hash256 txnHash = txn.hash();
+//		UInt32 txnSequence = txn.sequence();
+//
+//		ArrayList<AffectedNode> deletedNodes = new ArrayList<>();
+//		ArrayList<Offer> offersExecuteds = new ArrayList<>();
+//
+//		for (AffectedNode node : meta.affectedNodes()) {
+//			if (!node.isCreatedNode()) {
+//				LedgerEntry asPrevious = (LedgerEntry) node.nodeAsPrevious();
+//				if (node.isDeletedNode()) {
+//					deletedNodes.add(node);
 //				}
-//				oes.addAll(fa.process());
-//			}else{
-//				for (Offer offer : offersExecuteds) {
-//					STObject finalFields = offer.get(STObject.FinalFields);
-//					
-//					if (finalFields != null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
-//						oes.add(RLOrder.fromOfferExecuted(offer, true));
-//					}
+//				if (asPrevious instanceof Offer) {
+//					offersExecuteds.add((Offer) asPrevious);
+//				}
+//			} else {
+//				LedgerEntry asFinal = (LedgerEntry) node.nodeAsPrevious();
+//				if (asFinal instanceof Offer) {
+//					Offer offer = (Offer) asFinal;
+//					offerCreated = offer;
 //				}
 //			}
-		}
-		
-		if (txType.equals("OfferCreate") || txType.equals("Payment")){
-			for (Offer offer : offersExecuteds) {		
-				FilterAutobridged fa = new FilterAutobridged();
-
-				STObject finalFields = offer.get(STObject.FinalFields);
-				if (finalFields != null) {			
-					AccountID account = offer.get(AccountID.Account);
-					UInt32 seq = offer.get(UInt32.Sequence);
-					log("OE " + account + " " + seq + " \n " + offer.prettyJSON() );
-				}
-			}
-		}
+//		}
+//
+//		Hash256 previousTxnId = null;
+//		for (AffectedNode deletedNode : deletedNodes) {
+//			LedgerEntry le = (LedgerEntry) deletedNode.nodeAsFinal();
+//			previousTxnId = le.get(Hash256.PreviousTxnID);
+//			if (previousTxnId != null) {
+//				break;
+//			}
+//		}
+//
+//		String txType = txn.get(Field.TransactionType).toString();
+//		if (txType.equals("OfferCancel")) {
+//			log("CANCELED Account: " + txn.account().address + " Seq: " + txn.sequence() + "  prevTxnId: " + previousTxnId);
+//			bus.send(new OnOfferCanceled(txn.account(), txn.sequence(), previousTxnId));
+//			return;
+//		}
+//
+//		if (txType.equals("OfferCreate")) {
+//			RLOrder offerCreate = RLOrder.fromOfferCreate(txn);
+//			log("OFFER CREATE Account: " + txnAccId + " Hash " + txnHash + " Sequence " + txnSequence + "\n" + GsonUtils.toJson(offerCreate));
+//			// OnOfferCreate event is only needed to increment sequence.
+//			bus.send(new OnOfferCreate(txnAccId, txnHash, txnSequence));
+//
+//			if (offerCreated != null) {
+//				AccountID ocAccId = offerCreated.account();		
+//				if (previousTxnId == null) {
+//					log("OFFER CREATED OCID " + ocAccId + " TxnID " + txnAccId + " OCPrevTxnId " + previousTxnId + " \n" + offerCreated.prettyJSON() );
+////					bus.send(new OnOfferCreated(txnAccId, ocAccId, offerCreated.previousTxnID(), rlOfferCreated));				
+//				}else{
+//					log("EDITED " + previousTxnId + " to " + txn.hash() + " \n" + offerCreated.prettyJSON());
+////					bus.send(new OnOfferEdited(ocAccId, txnHash, previousTxnId, rlOfferCreated));
+//				}
+//			}
+//			
+//
+//			
+////			if (txn.account().address.equals(this.config.getCredentials().getAddress())) {
+////				FilterAutobridged fa = new FilterAutobridged();
+////				for (Offer offer : offersExecuteds) {
+////					STObject finalFields = offer.get(STObject.FinalFields);
+////					if (finalFields != null) {
+////						fa.push(offer);
+////					}
+////				}
+////				oes.addAll(fa.process());
+////			}else{
+////				for (Offer offer : offersExecuteds) {
+////					STObject finalFields = offer.get(STObject.FinalFields);
+////					
+////					if (finalFields != null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
+////						oes.add(RLOrder.fromOfferExecuted(offer, true));
+////					}
+////				}
+////			}
+//		}
+//		
+//		if (txType.equals("OfferCreate") || txType.equals("Payment")){
+//			for (Offer offer : offersExecuteds) {		
+//				FilterAutobridged fa = new FilterAutobridged();
+//
+//				STObject finalFields = offer.get(STObject.FinalFields);
+//				if (finalFields != null) {			
+//					AccountID account = offer.get(AccountID.Account);
+//					UInt32 seq = offer.get(UInt32.Sequence);
+//					log("OE " + account + " " + seq + " \n " + offer.prettyJSON() );
+//				}
+//			}
+//		}
 		
 //		else if (txType.equals("Payment") && !txn.account().address.equals(config.getCredentials().getAddress())) {
 //			// we only care about payment not from ours.
@@ -362,8 +367,8 @@ public class Common extends Base {
 //			log(sb.toString());
 //			bus.send(new OnOfferExecuted(oes));
 //		}
-
-	}
+//
+//	}
 
 	private static class FilterAutobridged {
 		// pretty sure autobridge happens on OE belonging to others

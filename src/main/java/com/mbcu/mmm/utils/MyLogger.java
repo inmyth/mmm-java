@@ -10,7 +10,7 @@ import java.util.logging.SimpleFormatter;
 
 public class MyLogger {
 
-	private static final String LOG_NAME = "log.txt";
+	private static final String LOG_NAME = "log.ob.txt";
 	
 	public static void setup() throws IOException {
 
