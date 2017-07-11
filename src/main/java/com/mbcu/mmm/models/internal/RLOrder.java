@@ -113,19 +113,19 @@ public final class RLOrder extends Base{
 		return res;
 	}
 
-	public static RLOrder fromOfferExecuted(Offer offer, boolean isOwn) {
+	public static RLOrder fromOfferExecuted(Offer offer, boolean isOEOwn) {
 		// All OE's paid and got are negative and need to be reversed
-		BigDecimal ask = isOwn ? BigDecimal.ONE.divide(askFrom(offer), MathContext.DECIMAL64) : askFrom(offer);
+		BigDecimal ask = isOEOwn ? BigDecimal.ONE.divide(askFrom(offer), MathContext.DECIMAL64) : askFrom(offer);
 		STObject executed = offer.executed(offer.get(STObject.FinalFields));
 		Amount paid = executed.get(Amount.TakerPays);
 		Amount got = executed.get(Amount.TakerGets);	
-		RLAmount rlGot = isOwn ? RLAmount.newInstance(new Amount(paid.value(), paid.currency(), paid.issuer())) 
+		RLAmount rlGot = isOEOwn ? RLAmount.newInstance(new Amount(paid.value(), paid.currency(), paid.issuer())) 
 				: RLAmount.newInstance(new Amount(got.value(), got.currency(), got.issuer()));
-		RLAmount rlPaid = isOwn ? RLAmount.newInstance(new Amount(got.value(), got.currency(), got.issuer()))
+		RLAmount rlPaid = isOEOwn ? RLAmount.newInstance(new Amount(got.value(), got.currency(), got.issuer()))
 				: RLAmount.newInstance(new Amount(paid.value(), paid.currency(), paid.issuer())) ;
-		String pair = buildPair(paid, got);
-
-		RLOrder res = new RLOrder(Direction.BUY, rlGot, rlPaid, ask, pair);
+		String pair = buildPair(isOEOwn ? got : paid , isOEOwn ? paid: got);
+		RLOrder res = new RLOrder(Direction.BUY, rlGot, rlPaid, ask, pair);	
+		System.out.println("RLORDER \n " + res.stringify());
 		return res;
 	}
 	
@@ -154,7 +154,6 @@ public final class RLOrder extends Base{
 		
 		Direction direction = Direction.BUY;		
 		for (Offer oe : majorities){
-
 			STObject oeExecuted = oe.executed(oe.get(STObject.FinalFields));
 			BigDecimal newAsk = refAsk.multiply(oe.directoryAskQuality(), MathContext.DECIMAL64);			
 			Amount oePaid = oeExecuted.get(Amount.TakerPays);	
@@ -181,8 +180,6 @@ public final class RLOrder extends Base{
 		return new RLOrder(direction, quantity, totalPrice, null, null);
 
 	}
-	
-	
 	
 	private static BigDecimal oeAvg(ArrayList<Offer> offers){
 		BigDecimal paids = new BigDecimal(0);
@@ -218,7 +215,6 @@ public final class RLOrder extends Base{
 		String pair = RLOrder.buildPair(paid, got);
 		return pair;
 	}
-	
 	
 	
 	public static String buildPair(Amount pay, Amount get){

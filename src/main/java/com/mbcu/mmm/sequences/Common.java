@@ -302,66 +302,49 @@ public class Common extends Base {
 				AccountID ocAccId = offerCreated.account();		
 				if (previousTxnId == null) {
 					log("OFFER CREATED OCID " + ocAccId + " TxnID " + txnAccId + " OCPrevTxnId " + previousTxnId + " \n" + offerCreated.prettyJSON() );
-//					bus.send(new OnOfferCreated(txnAccId, ocAccId, offerCreated.previousTxnID(), rlOfferCreated));				
+					bus.send(new OnOfferCreated(txnAccId, ocAccId, offerCreated.previousTxnID(), RLOrder.fromOfferCreated(offerCreated)));				
 				}else{
 					log("EDITED " + previousTxnId + " to " + txn.hash() + " \n" + offerCreated.prettyJSON());
-//					bus.send(new OnOfferEdited(ocAccId, txnHash, previousTxnId, rlOfferCreated));
+					bus.send(new OnOfferEdited(ocAccId, txnHash, previousTxnId, RLOrder.fromOfferCreated(offerCreated)));
 				}
-			}
-			
-
-			
-//			if (txn.account().address.equals(this.config.getCredentials().getAddress())) {
-//				FilterAutobridged fa = new FilterAutobridged();
-//				for (Offer offer : offersExecuteds) {
-//					STObject finalFields = offer.get(STObject.FinalFields);
-//					if (finalFields != null) {
-//						fa.push(offer);
-//					}
-//				}
-//				oes.addAll(fa.process());
-//			}else{
-//				for (Offer offer : offersExecuteds) {
-//					STObject finalFields = offer.get(STObject.FinalFields);
-//					
-//					if (finalFields != null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
-//						oes.add(RLOrder.fromOfferExecuted(offer, true));
-//					}
-//				}
-//			}
-		}
-		
-		if (txType.equals("OfferCreate") || txType.equals("Payment")){
-			for (Offer offer : offersExecuteds) {		
+			}		
+			if (txn.account().address.equals(this.config.getCredentials().getAddress())) {
 				FilterAutobridged fa = new FilterAutobridged();
-
+				for (Offer offer : offersExecuteds) {
+					STObject finalFields = offer.get(STObject.FinalFields);
+					if (finalFields != null) {
+						fa.push(offer);
+					}
+				}
+				oes.addAll(fa.process());
+			}else{
+				for (Offer offer : offersExecuteds) {
+					STObject finalFields = offer.get(STObject.FinalFields);
+					if (finalFields != null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
+						oes.add(RLOrder.fromOfferExecuted(offer, true));
+					}
+				}
+			}
+		}
+			
+		else if (txType.equals("Payment") && !txn.account().address.equals(config.getCredentials().getAddress())) {
+			// we only care about payment not from ours.
+			for (Offer offer : offersExecuteds) {
 				STObject finalFields = offer.get(STObject.FinalFields);
-				if (finalFields != null) {			
-					AccountID account = offer.get(AccountID.Account);
-					UInt32 seq = offer.get(UInt32.Sequence);
-					log("OE " + account + " " + seq + " \n " + offer.prettyJSON() );
+				if (finalFields != null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
+					oes.add(RLOrder.fromOfferExecuted(offer, false));
 				}
 			}
 		}
 		
-//		else if (txType.equals("Payment") && !txn.account().address.equals(config.getCredentials().getAddress())) {
-//			// we only care about payment not from ours.
-//			for (Offer offer : offersExecuteds) {
-//				STObject finalFields = offer.get(STObject.FinalFields);
-//				if (finalFields != null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
-//					oes.add(RLOrder.fromOfferExecuted(offer, false));
-//				}
-//			}
-//		}
-		
-//		if (!oes.isEmpty()){
-//			final StringBuffer sb = new StringBuffer("OFFER EXECUTED");
-//			oes.forEach(oe -> {
-//				sb.append(GsonUtils.toJson(oe));
-//			});
-//			log(sb.toString());
-//			bus.send(new OnOfferExecuted(oes));
-//		}
+		if (!oes.isEmpty()){
+			final StringBuffer sb = new StringBuffer("OFFER EXECUTED");
+			oes.forEach(oe -> {
+				sb.append(GsonUtils.toJson(oe));
+			});
+			log(sb.toString());
+			bus.send(new OnOfferExecuted(oes));
+		}
 
 	}
 

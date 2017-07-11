@@ -18,7 +18,7 @@ public class BotConfig {
 
 	String pair;
 	float startMiddlePrice;
-	float gridSpace;
+	String gridSpace;
 	int buyGridLevels;
 	int sellGridLevels;
 	float buyOrderQuantity;
@@ -59,13 +59,10 @@ public class BotConfig {
 		this.startMiddlePrice = startMiddlePrice;
 	}
 
-	public float getGridSpace() {
-		return gridSpace;
+	public BigDecimal getGridSpace() {
+		return new BigDecimal(this.gridSpace);
 	}
 
-	public void setGridSpace(float gridSpace) {
-		this.gridSpace = gridSpace;
-	}
 
 	public int getBuyGridLevels() {
 		return buyGridLevels;
@@ -117,7 +114,7 @@ public class BotConfig {
 
 	private Queue<Integer> getLevels(int max){
 		Queue<Integer> res = new LinkedList<>();
-		IntStream.range(1, max).forEach(a -> {res.add(a);});
+		IntStream.range(0, max ).forEach(a -> {res.add(a);});
 		return res;
 	}
 

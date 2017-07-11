@@ -66,6 +66,8 @@ public final class RLAmount extends Base {
 		return new RLAmount(currency, issuer, value, amount);		
 	}
 	
+
+	
 	public Amount amount(){
 		Amount res;
 		if (currency.equals(Currency.XRP.toString())){
