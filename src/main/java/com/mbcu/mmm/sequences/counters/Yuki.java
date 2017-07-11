@@ -7,7 +7,6 @@ import java.util.logging.Level;
 
 import com.mbcu.mmm.models.internal.BotConfig;
 import com.mbcu.mmm.models.internal.Config;
-import com.mbcu.mmm.models.internal.RLAmount;
 import com.mbcu.mmm.models.internal.RLOrder;
 import com.mbcu.mmm.models.internal.RLOrder.Direction;
 import com.mbcu.mmm.rx.RxBus;
@@ -71,29 +70,30 @@ public class Yuki extends Base implements Counter {
 //		BigDecimal newTotalPriceValue = null
 //				
 		
-	RLAmount oldQuantity = origin.getQuantity();
-	RLAmount oldTotalPrice = origin.getTotalPrice();
+	Amount oldQuantity = origin.getQuantity();
+	Amount oldTotalPrice = origin.getTotalPrice();
 		RLOrder res = null;
 		if (isDirectionMatch){
-			RLAmount newQuantity =  RLAmount.newInstance(origin.getQuantity().amount().multiply(new BigDecimal("-1")));
+			Amount newQuantity = origin.getQuantity().multiply(new BigDecimal("-1"));
 			BigDecimal newRate = origin.getAsk().add(botConfig.getGridSpace());
-			Amount newTotalPriceAmount = new Amount(newQuantity.amount().value().multiply(newRate), oldTotalPrice.amount().currency(), oldTotalPrice.amount().issuer());
-			RLAmount newTotalPrice = RLAmount.newInstance(newTotalPriceAmount);
+			Amount newTotalPrice = RLOrder.amount(newQuantity.value().multiply(newRate), oldTotalPrice.currency(), oldTotalPrice.issuer());
 			res = RLOrder.basic(Direction.SELL, newQuantity, newTotalPrice);				
 		}else{
-			RLAmount newTotalPrice =  RLAmount.newInstance(origin.getTotalPrice().amount().multiply(new BigDecimal("-1")));
+			Amount newTotalPrice =  origin.getTotalPrice().multiply(new BigDecimal("-1"));
 			BigDecimal newRate = BigDecimal.ONE.divide(origin.getAsk(), MathContext.DECIMAL128).subtract(botConfig.getGridSpace());
 			if (newRate.compareTo(BigDecimal.ZERO) <= 0){
 				log("counter rate below zero " + newRate + " " + origin.getDirection(), Level.SEVERE);
 				return null;			
 			}
-			Amount newQuantityAmount = new Amount( newTotalPrice.amount().value().multiply(newRate), oldQuantity.amount().currency(), oldQuantity.amount().issuer());
-			RLAmount newQuantity = RLAmount.newInstance(newQuantityAmount);
+//			value precision of 40 is greater than maximum iou precision of 16
+			Amount newQuantity = RLOrder.amount( newTotalPrice.value().multiply(newRate), oldQuantity.currency(), oldQuantity.issuer());
 		  res = RLOrder.basic(Direction.BUY, newQuantity, newTotalPrice);
 		}
 		return res;
 	}
 
+
+	
 	@Override
 	public void onCounterReady(RLOrder counter) {
 		bus.send(new Counter.CounterReady(counter));

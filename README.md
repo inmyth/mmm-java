@@ -11,6 +11,10 @@ How to use:
 ```
 java -jar mmm.jar <path_to_config_file>
 ```
+v.009
+- pre-alpha counter
+- removed RLAmount.
+
 v.008 
 - debugging counter
 
@@ -44,7 +48,7 @@ NOTES
 - tested sending 100 offers, all tesSUCCESS, validated=true
 - offer create for RJP/JPY may not have PreviousFields. This causes parse error for FinalFields. It looks creating new offer also cancels some tx which results in this situation. We can saafel ignore it and use transaction information instead. 
 - payment and OC belonging to others will result in many OEs. Find only those belonging for us
-
+- do not instantiate Amount directly. Use RLOrder#amount
 
 TODOS
 - (done cancel-order.txt) see delete offer response 
@@ -58,7 +62,7 @@ TODOS
 - (done) autobridge tx should result in original rate. 
 - our OEs should return FinalFields and hash they modify
 - (done) OC should also return sequence
-- define a class to hold sequence, update and get it concurrently.
+- (done) define a class to hold sequence, update and get it concurrently.
 - (canceled, pointless) move all bus elements to the end of parser
 - update hash for OC. It looks like OC we send doesn't have meta
-- define Counter class
+- (done)define Counter class

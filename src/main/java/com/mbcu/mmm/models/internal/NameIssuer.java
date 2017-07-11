@@ -8,17 +8,17 @@ import com.ripple.core.coretypes.Amount;
 import com.ripple.core.coretypes.Currency;
 
 public class NameIssuer {
-	
+
 	String currency;
 	String issuer;
-	
+
 	private NameIssuer(String currency, String issuer) {
 		super();
 		this.currency = currency;
 		this.issuer = issuer;
 	}
-	
-	public static NameIssuer fromDotForm(String part) throws IllegalArgumentException {	
+
+	public static NameIssuer fromDotForm(String part) throws IllegalArgumentException {
 		String currency = null;
 		String issuer = null;
 		String[] b = part.split("[.]");
@@ -34,11 +34,7 @@ public class NameIssuer {
 	}
 
 	public Amount amountWith(BigDecimal value){
-		if (currency.equals(Currency.XRP.toString())){
-			return new Amount(value.setScale(6, BigDecimal.ROUND_HALF_UP));		
-
-		}
-		return new Amount(value.setScale(16,  BigDecimal.ROUND_FLOOR), Currency.fromString(this.currency), AccountID.fromAddress(issuer));		
+	 return	RLOrder.amount(value, Currency.fromString(this.currency), AccountID.fromAddress(issuer));	
 	}
-	
+
 }

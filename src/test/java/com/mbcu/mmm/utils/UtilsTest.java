@@ -1,8 +1,11 @@
 package com.mbcu.mmm.utils;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
+
+import com.ripple.core.coretypes.Currency;
 
 public class UtilsTest {
 	
@@ -16,4 +19,11 @@ public class UtilsTest {
 		
 	}
 
+	
+	@Test
+	public void testCurrencyNative(){
+		Currency c = Currency.XRP;
+		assertTrue(c.isNative());
+		
+	}
 }

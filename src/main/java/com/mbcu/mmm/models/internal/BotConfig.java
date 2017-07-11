@@ -6,14 +6,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.Stack;
 import java.util.stream.IntStream;
+
+import org.parceler.Parcel;
 
 import com.mbcu.mmm.models.internal.RLOrder.Direction;
 import com.ripple.core.coretypes.AccountID;
 import com.ripple.core.coretypes.Amount;
 import com.ripple.core.coretypes.Currency;
 
+@Parcel
 public class BotConfig {
 
 	String pair;
@@ -145,8 +147,8 @@ public class BotConfig {
 					buyLevels.clear();				
 				}else{
 					BigDecimal totalPriceValue = quantity.value().multiply(rate, MathContext.DECIMAL64);
-					Amount totalPrice = new Amount(totalPriceValue, Currency.fromString(quote.currency), AccountID.fromAddress(quote.issuer));
-					RLOrder buy = RLOrder.basic(Direction.BUY, RLAmount.newInstance(quantity), RLAmount.newInstance(totalPrice));
+					Amount totalPrice =  RLOrder.amount(totalPriceValue, Currency.fromString(quote.currency), AccountID.fromAddress(quote.issuer));
+					RLOrder buy = RLOrder.basic(Direction.BUY, quantity, totalPrice);
 					res.add(buy);
 				}
 			}
@@ -154,8 +156,8 @@ public class BotConfig {
 				Amount quantity = getSellQuantityAmount();
 				BigDecimal rate = middlePrice.add(margin.multiply(new BigDecimal(sellLevels.remove()), MathContext.DECIMAL64));
 				BigDecimal totalPriceValue = quantity.value().multiply(rate, MathContext.DECIMAL64);
-				Amount totalPrice = new Amount(totalPriceValue, Currency.fromString(quote.currency), AccountID.fromAddress(quote.issuer));
-				RLOrder sell = RLOrder.basic(Direction.SELL, RLAmount.newInstance(quantity), RLAmount.newInstance(totalPrice));
+				Amount totalPrice = RLOrder.amount(totalPriceValue, Currency.fromString(quote.currency), AccountID.fromAddress(quote.issuer));
+				RLOrder sell = RLOrder.basic(Direction.SELL, quantity, totalPrice);
 				res.add(sell);	
 			}			
 		}	

@@ -37,15 +37,15 @@ public final class RLOrder extends Base{
 	}
 
 	private final String direction;
-	private final RLAmount quantity;
-	private final RLAmount totalPrice;
+	private final Amount quantity;
+	private final Amount totalPrice;
 	private final boolean passive;
 	private final boolean fillOrKill;
 
 	private final BigDecimal ask;
     private final String pair;
 
-	public RLOrder(Direction direction, RLAmount quantity, RLAmount totalPrice, BigDecimal ask, String pair) {
+	public RLOrder(Direction direction, Amount quantity, Amount totalPrice, BigDecimal ask, String pair) {
 		super();
 		this.direction = direction.text;
 		this.quantity = quantity;
@@ -60,14 +60,15 @@ public final class RLOrder extends Base{
 		return direction;
 	}
 
-	public RLAmount getQuantity() {
+
+	public Amount getQuantity() {
 		return quantity;
 	}
-
-	public RLAmount getTotalPrice() {
+	
+	public Amount getTotalPrice() {
 		return totalPrice;
 	}
-
+	
 	public boolean isPassive() {
 		return passive;
 	}
@@ -92,13 +93,26 @@ public final class RLOrder extends Base{
 		return ask;
 	}
 	
+	public static Amount amount(BigDecimal value, Currency currency, AccountID issuer){
+		if(currency.isNative()){
+			value = value.setScale(6, BigDecimal.ROUND_HALF_DOWN);
+			return new Amount(value);
+		}else{
+			value = value.setScale(16, BigDecimal.ROUND_HALF_DOWN);
+			return new Amount(value, currency, issuer);
+		}
+	}
+	
+	public static RLOrder basic(Direction direction, Amount quantity, Amount totalPrice){
+		return new RLOrder(direction, quantity, totalPrice, null, null);
+
+	}
+	
 	public static RLOrder fromOfferCreate(Transaction txn){
 		Amount gets = txn.get(Amount.TakerGets);
 		Amount pays = txn.get(Amount.TakerPays);
-		RLAmount rlRealGot = RLAmount.newInstance(pays);
-		RLAmount rlRealPaid = RLAmount.newInstance(gets);
-		String pair = buildPair(gets.currencyString(), gets.issuerString(), pays.currencyString(), pays.issuerString());
-		RLOrder res = new RLOrder(Direction.BUY, rlRealGot, rlRealPaid, null, pair);
+		String pair = buildPair(gets, pays);
+		RLOrder res = new RLOrder(Direction.BUY, gets, pays, null, pair);
 		return res;
 	}
 
@@ -106,10 +120,8 @@ public final class RLOrder extends Base{
 		BigDecimal ask = askFrom(offer);		
 		Amount pays = offer.takerPays();
 		Amount gets = offer.takerGets();
-		RLAmount rlRealGot = RLAmount.newInstance(pays);
-		RLAmount rlRealPaid = RLAmount.newInstance(gets);
-		String pair = buildPair(gets.currencyString(), gets.issuerString(), pays.currencyString(), pays.issuerString());
-		RLOrder res = new RLOrder(Direction.BUY, rlRealGot, rlRealPaid, ask, pair);
+		String pair = buildPair(gets, pays);
+		RLOrder res = new RLOrder(Direction.BUY, gets, pays, ask, pair);
 		return res;
 	}
 
@@ -119,10 +131,8 @@ public final class RLOrder extends Base{
 		STObject executed = offer.executed(offer.get(STObject.FinalFields));
 		Amount paid = executed.get(Amount.TakerPays);
 		Amount got = executed.get(Amount.TakerGets);	
-		RLAmount rlGot = isOEOwn ? RLAmount.newInstance(new Amount(paid.value(), paid.currency(), paid.issuer())) 
-				: RLAmount.newInstance(new Amount(got.value(), got.currency(), got.issuer()));
-		RLAmount rlPaid = isOEOwn ? RLAmount.newInstance(new Amount(got.value(), got.currency(), got.issuer()))
-				: RLAmount.newInstance(new Amount(paid.value(), paid.currency(), paid.issuer())) ;
+		Amount rlGot = isOEOwn ? amount(paid.value(), paid.currency(), paid.issuer()) : amount(got.value(), got.currency(), got.issuer());
+		Amount rlPaid = isOEOwn ? amount(got.value(), got.currency(), got.issuer()) :amount(paid.value(), paid.currency(), paid.issuer()) ;
 		String pair = buildPair(isOEOwn ? got : paid , isOEOwn ? paid: got);
 		RLOrder res = new RLOrder(Direction.BUY, rlGot, rlPaid, ask, pair);	
 		System.out.println("RLORDER \n " + res.stringify());
@@ -163,23 +173,20 @@ public final class RLOrder extends Base{
 				Amount newPaid = new Amount(oePaid.value().multiply(refAsk, MathContext.DECIMAL64), oePaidRef.currency(), oePaidRef.issuer());
 				String pair = buildPair(newPaid, oeGot);
 				Amount oeGotPositive = new Amount(oeGot.value(), oeGot.currency(), oeGot.issuer());
-				res.add(new RLOrder(direction, RLAmount.newInstance(oeGotPositive), RLAmount.newInstance(newPaid), newAsk, pair));			
+				res.add(new RLOrder(direction, oeGotPositive, newPaid, newAsk, pair));			
 			}
 			else{
 				Amount oeGotRef = oeExecutedMinor.get(Amount.TakerGets);
 				Amount newGot = new Amount(oeGot.value().divide(refAsk,  MathContext.DECIMAL64), oeGotRef.currency(), oeGotRef.issuer());
 				Amount oePaidPositive = new Amount(oePaid.value(), oePaid.currency(), oePaid.issuer());
 				String pair = buildPair(oePaid, newGot);
-				res.add(new RLOrder(direction, RLAmount.newInstance(newGot), RLAmount.newInstance(oePaidPositive), newAsk, pair));			
+				res.add(new RLOrder(direction, newGot, oePaidPositive, newAsk, pair));			
 			}
 		}
 		return res;
 	}
 	
-	public static RLOrder basic(Direction direction, RLAmount quantity, RLAmount totalPrice){
-		return new RLOrder(direction, quantity, totalPrice, null, null);
 
-	}
 	
 	private static BigDecimal oeAvg(ArrayList<Offer> offers){
 		BigDecimal paids = new BigDecimal(0);
@@ -228,11 +235,11 @@ public final class RLOrder extends Base{
 	public SignedTransaction sign(Config config, int sequence, BigDecimal fees){	
 		OfferCreate offerCreate = new OfferCreate();
 		if (this.direction.equals(Direction.BUY.text())){
-			offerCreate.takerGets(totalPrice.amount());
-			offerCreate.takerPays(quantity.amount());
+			offerCreate.takerGets(totalPrice);
+			offerCreate.takerPays(quantity);
 		}else if (this.direction.equals(Direction.SELL.text())){
-			offerCreate.takerGets(quantity.amount());
-			offerCreate.takerPays(totalPrice.amount());			
+			offerCreate.takerGets(quantity);
+			offerCreate.takerPays(totalPrice);			
 		}else{
 			throw new IllegalArgumentException("Direction not valid");
 		}
