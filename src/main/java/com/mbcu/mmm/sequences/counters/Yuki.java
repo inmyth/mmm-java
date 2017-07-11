@@ -13,8 +13,11 @@ import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.sequences.Base;
 import com.mbcu.mmm.sequences.Common;
-import com.mbcu.mmm.sequences.Common.OnOfferExecuted;
+import com.mbcu.mmm.sequences.Common.OnMyOfferExecuted;
 import com.mbcu.mmm.utils.MyLogger;
+import com.ripple.core.coretypes.Amount;
+import com.ripple.core.coretypes.STObject;
+import com.ripple.core.types.known.sle.entries.Offer;
 
 import io.reactivex.schedulers.Schedulers;
 
@@ -30,9 +33,9 @@ public class Yuki extends Base implements Counter {
 		bus.toObservable()
 		.subscribeOn(Schedulers.newThread())
 		.subscribe(o -> {
-			if (o instanceof Common.OnOfferExecuted) {
-				OnOfferExecuted event = (OnOfferExecuted) o;
-				counter(event.oes);
+			if (o instanceof Common.OnMyOfferExecuted) {
+				OnMyOfferExecuted event = (OnMyOfferExecuted) o;
+				counter(event.oes, event.isOCmine);
 			} 
 		});
 
@@ -43,22 +46,54 @@ public class Yuki extends Base implements Counter {
 		return counter;
 	}
 
-	private void counter(List<RLOrder> oes){
-	oes.forEach(oe -> {
-		boolean isReversed = false;
-		BotConfig botConfig = config.getBotConfigMap().get(oe.getPair());
-		if (botConfig == null){
-			botConfig = config.getBotConfigMap().get(oe.getReversePair());		
-			isReversed = true;
-		}
-		if (botConfig == null){
-			return;
-		}
+	private void counter(List<Offer> oes, boolean isOCmine){
+		oes.stream().filter(oe -> {
+			if (isOCmine){
+				return true;
+			}else{
+				return config.getCredentials().addressEquals(oe.account());
+			}			
+		})
+		.forEach(oe -> {
+			
+		})
 		
-		RLOrder counter = buildCounter(botConfig, oe, isReversed);
-		onCounterReady(counter);			
-		});	
+		;
+		
+		
 	}
+	
+	
+	private OrderI buildCounter(BotConfig botConfig, Offer oe, boolean isOCmine){
+		STObject executed = oe.executed(oe.get(STObject.FinalFields));
+
+		if (isOCmine){// sell what I got
+			Amount quantity = executed.get(Amount.TakerGets);			
+			BigDecimal newAsk = oe.directoryAskQuality().add(botConfig.getGridspace());
+			Amount totalPrice = 
+		}
+	}
+	
+	
+//	private void counter(List<RLOrder> oes){
+//	oes.forEach(oe -> {
+//		boolean isReversed = false;
+//		BotConfig botConfig = config.getBotConfigMap().get(oe.getPair());
+//		if (botConfig == null){
+//			botConfig = config.getBotConfigMap().get(oe.getReversePair());		
+//			isReversed = true;
+//		}
+//		if (botConfig == null){
+//			return;
+//		}
+//		
+//		RLOrder counter = buildCounter(botConfig, oe, isReversed);
+//		onCounterReady(counter);			
+//		});	
+//	}
+	
+	
+	
 	
 	private RLOrder buildCounter(BotConfig botConfig, RLOrder origin, boolean isReversed){
 		RLAmount oldQuantity = origin.getQuantity();

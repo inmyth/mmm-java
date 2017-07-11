@@ -36,8 +36,8 @@ Got:     -0.556962/XRP
         "issuer": "rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"
     },
 - from OC's account perspective OE is
-I want to get 2 XRP and I got 1.443038 XRP
-I want to pay 60 JPY and I paid 42.564
+I want to get 0.556 XRP and I got 0.556 XRP
+I want to pay 16.428 JPY and I paid 16.428
 
 - from OE's account perspective OE is
 I want to get 249.03 JPY and got 16.42 JPY

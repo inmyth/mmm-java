@@ -6,6 +6,7 @@ import java.util.Collections;
 import org.json.JSONObject;
 import org.junit.Test;
 
+import com.mbcu.mmm.models.internal.OfferI;
 import com.ripple.core.coretypes.Amount;
 import com.ripple.core.coretypes.STObject;
 import com.ripple.core.coretypes.hash.Hash256;

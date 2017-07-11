@@ -8,12 +8,14 @@ import java.util.Queue;
 import java.util.stream.IntStream;
 
 import com.ripple.core.coretypes.Amount;
+import com.ripple.core.coretypes.STObject;
+import com.ripple.core.types.known.sle.entries.Offer;
 
 public class BotConfig {
 
 	String pair;
 	float startMiddlePrice;
-	float gridSpace;
+	String gridSpace;
 	int buyGridLevels;
 	int sellGridLevels;
 	float buyOrderQuantity;
@@ -54,12 +56,8 @@ public class BotConfig {
 		this.startMiddlePrice = startMiddlePrice;
 	}
 
-	public float getGridSpace() {
-		return gridSpace;
-	}
-
-	public void setGridSpace(float gridSpace) {
-		this.gridSpace = gridSpace;
+	public BigDecimal getGridspace(){
+		return new BigDecimal(this.gridSpace);
 	}
 
 	public int getBuyGridLevels() {
@@ -123,6 +121,8 @@ public class BotConfig {
 	public Amount getSellQuantityAmount(){
 		return base.amountWith(new BigDecimal(sellOrderQuantity));
 	}
+	
+
 	
 	public ArrayList<RLOrder> buildSeed(){
 		ArrayList<RLOrder> res = new ArrayList<>();

@@ -8,6 +8,9 @@ import com.google.gson.annotations.Expose;
 import com.mbcu.mmm.utils.GsonUtils;
 import com.mbcu.mmm.utils.MyUtils;
 import com.ripple.core.coretypes.AccountID;
+import com.ripple.core.coretypes.Amount;
+import com.ripple.core.coretypes.STObject;
+import com.ripple.core.types.known.sle.entries.Offer;
 
 public class Config {
 	
@@ -65,6 +68,22 @@ public class Config {
 		return res;
 	}
 	
+	
+	public BotConfig isPairMatched(Offer offer){
+		BotConfig res = null;
+		STObject executed = offer.executed(offer.get(STObject.FinalFields));
+		String at1 = OfferI.pairFrom(executed.get(Amount.TakerGets), executed.get(Amount.TakerPays));
+		res = botConfigMap.get(at1);
+		if (res != null){
+			return res;
+		}		
+		String at2 = OfferI.pairFrom(executed.get(Amount.TakerPays), executed.get(Amount.TakerGets));
+		res = botConfigMap.get(at2);
+		if (res != null){
+			return res;
+		}
+		return null;
+	}
 
 
 }

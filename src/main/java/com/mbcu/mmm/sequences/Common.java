@@ -193,8 +193,6 @@ public class Common extends Base {
 					bus.send(new OnOfferEdited(previousTxnId, offerCreated));
 				}
 			}
-			
-			
 			}
 			
 //			if (txn.account().address.equals(this.config.getCredentials().getAddress())) {
@@ -583,11 +581,13 @@ public class Common extends Base {
 		}		
 	}
 	
-	public static class OnOfferExecuted{
-		public List<RLOrder> oes;
+	public static class OnMyOfferExecuted{
+		public final boolean isOCmine;
+		public final List<Offer> oes;
 
-		public OnOfferExecuted(List<RLOrder> oes) {
+		public OnMyOfferExecuted(List<Offer> oes, boolean isOCmine) {
 			super();
+			this.isOCmine = isOCmine;
 			this.oes = oes;
 		}
 	}
