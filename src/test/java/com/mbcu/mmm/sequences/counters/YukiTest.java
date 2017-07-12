@@ -32,14 +32,14 @@ public class YukiTest {
     bought 0.100348 XRP at price 19.8 JPY.MrRipple
     bought 1.30636 JPY.TokyoJPY at price 0.050175 XRP   
       
-	  buy
+		buy
 		quantity:-0.69363877168/JPY/r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN
 		totalPrice:-0.6890598/JPY/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
-		rate:-0.69363877168
+		rate:0.9933744005069883
 		buy
 		quantity:-1.30636122832/JPY/r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN
 		totalPrice:-1.2978306/JPY/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
-		rate:-1.30636122832
+		rate:0.9934771700953337
 	 */
 	
 	@Test
