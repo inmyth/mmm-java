@@ -1,7 +1,5 @@
 package com.mbcu.mmm.sequences;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,17 +13,13 @@ import com.mbcu.mmm.main.Events.WSGotText;
 import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.models.internal.RLOrder;
 import com.mbcu.mmm.models.request.Request.Command;
-import com.mbcu.mmm.models.request.Submit;
 import com.mbcu.mmm.models.request.Subscribe;
-import com.mbcu.mmm.utils.GsonUtils;
 import com.mbcu.mmm.utils.MyLogger;
 import com.ripple.core.coretypes.AccountID;
 import com.ripple.core.coretypes.Amount;
-import com.ripple.core.coretypes.Currency;
 import com.ripple.core.coretypes.STObject;
 import com.ripple.core.coretypes.hash.Hash256;
 import com.ripple.core.coretypes.uint.UInt32;
-import com.ripple.core.fields.AccountIDField;
 import com.ripple.core.fields.Field;
 import com.ripple.core.serialized.enums.EngineResult;
 import com.ripple.core.types.known.sle.LedgerEntry;
@@ -33,27 +27,32 @@ import com.ripple.core.types.known.sle.entries.Offer;
 import com.ripple.core.types.known.tx.Transaction;
 import com.ripple.core.types.known.tx.result.AffectedNode;
 import com.ripple.core.types.known.tx.result.TransactionMeta;
-import com.ripple.core.types.known.tx.signed.SignedTransaction;
-import com.ripple.core.types.known.tx.txns.OfferCreate;
 
+import io.reactivex.Observer;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
-public class Common extends Base {
-	private boolean isSent = false;
-	
+public class Common extends Base {	
 	private Common(Config config) {
 		super(MyLogger.getLogger(Common.class.getName()), config);
 		this.config = config;
 		String subscribeRequest = Subscribe
-				.build(Command.SUBSCRIBE)
+			.build(Command.SUBSCRIBE)
 //				.withOrderbookFromConfig(config)
-				.withAccount(config.getCredentials().getAddress())
-				.stringify();
+			.withAccount(config.getCredentials().getAddress())
+			.stringify();
 
 		bus.toObservable()
-				 .subscribeOn(Schedulers.newThread())
-				
-				.subscribe(o -> {
+			.subscribeOn(Schedulers.newThread())			
+			.subscribe(new Observer<Object>() {
+
+				@Override
+				public void onSubscribe(Disposable d) {
+					// TODO Auto-generated method stub						
+				}
+
+				@Override
+				public void onNext(Object o) {
 					if (o instanceof Events.WSConnected) {
 						log("connected", Level.FINER);
 						log("Sending subsribe request");
@@ -64,26 +63,29 @@ public class Common extends Base {
 					} else if (o instanceof Events.WSError) {
 						Events.WSError event = (WSError) o;
 						log(event.e.getMessage(), Level.SEVERE);
-					} else if (o instanceof Events.WSGotText) {
-//						if (!isSent){
-//							for (int seq = 5968 ; seq < 5970; seq ++){						
-//								bus.send(new Events.WSRequestSendText(sign(seq, config)));
-//							}
-//							isSent = true;
-//						}
-						
+					} else if (o instanceof Events.WSGotText) {						
 						Events.WSGotText event = (WSGotText) o;
-						log(event.raw, Level.FINER);						
+						log(event.raw, Level.FINER);													
 						reroute(event.raw);
-					}
-				});
+					}						
+				}
+
+				@Override
+				public void onError(Throwable e) {
+					log(e.getMessage(), Level.SEVERE);					
+				}
+
+				@Override
+				public void onComplete() {						
+				}
+			});
 	}
 
 	public static Common newInstance(Config config) {
 		return new Common(config);
 	}
 
-	private void reroute(String raw) throws Exception {
+	private void reroute(String raw) {
 		if (raw.contains("response")) {
 			filterResponse(raw);
 		} else if (raw.contains("transaction")) {
@@ -177,7 +179,7 @@ public class Common extends Base {
 
 		if (txType.equals("OfferCreate")) {
 			RLOrder offerCreate = RLOrder.fromOfferCreate(txn);
-			log("OFFER CREATE Account: " + txnAccId + " Hash " + txnHash + " Sequence " + txnSequence + "\n" + GsonUtils.toJson(offerCreate));
+			log("OFFER CREATE Account: " + txnAccId + " Hash " + txnHash + " Sequence " + txnSequence + "\n" + offerCreate.stringify());
 			// OnOfferCreate event is only needed to increment sequence.
 			bus.send(new OnOfferCreate(txnAccId, txnHash, txnSequence));
 
@@ -185,10 +187,10 @@ public class Common extends Base {
 				AccountID ocAccId = offerCreated.account();		
 				RLOrder rlOfferCreated = RLOrder.fromOfferCreated(offerCreated);
 				if (previousTxnId == null) {
-					log("OFFER CREATED OCID " + ocAccId + " TxnID " + txnAccId + " OCPrevTxnId " + previousTxnId + " \n" + GsonUtils.toJson(rlOfferCreated) );
+					log("OFFER CREATED OCID " + ocAccId + " TxnID " + txnAccId + " OCPrevTxnId " + previousTxnId + " \n" + rlOfferCreated.stringify());
 					bus.send(new OnOfferCreated(txnAccId, ocAccId, offerCreated.previousTxnID(), rlOfferCreated));				
 				}else{
-					log("EDITED " + previousTxnId + " to " + txn.hash() + " \n" + GsonUtils.toJson(rlOfferCreated));
+					log("EDITED " + previousTxnId + " to " + txn.hash() + " \n" + rlOfferCreated.stringify());
 					bus.send(new OnOfferEdited(ocAccId, txnHash, previousTxnId, rlOfferCreated));
 				}
 			}
@@ -224,7 +226,7 @@ public class Common extends Base {
 		if (!oes.isEmpty()){
 			final StringBuffer sb = new StringBuffer("OFFER EXECUTED");
 			oes.forEach(oe -> {
-				sb.append(GsonUtils.toJson(oe));
+				sb.append(oe.stringify());
 			});
 			log(sb.toString());
 			bus.send(new OnOfferExecuted(oes));
@@ -294,7 +296,7 @@ public class Common extends Base {
 
 		if (txType.equals("OfferCreate")) {
 			RLOrder offerCreate = RLOrder.fromOfferCreate(txn);
-			log("OFFER CREATE Account: " + txnAccId + " Hash " + txnHash + " Sequence " + txnSequence + "\n" + GsonUtils.toJson(offerCreate));
+			log("OFFER CREATE Account: " + txnAccId + " Hash " + txnHash + " Sequence " + txnSequence + "\n" + offerCreate.stringify());
 			// OnOfferCreate event is only needed to increment sequence.
 			bus.send(new OnOfferCreate(txnAccId, txnHash, txnSequence));
 
@@ -338,9 +340,9 @@ public class Common extends Base {
 		}
 		
 		if (!oes.isEmpty()){
-			final StringBuffer sb = new StringBuffer("OFFER EXECUTED");
+			final StringBuffer sb = new StringBuffer("OFFER EXECUTED\n");
 			oes.forEach(oe -> {
-				sb.append(GsonUtils.toJson(oe));
+				sb.append(oe.stringify());
 			});
 			log(sb.toString());
 			bus.send(new OnOfferExecuted(oes));
@@ -497,26 +499,6 @@ public class Common extends Base {
 
 	}
 
-
-	
-	public String sign(int seq) {		
-		OfferCreate offerCreate = new OfferCreate();
-		offerCreate.takerGets(new Amount(new BigDecimal(1.0d)));
-		offerCreate.takerPays(new Amount(new BigDecimal(27.0d), Currency.fromString("JPY"),
-				AccountID.fromString("rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS")));
-		offerCreate.sequence(new UInt32(new BigInteger(String.valueOf(seq))));
-		offerCreate.fee(new Amount(new BigDecimal(12)));
-		offerCreate.account(AccountID.fromAddress(config.getCredentials().getAddress()));
-
-		SignedTransaction signed = offerCreate.sign(config.getCredentials().getSecret());
-		System.out.println(offerCreate.prettyJSON());
-
-		System.out.println(signed.hash);
-		System.out.println(signed.tx_blob);
-
-		return Submit.build(signed.tx_blob).stringify();
-
-	}
 	public static class OnOfferCanceled {
 		public AccountID account;
 		public Hash256 previousTxnId;

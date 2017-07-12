@@ -11,6 +11,10 @@ How to use:
 ```
 java -jar mmm.jar <path_to_config_file>
 ```
+v.010
+- privatized NamePair
+- used Observer on all sequences (intercept error)
+
 v.009
 - pre-alpha counter
 - removed RLAmount.
@@ -66,3 +70,4 @@ TODOS
 - (canceled, pointless) move all bus elements to the end of parser
 - update hash for OC. It looks like OC we send doesn't have meta
 - (done)define Counter class
+- (fixed) v.009 value precision of 18 is greater than maximum iou precision of 16

@@ -2,18 +2,12 @@ package com.mbcu.mmm.models.internal;
 
 import org.parceler.Parcel;
 
-import com.google.gson.annotations.Expose;
 import com.ripple.core.coretypes.AccountID;
 
 @Parcel
 public class Credentials {
-
 	String address;	
 	String secret;
-
-	public Credentials() {
-		// TODO Auto-generated constructor stub
-	}
 
 	public Credentials(String address, String secret) {
 		super();
@@ -37,10 +31,8 @@ public class Credentials {
 		this.secret = secret;
 	}
 
-	
 	public boolean addressEquals(AccountID accountID){
 		return accountID.address.equals(this.address);
 	}
-
 
 }

@@ -13,9 +13,7 @@ public interface Counter {
 		public CounterReady(RLOrder counter) {
 			super();
 			this.counter = counter;
-		}
-
-		
+		}		
 	}
 
 }

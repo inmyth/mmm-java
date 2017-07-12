@@ -10,6 +10,7 @@ import java.util.stream.IntStream;
 
 import org.parceler.Parcel;
 
+import com.mbcu.mmm.models.Asset;
 import com.mbcu.mmm.models.internal.RLOrder.Direction;
 import com.ripple.core.coretypes.AccountID;
 import com.ripple.core.coretypes.Amount;
@@ -23,22 +24,35 @@ public class BotConfig {
 	String gridSpace;
 	int buyGridLevels;
 	int sellGridLevels;
-	float buyOrderQuantity;
-	float sellOrderQuantity;	
-	transient NameIssuer base;
-	transient NameIssuer quote;
+	String buyOrderQuantity;
+	String sellOrderQuantity;	
+	transient Amount base;
+	transient Amount quote;
 
 	public static HashMap<String, BotConfig> buildMap(ArrayList<BotConfig> bots)  {
 		HashMap<String, BotConfig> res = new HashMap<>();
 		for (BotConfig bot : bots) {
 			String[] pair = buildBaseAndQuote(bot.getPair());
-			NameIssuer base = NameIssuer.fromDotForm(pair[0]);
-			NameIssuer quote = NameIssuer.fromDotForm(pair[1]);
-			bot.setBase(base);
-			bot.setQuote(quote);
+			bot.base = fromDotForm(pair[0]);
+			bot.quote = fromDotForm(pair[1]);			
 			res.put(bot.getPair(), bot);
 		}
 		return res;
+	}
+	
+	public static Amount fromDotForm(String part) throws IllegalArgumentException {
+		String currency = null;
+		String issuer = null;
+		String[] b = part.split("[.]");
+		if (!b[0].equals(Asset.Currency.XRP.text()) && b.length != 2) {
+			throw new IllegalArgumentException("currency pair not formatted in base.issuer/quote.issuer");
+		} else {
+			currency = b[0];
+			if (b.length == 2) {
+				issuer = b[1];
+			}
+		}		
+		return issuer == null ? new Amount(new BigDecimal("0")) : new Amount(Currency.fromString(currency), AccountID.fromAddress(issuer));		
 	}
 	
 	public static String[] buildBaseAndQuote(String pair) {
@@ -82,51 +96,31 @@ public class BotConfig {
 		this.sellGridLevels = sellGridLevels;
 	}
 
-	public float getBuyOrderQuantity() {
-		return buyOrderQuantity;
+
+	public BigDecimal getBuyOrderQuantity() {
+		return new BigDecimal(buyOrderQuantity);
 	}
 
-	public void setBuyOrderQuantity(float buyOrderQuantity) {
-		this.buyOrderQuantity = buyOrderQuantity;
+	public BigDecimal getSellOrderQuantity() {
+		return new BigDecimal(sellOrderQuantity);
 	}
-
-	public float getSellOrderQuantity() {
-		return sellOrderQuantity;
-	}
-
-	public void setSellOrderQuantity(float sellOrderQuantity) {
-		this.sellOrderQuantity = sellOrderQuantity;
-	}
-
-	public NameIssuer getBase() {
+	
+	
+	public Amount getBase() {
 		return base;
 	}
-
-	public void setBase(NameIssuer base) {
-		this.base = base;
-	}
-
-	public NameIssuer getQuote() {
+	
+	public Amount getQuote() {
 		return quote;
-	}
-
-	public void setQuote(NameIssuer quote) {
-		this.quote = quote;
 	}
 
 	private Queue<Integer> getLevels(int max){
 		Queue<Integer> res = new LinkedList<>();
-		IntStream.range(0, max ).forEach(a -> {res.add(a);});
+		IntStream.range(1, max + 1).forEach(a -> {res.add(a);});
 		return res;
 	}
 
-	public Amount getBuyQuantityAmount(){
-		return base.amountWith(new BigDecimal(buyOrderQuantity));
-	}
-	
-	public Amount getSellQuantityAmount(){
-		return base.amountWith(new BigDecimal(sellOrderQuantity));
-	}
+
 	
 	public ArrayList<RLOrder> buildSeed(){
 		ArrayList<RLOrder> res = new ArrayList<>();
@@ -134,29 +128,29 @@ public class BotConfig {
 		BigDecimal margin = new BigDecimal(this.gridSpace);
 		Queue<Integer> buyLevels = getLevels(this.buyGridLevels);
 		Queue<Integer> sellLevels = getLevels(this.sellGridLevels);
-	
 		
 		while (true){
 			if (buyLevels.isEmpty() && sellLevels.isEmpty()){
 				break;
 			}
 			if (!buyLevels.isEmpty()){
-				Amount quantity = getBuyQuantityAmount();				
+				Amount quantity =	base.add(getBuyOrderQuantity());	
+				
 				BigDecimal rate = middlePrice.subtract(margin.multiply(new BigDecimal(buyLevels.remove()), MathContext.DECIMAL64));
 				if (rate.compareTo(BigDecimal.ZERO) <= 0){
 					buyLevels.clear();				
 				}else{
 					BigDecimal totalPriceValue = quantity.value().multiply(rate, MathContext.DECIMAL64);
-					Amount totalPrice =  RLOrder.amount(totalPriceValue, Currency.fromString(quote.currency), AccountID.fromAddress(quote.issuer));
+					Amount totalPrice =  RLOrder.amount(totalPriceValue, Currency.fromString(quote.currencyString()), AccountID.fromAddress(quote.issuerString()));
 					RLOrder buy = RLOrder.basic(Direction.BUY, quantity, totalPrice);
 					res.add(buy);
 				}
 			}
 			if (!sellLevels.isEmpty()){
-				Amount quantity = getSellQuantityAmount();
+				Amount quantity = base.add(getSellOrderQuantity());
 				BigDecimal rate = middlePrice.add(margin.multiply(new BigDecimal(sellLevels.remove()), MathContext.DECIMAL64));
 				BigDecimal totalPriceValue = quantity.value().multiply(rate, MathContext.DECIMAL64);
-				Amount totalPrice = RLOrder.amount(totalPriceValue, Currency.fromString(quote.currency), AccountID.fromAddress(quote.issuer));
+				Amount totalPrice = RLOrder.amount(totalPriceValue, Currency.fromString(quote.currencyString()), AccountID.fromAddress(quote.issuerString()));
 				RLOrder sell = RLOrder.basic(Direction.SELL, quantity, totalPrice);
 				res.add(sell);	
 			}			

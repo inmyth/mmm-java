@@ -1,11 +1,9 @@
 package com.mbcu.mmm.models.request;
 
 import java.util.ArrayList;
-import java.util.List;
 
-import com.mbcu.mmm.models.internal.BotConfig;
 import com.mbcu.mmm.models.internal.Config;
-import com.mbcu.mmm.models.internal.NameIssuer;
+import com.ripple.core.coretypes.Amount;
 
 public class Subscribe extends Request {
 
@@ -59,7 +57,7 @@ public class Subscribe extends Request {
 		return this;
 	}
 
-	public Subscribe withOrderbook(NameIssuer takerGets, NameIssuer takerPays){
+	public Subscribe withOrderbook(Amount takerGets, Amount takerPays){
 		if (this.books == null){
 			this.books = new ArrayList<>();
 		}
@@ -78,10 +76,24 @@ public class Subscribe extends Request {
 		NameIssuer taker_gets, taker_pays;
 		boolean snapshot = false;
 		boolean both = true;
-		public Book(NameIssuer taker_gets, NameIssuer taker_pays) {
+		public Book(Amount taker_gets, Amount taker_pays) {
 			super();
-			this.taker_gets = taker_gets;
-			this.taker_pays = taker_pays;
+			this.taker_gets = new NameIssuer(taker_gets);
+			this.taker_pays = new NameIssuer(taker_pays);
+		}
+	}
+	
+	private static class NameIssuer {
+		String currency;
+		String issuer;
+
+		private NameIssuer(Amount amount) {
+			super();
+			
+			this.currency = amount.currencyString();
+			if (!amount.isNative()){
+				this.issuer = amount.issuerString();
+			}
 		}
 	}
 	

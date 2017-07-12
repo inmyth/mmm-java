@@ -3,6 +3,7 @@ package com.mbcu.mmm.models.internal;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +46,7 @@ public final class RLOrder extends Base{
 	private final BigDecimal ask;
     private final String pair;
 
-	public RLOrder(Direction direction, Amount quantity, Amount totalPrice, BigDecimal ask, String pair) {
+	private RLOrder(Direction direction, Amount quantity, Amount totalPrice, BigDecimal ask, String pair) {
 		super();
 		this.direction = direction.text;
 		this.quantity = quantity;
@@ -90,21 +91,25 @@ public final class RLOrder extends Base{
 	}
 	
 	public BigDecimal getAsk() {
-		return ask;
+		if (ask != null){
+			return ask;
+		}
+		return totalPrice.value().divide(quantity.value(), MathContext.DECIMAL32);
 	}
 	
 	public static Amount amount(BigDecimal value, Currency currency, AccountID issuer){
 		if(currency.isNative()){
-			value = value.setScale(6, BigDecimal.ROUND_HALF_DOWN);
+			value = value.round(new MathContext(6, RoundingMode.HALF_DOWN));
 			return new Amount(value);
 		}else{
-			value = value.setScale(16, BigDecimal.ROUND_HALF_DOWN);
+			value = value.round(new MathContext(16, RoundingMode.HALF_DOWN));
 			return new Amount(value, currency, issuer);
 		}
 	}
 	
 	public static RLOrder basic(Direction direction, Amount quantity, Amount totalPrice){
-		return new RLOrder(direction, quantity, totalPrice, null, null);
+		String pair = buildPair(quantity, totalPrice);
+		return new RLOrder(direction, quantity, totalPrice, null, pair);
 
 	}
 	
@@ -223,7 +228,6 @@ public final class RLOrder extends Base{
 		return pair;
 	}
 	
-	
 	public static String buildPair(Amount pay, Amount get){
 		return buildPair(get.currencyString(), get.issuerString(), pay.currencyString(), pay.issuerString());
 	}
@@ -251,8 +255,19 @@ public final class RLOrder extends Base{
 	}
 
 	@Override
-	public String stringify() {
-		return super.stringify(this);
+	public String stringify() {	
+		StringBuffer sb = new StringBuffer(direction);
+		sb.append("\n");
+		sb.append("quantity:");
+		sb.append(quantity.toTextFull());
+		sb.append("\n");
+		sb.append("totalPrice:");
+		sb.append(totalPrice.toTextFull());
+		sb.append("\n");
+		sb.append("rate:");
+		sb.append(getAsk().toString());
+		sb.append("\n");
+		return sb.toString();		
 	}
-
+	
 }

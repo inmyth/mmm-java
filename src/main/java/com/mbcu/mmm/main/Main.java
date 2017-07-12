@@ -3,7 +3,7 @@ package com.mbcu.mmm.main;
 import java.io.IOException;
 
 import com.mbcu.mmm.models.internal.Config;
-import com.mbcu.mmm.sequences.Manager;
+import com.mbcu.mmm.sequences.Starter;
 import com.mbcu.mmm.utils.MyLogger;
 import com.neovisionaries.ws.client.WebSocketException;
 
@@ -17,7 +17,7 @@ public class Main {
 	private static void start(String[] args) throws IOException, WebSocketException{	
 		MyLogger.setup();
 		Config config = Config.build(args[0]);
-		Manager manager = Manager.newInstance(config);
+		Starter manager = Starter.newInstance(config);
 		manager.start();	
 	}
 	

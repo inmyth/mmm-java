@@ -17,32 +17,53 @@ import com.mbcu.mmm.sequences.state.StateProvider;
 import com.mbcu.mmm.utils.MyLogger;
 import com.neovisionaries.ws.client.WebSocketException;
 
-public class Manager extends Base{
+import io.reactivex.Observer;
+import io.reactivex.disposables.Disposable;
+
+public class Starter extends Base{
   private final CountDownLatch latch = new CountDownLatch(1);
   private final RxBus bus = RxBusProvider.getInstance();
   private State state;
   
   
-	public Manager(Config config) {
-		super(MyLogger.getLogger(Manager.class.getName()), config);
+	public Starter(Config config) {
+		super(MyLogger.getLogger(Starter.class.getName()), config);
 		this.state = StateProvider.getInstance(config);
 
-		bus
-		.toObservable()
-		.subscribe(o -> {
-			if (o instanceof Events.WSConnected){
-				bus.send(new Events.WSRequestSendText(AccountInfo.newInstance(config.getCredentials().getAddress()).stringify()));			
-			}else if (o instanceof Common.OnAccountInfoSequence){
-				Common.OnAccountInfoSequence event = (OnAccountInfoSequence) o;
-				state.setSequence(event.sequence);
-				latch.countDown();
+		bus.toObservable()
+		.subscribe(new Observer<Object>() {
+
+			@Override
+			public void onSubscribe(Disposable d) {
+				// TODO Auto-generated method stub			
+			}
+
+			@Override
+			public void onNext(Object o) {
+				if (o instanceof Events.WSConnected){
+					bus.send(new Events.WSRequestSendText(AccountInfo.newInstance(config.getCredentials().getAddress()).stringify()));			
+				}else if (o instanceof Common.OnAccountInfoSequence){
+					Common.OnAccountInfoSequence event = (OnAccountInfoSequence) o;
+					state.setSequence(event.sequence);
+					latch.countDown();
+				}				
+			}
+
+			@Override
+			public void onError(Throwable e) {
+				// TODO Auto-generated method stub			
+			}
+
+			@Override
+			public void onComplete() {
+				// TODO Auto-generated method stub				
 			}
 		});
 		
 	}
 	
-	public static Manager newInstance(Config config){
-		Manager res = new Manager(config);
+	public static Starter newInstance(Config config){
+		Starter res = new Starter(config);
 		return res;
 	}
 	
