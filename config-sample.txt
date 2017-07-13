@@ -24,6 +24,15 @@
 			"sellOrderQuantity": 0.00001
 		},
 		{
+			"pair": "JPY.r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN/JPY.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
+			"startMiddlePrice": 0.994,
+			"gridSpace": 0.005,
+			"buyGridLevels": 3,
+			"sellGridLevels": 2,
+			"buyOrderQuantity": 2,
+			"sellOrderQuantity": 2
+		},
+		{
 			"pair": "XRP/USD.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
 			"startMiddlePrice": 0.227,
 			"gridSpace": 0.05,
