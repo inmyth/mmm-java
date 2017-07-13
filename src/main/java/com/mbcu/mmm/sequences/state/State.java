@@ -1,7 +1,6 @@
 package com.mbcu.mmm.sequences.state;
 
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
@@ -29,6 +28,7 @@ public class State extends Base {
 	
 	private final AtomicInteger sequence = new AtomicInteger(0);
 	private final ConcurrentHashMap<Integer, SubmitCache> pending = new ConcurrentHashMap<>();
+	
 
 	private RxBus bus = RxBusProvider.getInstance();
 

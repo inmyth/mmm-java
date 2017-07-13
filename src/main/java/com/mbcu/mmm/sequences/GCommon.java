@@ -272,7 +272,7 @@ public class GCommon extends Base {
 			List<RLOrder> res = new ArrayList<>();
 			if (!flagSizeTwo || !flagXRPfirst || !flagXRPlast){
 				cache.stream().forEach(oe -> {
-					res.add(RLOrder.fromOfferExecuted(oe, false));
+					res.add(RLOrder.fromOfferExecuted(oe, true));
 				});
 				return res;
 			}

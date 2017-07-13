@@ -94,7 +94,7 @@ public final class RLOrder extends Base{
 		if (ask != null){
 			return ask;
 		}
-		return totalPrice.value().divide(quantity.value(), MathContext.DECIMAL32);
+		return totalPrice.value().divide(quantity.value(), MathContext.DECIMAL128);
 	}
 	
 	public static Amount amount(BigDecimal value, Currency currency, AccountID issuer){
@@ -107,15 +107,21 @@ public final class RLOrder extends Base{
 		}
 	}
 	
-	public static RLOrder basic(Direction direction, Amount quantity, Amount totalPrice){
-		String pair = buildPair(quantity, totalPrice);
+	/**
+	 * Instantiate RLORder where ask rate is not needed or used for log. This object typically goes to submit or test. 
+	 * @param direction
+	 * @param quantity
+	 * @param totalPrice
+	 * @return
+	 */
+	public static RLOrder rateUnneeded(Direction direction, Amount quantity, Amount totalPrice){
+		String pair = direction == Direction.BUY ? buildPair(totalPrice, quantity) : buildPair(quantity, totalPrice);
 		return new RLOrder(direction, quantity, totalPrice, null, pair);
-
 	}
 	
 	public static RLOrder fromOfferCreate(Transaction txn){
-		Amount gets = txn.get(Amount.TakerGets);
-		Amount pays = txn.get(Amount.TakerPays);
+		Amount gets = txn.get(Amount.TakerPays);
+		Amount pays = txn.get(Amount.TakerGets);
 		String pair = buildPair(gets, pays);
 		RLOrder res = new RLOrder(Direction.BUY, gets, pays, null, pair);
 		return res;
@@ -130,15 +136,15 @@ public final class RLOrder extends Base{
 		return res;
 	}
 
-	public static RLOrder fromOfferExecuted(Offer offer, boolean isOEOwn) {
+	public static RLOrder fromOfferExecuted(Offer offer, boolean isOCOwn) {
 		// All OE's paid and got are negative and need to be reversed
-		BigDecimal ask = isOEOwn ? BigDecimal.ONE.divide(askFrom(offer), MathContext.DECIMAL64) : askFrom(offer);
+		BigDecimal ask = isOCOwn ? BigDecimal.ONE.divide(askFrom(offer), MathContext.DECIMAL64) : askFrom(offer);
 		STObject executed = offer.executed(offer.get(STObject.FinalFields));
 		Amount paid = executed.get(Amount.TakerPays);
 		Amount got = executed.get(Amount.TakerGets);	
-		Amount rlGot = isOEOwn ? amount(paid.value(), paid.currency(), paid.issuer()) : amount(got.value(), got.currency(), got.issuer());
-		Amount rlPaid = isOEOwn ? amount(got.value(), got.currency(), got.issuer()) :amount(paid.value(), paid.currency(), paid.issuer()) ;
-		String pair = buildPair(isOEOwn ? got : paid , isOEOwn ? paid: got);
+		Amount rlGot = isOCOwn ? amount(paid.value(), paid.currency(), paid.issuer()) : amount(got.value(), got.currency(), got.issuer());
+		Amount rlPaid = isOCOwn ? amount(got.value(), got.currency(), got.issuer()) :amount(paid.value(), paid.currency(), paid.issuer()) ;
+		String pair = buildPair(isOCOwn ? got : paid , isOCOwn ? paid: got);
 		RLOrder res = new RLOrder(Direction.BUY, rlGot, rlPaid, ask, pair);	
 		System.out.println("RLORDER \n " + res.stringify());
 		return res;
@@ -266,6 +272,9 @@ public final class RLOrder extends Base{
 		sb.append("\n");
 		sb.append("rate:");
 		sb.append(getAsk().toString());
+		sb.append("\n");
+		sb.append("pair:");
+		sb.append(getPair());
 		sb.append("\n");
 		return sb.toString();		
 	}

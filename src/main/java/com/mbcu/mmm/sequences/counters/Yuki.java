@@ -88,20 +88,19 @@ public class Yuki extends Base implements Counter {
 		RLOrder res = null;
 		if (isDirectionMatch) {
 			Amount newQuantity = origin.getQuantity().multiply(new BigDecimal("-1"));
-			BigDecimal oldRate = origin.getAsk();
 			BigDecimal newRate = origin.getAsk().add(botConfig.getGridSpace());
 			Amount newTotalPrice = RLOrder.amount(newQuantity.value().multiply(newRate), oldTotalPrice.currency(),
 					oldTotalPrice.issuer());
-			res = RLOrder.basic(Direction.SELL, newQuantity, newTotalPrice);
+			res = RLOrder.rateUnneeded(Direction.SELL, newQuantity, newTotalPrice);
 		} else {
 			Amount newQuantity = origin.getTotalPrice().multiply(new BigDecimal("-1"));
-			BigDecimal newRate = BigDecimal.ONE.divide(origin.getAsk().add(botConfig.getGridSpace()), MathContext.DECIMAL128);
+			BigDecimal newRate = BigDecimal.ONE.divide(origin.getAsk(), MathContext.DECIMAL128).subtract(botConfig.getGridSpace());
 			if (newRate.compareTo(BigDecimal.ZERO) <= 0) {
 				log("counter rate below zero " + newRate + " " + origin.getPair(), Level.SEVERE);
 			}
-			Amount newTotalPricce = RLOrder.amount(newQuantity.value().multiply(newRate), oldQuantity.currency(),
+			Amount newTotalPrice = RLOrder.amount(newQuantity.value().multiply(newRate), oldQuantity.currency(),
 					oldQuantity.issuer());
-			res = RLOrder.basic(Direction.BUY, newQuantity, newTotalPricce );
+			res = RLOrder.rateUnneeded(Direction.BUY, newQuantity, newTotalPrice);
 		}
 		return res;
 	}

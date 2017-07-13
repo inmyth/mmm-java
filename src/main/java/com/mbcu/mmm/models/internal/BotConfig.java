@@ -142,7 +142,7 @@ public class BotConfig {
 				}else{
 					BigDecimal totalPriceValue = quantity.value().multiply(rate, MathContext.DECIMAL64);
 					Amount totalPrice =  RLOrder.amount(totalPriceValue, Currency.fromString(quote.currencyString()), AccountID.fromAddress(quote.issuerString()));
-					RLOrder buy = RLOrder.basic(Direction.BUY, quantity, totalPrice);
+					RLOrder buy = RLOrder.rateUnneeded(Direction.BUY, quantity, totalPrice);
 					res.add(buy);
 				}
 			}
@@ -151,7 +151,7 @@ public class BotConfig {
 				BigDecimal rate = middlePrice.add(margin.multiply(new BigDecimal(sellLevels.remove()), MathContext.DECIMAL64));
 				BigDecimal totalPriceValue = quantity.value().multiply(rate, MathContext.DECIMAL64);
 				Amount totalPrice = RLOrder.amount(totalPriceValue, Currency.fromString(quote.currencyString()), AccountID.fromAddress(quote.issuerString()));
-				RLOrder sell = RLOrder.basic(Direction.SELL, quantity, totalPrice);
+				RLOrder sell = RLOrder.rateUnneeded(Direction.SELL, quantity, totalPrice);
 				res.add(sell);	
 			}			
 		}	

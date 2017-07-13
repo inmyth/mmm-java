@@ -40,6 +40,38 @@ public class YukiTest {
 		quantity:-1.30636122832/JPY/r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN
 		totalPrice:-1.2978306/JPY/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
 		rate:0.9934771700953337
+		
+		for
+		"pair": "JPY.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS/JPY.r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN",
+		"gridSpace": 0.0005,
+		matches
+		buy
+		quantity:0.6890598/JPY/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
+		totalPrice:0.69329424178/JPY/r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN
+		rate:1.006145245710169131909886485904416
+		pair:JPY.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS/JPY.r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN
+		
+		buy
+		quantity:1.2978306/JPY/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
+		totalPrice:1.30571231302/JPY/r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN
+		rate:1.006072990589064551259617395367315
+		pair:JPY.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS/JPY.r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN
+
+		for
+		"pair": "JPY.r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN/JPY.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
+		"gridSpace": 0.0005
+		sell
+		quantity:0.69363877168/JPY/r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN
+		totalPrice:0.68940661938584/JPY/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
+		rate:0.9938986220682132789743019862098721
+		pair:JPY.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS/JPY.r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN
+		
+		sell
+		quantity:1.30636122832/JPY/r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN
+		totalPrice:1.29848378061416/JPY/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS
+		rate:0.9939699314897989470361595399005741
+		pair:JPY.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS/JPY.r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN
+
 	 */
 	
 	@Test
@@ -48,8 +80,8 @@ public class YukiTest {
 		Amount t1 = RLOrder.amount(new BigDecimal("-0.6890598"), Currency.fromString("JPY"), AccountID.fromAddress("rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"));
 		Amount q2 = RLOrder.amount(new BigDecimal("-1.30636122832"), Currency.fromString("JPY"), AccountID.fromAddress("r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN"));
 		Amount t2 = RLOrder.amount(new BigDecimal("-1.2978306"), Currency.fromString("JPY"), AccountID.fromAddress("rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"));
-		RLOrder r1 = RLOrder.basic(Direction.BUY, q1, t1);
-		RLOrder r2 = RLOrder.basic(Direction.BUY, q2, t2);
+		RLOrder r1 = RLOrder.rateUnneeded(Direction.BUY, q1, t1);
+		RLOrder r2 = RLOrder.rateUnneeded(Direction.BUY, q2, t2);
 
 	  List<RLOrder> list = new ArrayList<>();
 	  list.add(r1);

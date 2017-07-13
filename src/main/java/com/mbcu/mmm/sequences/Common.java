@@ -116,123 +116,6 @@ public class Common extends Base {
 		}
 
 	}
-
-	public void filterStream(String raw) {
-		if (!raw.contains("tesSUCCESS") && 
-				!(raw.contains("OfferCreate") || raw.contains("Payment") || raw.contains("OfferCancel"))){
-			log("Stream parse condition failed : " + raw, Level.WARNING);
-			return;
-		}
-		
-		if (!raw.contains(config.getCredentials().getAddress())){
-			log("Not related to our order : " + raw, Level.WARNING);
-			return;
-		}
-				
-		ArrayList<RLOrder> oes = new ArrayList<>();
-		Offer offerCreated = null;
-		JSONObject transaction = new JSONObject(raw);
-
-		JSONObject metaJSON = (JSONObject) transaction.remove("meta");
-		TransactionMeta meta = (TransactionMeta) STObject.fromJSONObject(metaJSON);
-		Transaction txn = (Transaction) STObject.fromJSONObject(transaction.getJSONObject("transaction"));
-		AccountID txnAccId = txn.account();
-		Hash256 txnHash = txn.hash();
-		UInt32 txnSequence = txn.sequence();
-
-		ArrayList<AffectedNode> deletedNodes = new ArrayList<>();
-		ArrayList<Offer> offersExecuteds = new ArrayList<>();
-
-		for (AffectedNode node : meta.affectedNodes()) {
-			if (!node.isCreatedNode()) {
-				LedgerEntry asPrevious = (LedgerEntry) node.nodeAsPrevious();
-				if (node.isDeletedNode()) {
-					deletedNodes.add(node);
-				}
-				if (asPrevious instanceof Offer) {
-					offersExecuteds.add((Offer) asPrevious);
-				}
-			} else {
-				LedgerEntry asFinal = (LedgerEntry) node.nodeAsPrevious();
-				if (asFinal instanceof Offer) {
-					Offer offer = (Offer) asFinal;
-					offerCreated = offer;
-				}
-			}
-		}
-
-		Hash256 previousTxnId = null;
-		for (AffectedNode deletedNode : deletedNodes) {
-			LedgerEntry le = (LedgerEntry) deletedNode.nodeAsFinal();
-			previousTxnId = le.get(Hash256.PreviousTxnID);
-			if (previousTxnId != null) {
-				break;
-			}
-		}
-
-		String txType = txn.get(Field.TransactionType).toString();
-		if (txType.equals("OfferCancel")) {
-			log("CANCELED Account: " + txn.account().address + " Seq: " + txn.sequence() + "  prevTxnId: " + previousTxnId);
-			bus.send(new OnOfferCanceled(txn.account(), txn.sequence(), previousTxnId));
-			return;
-		}
-
-		if (txType.equals("OfferCreate")) {
-			RLOrder offerCreate = RLOrder.fromOfferCreate(txn);
-			log("OFFER CREATE Account: " + txnAccId + " Hash " + txnHash + " Sequence " + txnSequence + "\n" + offerCreate.stringify());
-			// OnOfferCreate event is only needed to increment sequence.
-			bus.send(new OnOfferCreate(txnAccId, txnHash, txnSequence));
-
-			if (offerCreated != null) {
-				AccountID ocAccId = offerCreated.account();		
-				RLOrder rlOfferCreated = RLOrder.fromOfferCreated(offerCreated);
-				if (previousTxnId == null) {
-					log("OFFER CREATED OCID " + ocAccId + " TxnID " + txnAccId + " OCPrevTxnId " + previousTxnId + " \n" + rlOfferCreated.stringify());
-					bus.send(new OnOfferCreated(txnAccId, ocAccId, offerCreated.previousTxnID(), rlOfferCreated));				
-				}else{
-					log("EDITED " + previousTxnId + " to " + txn.hash() + " \n" + rlOfferCreated.stringify());
-					bus.send(new OnOfferEdited(ocAccId, txnHash, previousTxnId, rlOfferCreated));
-				}
-			}
-			
-			if (txn.account().address.equals(this.config.getCredentials().getAddress())) {
-				FilterAutobridged fa = new FilterAutobridged();
-				for (Offer offer : offersExecuteds) {
-					STObject finalFields = offer.get(STObject.FinalFields);
-					if (finalFields != null) {
-						fa.push(offer);
-					}
-				}
-				oes.addAll(fa.process());
-			}else{
-				for (Offer offer : offersExecuteds) {
-					STObject finalFields = offer.get(STObject.FinalFields);
-					
-					if (finalFields != null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
-						oes.add(RLOrder.fromOfferExecuted(offer, true));
-					}
-				}
-			}
-		} else if (txType.equals("Payment") && !txn.account().address.equals(config.getCredentials().getAddress())) {
-			// we only care about payment not from ours.
-			for (Offer offer : offersExecuteds) {
-				STObject finalFields = offer.get(STObject.FinalFields);
-				if (finalFields != null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
-					oes.add(RLOrder.fromOfferExecuted(offer, false));
-				}
-			}
-		}
-		
-		if (!oes.isEmpty()){
-			final StringBuffer sb = new StringBuffer("OFFER EXECUTED");
-			oes.forEach(oe -> {
-				sb.append(oe.stringify());
-			});
-			log(sb.toString());
-			bus.send(new OnOfferExecuted(oes));
-		}
-
-	}
 	
 	public void filterStream2(String raw) {
 		if (!raw.contains("tesSUCCESS") && 
@@ -334,7 +217,7 @@ public class Common extends Base {
 			for (Offer offer : offersExecuteds) {
 				STObject finalFields = offer.get(STObject.FinalFields);
 				if (finalFields != null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
-					oes.add(RLOrder.fromOfferExecuted(offer, false));
+					oes.add(RLOrder.fromOfferExecuted(offer, true));
 				}
 			}
 		}
