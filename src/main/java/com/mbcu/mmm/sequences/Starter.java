@@ -3,13 +3,13 @@ package com.mbcu.mmm.sequences;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
-import com.mbcu.mmm.main.Events;
 import com.mbcu.mmm.main.WebSocketClient;
 import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.models.request.AccountInfo;
 import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.sequences.Common.OnAccountInfoSequence;
+import com.mbcu.mmm.sequences.Common.OnResponseLedgerClosed;
 import com.mbcu.mmm.sequences.balancer.Balancer;
 import com.mbcu.mmm.sequences.counters.Yuki;
 import com.mbcu.mmm.sequences.state.State;
@@ -21,7 +21,7 @@ import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
 
 public class Starter extends Base{
-  private final CountDownLatch latch = new CountDownLatch(1);
+  private final CountDownLatch latch = new CountDownLatch(2);
   private final RxBus bus = RxBusProvider.getInstance();
   private State state;
   
@@ -40,13 +40,17 @@ public class Starter extends Base{
 
 			@Override
 			public void onNext(Object o) {
-				if (o instanceof Events.WSConnected){
-					bus.send(new Events.WSRequestSendText(AccountInfo.newInstance(config.getCredentials().getAddress()).stringify()));			
+				if (o instanceof WebSocketClient.WSConnected){
+					bus.send(new WebSocketClient.WSRequestSendText(AccountInfo.newInstance(config.getCredentials().getAddress()).stringify()));			
 				}else if (o instanceof Common.OnAccountInfoSequence){
 					Common.OnAccountInfoSequence event = (OnAccountInfoSequence) o;
 					state.setSequence(event.sequence);
 					latch.countDown();
-				}				
+				}else if (o instanceof Common.OnResponseLedgerClosed){
+					Common.OnResponseLedgerClosed event =  (OnResponseLedgerClosed) o;
+					state.setLedgerIndex(event.ledgerEvent);
+					latch.countDown();
+				}
 			}
 
 			@Override
@@ -90,7 +94,8 @@ public class Starter extends Base{
 	}
 	
 	private void postInit(){
-		log("Initiation complete, current sequence is : " + state.getSequence());	
+		log(String.format("Initiation complete, current ledger closed: %d, validated: %d, sequence : %d", 
+				state.getLedgerClosed(), state.getLedgerValidated(), state.getSequence()));	
 		Yuki.newInstance(config);
 		Submitter.newInstance(config);
 		Balancer.newInstance(config);

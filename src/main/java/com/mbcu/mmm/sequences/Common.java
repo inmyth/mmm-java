@@ -7,13 +7,15 @@ import java.util.logging.Level;
 
 import org.json.JSONObject;
 
-import com.mbcu.mmm.main.Events;
-import com.mbcu.mmm.main.Events.WSError;
-import com.mbcu.mmm.main.Events.WSGotText;
+import com.mbcu.mmm.main.WebSocketClient;
+import com.mbcu.mmm.main.WebSocketClient.WSError;
+import com.mbcu.mmm.main.WebSocketClient.WSGotText;
 import com.mbcu.mmm.models.internal.Config;
+import com.mbcu.mmm.models.internal.LedgerEvent;
 import com.mbcu.mmm.models.internal.RLOrder;
 import com.mbcu.mmm.models.request.Request.Command;
 import com.mbcu.mmm.models.request.Subscribe;
+import com.mbcu.mmm.models.request.Subscribe.Stream;
 import com.mbcu.mmm.utils.MyLogger;
 import com.ripple.core.coretypes.AccountID;
 import com.ripple.core.coretypes.Amount;
@@ -39,6 +41,7 @@ public class Common extends Base {
 		String subscribeRequest = Subscribe
 			.build(Command.SUBSCRIBE)
 //				.withOrderbookFromConfig(config)
+			.withStream(Stream.LEDGER)
 			.withAccount(config.getCredentials().getAddress())
 			.stringify();
 
@@ -53,18 +56,18 @@ public class Common extends Base {
 
 				@Override
 				public void onNext(Object o) {
-					if (o instanceof Events.WSConnected) {
+					if (o instanceof WebSocketClient.WSConnected) {
 						log("connected", Level.FINER);
 						log("Sending subsribe request");
 						log(subscribeRequest);
-						bus.send(new Events.WSRequestSendText(subscribeRequest));
-					} else if (o instanceof Events.WSDisconnected) {
+						bus.send(new WebSocketClient.WSRequestSendText(subscribeRequest));
+					} else if (o instanceof WebSocketClient.WSDisconnected) {
 						log("disconnected");
-					} else if (o instanceof Events.WSError) {
-						Events.WSError event = (WSError) o;
+					} else if (o instanceof WebSocketClient.WSError) {
+						WebSocketClient.WSError event = (WSError) o;
 						log(event.e.getMessage(), Level.SEVERE);
-					} else if (o instanceof Events.WSGotText) {						
-						Events.WSGotText event = (WSGotText) o;
+					} else if (o instanceof WebSocketClient.WSGotText) {						
+						WebSocketClient.WSGotText event = (WSGotText) o;
 						log(event.raw, Level.FINER);													
 						reroute(event.raw);
 					}						
@@ -90,9 +93,15 @@ public class Common extends Base {
 			filterResponse(raw);
 		} else if (raw.contains("transaction")) {
 			filterStream2(raw);
+		} else if (raw.contains("ledgerClosed")){
+			filterLedgerClosed(raw);
 		}
 	}
-	
+		
+	private void filterLedgerClosed(String raw){
+		JSONObject whole = new JSONObject(raw);	
+		bus.send(new OnLedgerClosed(whole));		
+	}
 	
 	private void filterResponse(String raw){
 		JSONObject whole = new JSONObject(raw);	
@@ -106,13 +115,15 @@ public class Common extends Base {
 				UInt32 sequence = new UInt32(result.getJSONObject("tx_json").getInt("Sequence"));
 				log(engResult + " " +  accId + " ,hash " + hash + " ,seq" + sequence);
 				if (engResult.equals(EngineResult.tesSUCCESS.toString())){
-					bus.send(new OnResponseSuccess(accId, hash, sequence));
+					bus.send(new OnResponseTesSuccess(accId, hash, sequence));
 				}else{				
 					bus.send(new OnResponseFail(engResult, accId, hash, sequence));		}	
 			}		
 		}else if (result.has("account_data")){
 			UInt32 sequence = new UInt32(result.getJSONObject("account_data").getInt("Sequence"));
 			bus.send(new OnAccountInfoSequence(sequence));	
+		}else if (result.has("validated_ledgers")){
+			bus.send(new OnResponseLedgerClosed(result));		
 		}
 
 	}
@@ -448,12 +459,12 @@ public class Common extends Base {
 		}
 	}
 	
-	public static class OnResponseSuccess{
+	public static class OnResponseTesSuccess{
 		public AccountID accountID;
 		public Hash256 hash;
 		public UInt32 sequence;
 		
-		public OnResponseSuccess(AccountID accountID, Hash256 hash, UInt32 sequence) {
+		public OnResponseTesSuccess(AccountID accountID, Hash256 hash, UInt32 sequence) {
 			super();
 			this.accountID = accountID;
 			this.hash = hash;
@@ -473,6 +484,24 @@ public class Common extends Base {
 			this.hash = hash;
 			this.sequence = sequence;
 		}		
+	}
+	
+	public static class OnResponseLedgerClosed{
+		public final LedgerEvent ledgerEvent;
+
+		public OnResponseLedgerClosed(JSONObject root) {
+			super();
+			this.ledgerEvent = LedgerEvent.fromJSON(root);
+		}
+	}
+	
+	public static class OnLedgerClosed{
+		public final LedgerEvent ledgerEvent;
+		
+		public OnLedgerClosed(JSONObject root) {
+			super();
+			this.ledgerEvent = LedgerEvent.fromJSON(root);
+		}
 	}
 	
 	public static class OnAccountInfoSequence {

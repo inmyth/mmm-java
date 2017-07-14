@@ -2,9 +2,10 @@ package com.mbcu.mmm.sequences;
 
 import java.math.BigDecimal;
 
-import com.mbcu.mmm.main.Events;
+import com.mbcu.mmm.main.WebSocketClient;
 import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.models.internal.RLOrder;
+import com.mbcu.mmm.models.internal.cache.SubmitCache;
 import com.mbcu.mmm.models.request.Submit;
 import com.mbcu.mmm.sequences.balancer.Balancer;
 import com.mbcu.mmm.sequences.balancer.Balancer.SeedReady;
@@ -13,13 +14,13 @@ import com.mbcu.mmm.sequences.counters.Counter.CounterReady;
 import com.mbcu.mmm.sequences.state.State;
 import com.mbcu.mmm.sequences.state.StateProvider;
 import com.mbcu.mmm.utils.MyLogger;
-import com.ripple.core.coretypes.hash.Hash256;
 import com.ripple.core.types.known.tx.signed.SignedTransaction;
 
 import io.reactivex.schedulers.Schedulers;
 
 public class Submitter extends Base {
 	private static final BigDecimal DEFAULT_FEES_DROPS = new BigDecimal("0.000012");
+	private static final int DEFAULT_MAX_LEDGER_GAP = 2;
 	private State state;
 	
 
@@ -51,14 +52,13 @@ public class Submitter extends Base {
 	
 	private void signAndCache(RLOrder order){
 		int seq = state.getIncrementSequence();
-		System.out.println("Seq " + seq);
-		
-		SignedTransaction signed = order.sign(config, seq, DEFAULT_FEES_DROPS);
-		bus.send(new OnSubmitCache(new SubmitCache(order, signed.hash), signed, seq));
+		int maxLedger = state.getLedgerValidated() + DEFAULT_MAX_LEDGER_GAP;		
+		SignedTransaction signed = order.sign(config, seq, maxLedger, DEFAULT_FEES_DROPS);
+		bus.send(new OnSubmitCache(SubmitCache.newInstance(order, signed.hash, maxLedger, seq), signed, seq));
 	}
 	
 	private void submit(String txBlob){
-		bus.send(new Events.WSRequestSendText(Submit.build(txBlob).stringify()));
+		bus.send(new WebSocketClient.WSRequestSendText(Submit.build(txBlob).stringify()));
 	}
 
 	public static Submitter newInstance(Config config) {
@@ -79,18 +79,7 @@ public class Submitter extends Base {
 		}
 	}
 	
-	public static class SubmitCache {
-		public final RLOrder outbound;
-		public Hash256 hash;
-		
-		public SubmitCache(RLOrder outbound, Hash256 hash) {
-			super();
-			this.outbound = outbound;
-			this.hash = hash;
-		}
-		
-	}
-	
+
 	public static class SubmitTxBlob{
 		public final String txBlob;
 

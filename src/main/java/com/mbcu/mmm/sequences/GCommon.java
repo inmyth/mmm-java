@@ -7,9 +7,9 @@ import java.util.logging.Level;
 
 import org.json.JSONObject;
 
-import com.mbcu.mmm.main.Events;
-import com.mbcu.mmm.main.Events.WSError;
-import com.mbcu.mmm.main.Events.WSGotText;
+import com.mbcu.mmm.main.WebSocketClient;
+import com.mbcu.mmm.main.WebSocketClient.WSError;
+import com.mbcu.mmm.main.WebSocketClient.WSGotText;
 import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.models.internal.RLOrder;
 import com.mbcu.mmm.models.request.Request.Command;
@@ -17,11 +17,8 @@ import com.mbcu.mmm.models.request.Subscribe;
 import com.mbcu.mmm.sequences.Common.OnAccountInfoSequence;
 import com.mbcu.mmm.sequences.Common.OnOfferCanceled;
 import com.mbcu.mmm.sequences.Common.OnOfferCreate;
-import com.mbcu.mmm.sequences.Common.OnOfferCreated;
-import com.mbcu.mmm.sequences.Common.OnOfferEdited;
-import com.mbcu.mmm.sequences.Common.OnOfferExecuted;
 import com.mbcu.mmm.sequences.Common.OnResponseFail;
-import com.mbcu.mmm.sequences.Common.OnResponseSuccess;
+import com.mbcu.mmm.sequences.Common.OnResponseTesSuccess;
 import com.mbcu.mmm.utils.GsonUtils;
 import com.mbcu.mmm.utils.MyLogger;
 import com.ripple.core.coretypes.AccountID;
@@ -29,10 +26,7 @@ import com.ripple.core.coretypes.Currency;
 import com.ripple.core.coretypes.STObject;
 import com.ripple.core.coretypes.hash.Hash256;
 import com.ripple.core.coretypes.uint.UInt32;
-import com.ripple.core.fields.AccountIDField;
 import com.ripple.core.fields.Field;
-import com.ripple.core.fields.Hash256Field;
-import com.ripple.core.fields.UInt32Field;
 import com.ripple.core.serialized.enums.EngineResult;
 import com.ripple.core.types.known.sle.LedgerEntry;
 import com.ripple.core.types.known.sle.entries.Offer;
@@ -57,25 +51,25 @@ public class GCommon extends Base {
 				 .subscribeOn(Schedulers.newThread())
 				
 				.subscribe(o -> {
-					if (o instanceof Events.WSConnected) {
+					if (o instanceof WebSocketClient.WSConnected) {
 						log("connected", Level.FINER);
 						log("Sending subsribe request");
 						log(subscribeRequest);
-						bus.send(new Events.WSRequestSendText(subscribeRequest));
-					} else if (o instanceof Events.WSDisconnected) {
+						bus.send(new WebSocketClient.WSRequestSendText(subscribeRequest));
+					} else if (o instanceof WebSocketClient.WSDisconnected) {
 						log("disconnected");
-					} else if (o instanceof Events.WSError) {
-						Events.WSError event = (WSError) o;
+					} else if (o instanceof WebSocketClient.WSError) {
+						WebSocketClient.WSError event = (WSError) o;
 						log(event.e.getMessage(), Level.SEVERE);
-					} else if (o instanceof Events.WSGotText) {
+					} else if (o instanceof WebSocketClient.WSGotText) {
 //						if (!isSent){
 //							for (int seq = 5968 ; seq < 5970; seq ++){						
-//								bus.send(new Events.WSRequestSendText(sign(seq, config)));
+//								bus.send(new WebSocketClient.WSRequestSendText(sign(seq, config)));
 //							}
 //							isSent = true;
 //						}
 						
-						Events.WSGotText event = (WSGotText) o;
+						WebSocketClient.WSGotText event = (WSGotText) o;
 						log(event.raw, Level.FINER);						
 						reroute(event.raw);
 					}
@@ -103,7 +97,7 @@ public class GCommon extends Base {
 				UInt32 sequence = new UInt32(result.getJSONObject("tx_json").getInt("Sequence"));
 				log(engResult + " " +  accId + " ,hash " + hash + " ,seq" + sequence);
 				if (engResult.equals(EngineResult.tesSUCCESS.toString())){
-					bus.send(new OnResponseSuccess(accId, hash, sequence));
+					bus.send(new OnResponseTesSuccess(accId, hash, sequence));
 				}else{				
 					bus.send(new OnResponseFail(engResult, accId, hash, sequence));		}	
 			}		

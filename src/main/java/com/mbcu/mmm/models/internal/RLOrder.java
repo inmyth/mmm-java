@@ -242,7 +242,7 @@ public final class RLOrder extends Base{
 		return offer.directoryAskQuality().stripTrailingZeros();
 	}
 	
-	public SignedTransaction sign(Config config, int sequence, BigDecimal fees){	
+	public SignedTransaction sign(Config config, int sequence, int maxLedger, BigDecimal fees){	
 		OfferCreate offerCreate = new OfferCreate();
 		if (this.direction.equals(Direction.BUY.text())){
 			offerCreate.takerGets(totalPrice);
@@ -253,8 +253,9 @@ public final class RLOrder extends Base{
 		}else{
 			throw new IllegalArgumentException("Direction not valid");
 		}
-		offerCreate.sequence(new UInt32(new BigInteger(String.valueOf(sequence))));
+		offerCreate.sequence(new UInt32(String.valueOf(sequence)));
 		offerCreate.fee(new Amount(fees));
+		offerCreate.lastLedgerSequence(new UInt32(String.valueOf(maxLedger)));
 		offerCreate.account(AccountID.fromAddress(config.getCredentials().getAddress()));
 		SignedTransaction signed = offerCreate.sign(config.getCredentials().getSecret());
 		return signed;	
