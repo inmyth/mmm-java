@@ -12,7 +12,7 @@ public class MyLogger {
 
 	private static final String LOG_NAME = "log.txt";
 	
-	public static void setup() throws IOException {
+	public static void setup(boolean...isConsole) throws IOException {
 
 		// Get the global logger to configure it
 		Logger logger = Logger.getLogger("");
@@ -24,12 +24,15 @@ public class MyLogger {
 		SimpleFormatter formatter = new SimpleFormatter();
 		fileHandler.setFormatter(formatter);
 		logger.addHandler(fileHandler);
-
-		Handler consoleHandler = new ConsoleHandler();
-		consoleHandler.setLevel(Level.ALL);
-		consoleHandler.setFormatter(formatter);
-		logger.addHandler(consoleHandler);
-
+		
+		if (isConsole.length > 0){
+			if (isConsole[0]){
+				Handler consoleHandler = new ConsoleHandler();
+				consoleHandler.setLevel(Level.ALL);
+				consoleHandler.setFormatter(formatter);
+				logger.addHandler(consoleHandler);
+			}
+		}
 	}
 
 	public static Logger getLogger(String name) {

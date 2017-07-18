@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 import com.mbcu.mmm.main.WebSocketClient;
 import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.models.internal.RLOrder;
-import com.mbcu.mmm.models.internal.cache.SubmitCache;
+import com.mbcu.mmm.models.internal.cache.Txc;
 import com.mbcu.mmm.models.request.Submit;
 import com.mbcu.mmm.sequences.balancer.Balancer;
 import com.mbcu.mmm.sequences.balancer.Balancer.SeedReady;
@@ -54,7 +54,7 @@ public class Submitter extends Base {
 		int seq = state.getIncrementSequence();
 		int maxLedger = state.getLedgerValidated() + DEFAULT_MAX_LEDGER_GAP;		
 		SignedTransaction signed = order.sign(config, seq, maxLedger, DEFAULT_FEES_DROPS);
-		bus.send(new OnSubmitCache(SubmitCache.newInstance(order, signed.hash, maxLedger, seq), signed, seq));
+		bus.send(new OnSubmitCache(Txc.newInstance(order, signed.hash, maxLedger, seq), signed, seq));
 	}
 	
 	private void submit(String txBlob){
@@ -66,19 +66,19 @@ public class Submitter extends Base {
 		return res;
 	}
 	
-	public static class OnSubmitCache{
-		public final SubmitCache cache;
-		public final SignedTransaction signed;
-		public final int sequence;
-		
-		public OnSubmitCache(SubmitCache cache, SignedTransaction signed, int sequence) {
-			super();
-			this.cache = cache;
-			this.signed = signed;
-			this.sequence = sequence;
-		}
-	}
-	
+//	public static class OnSubmitCache{
+//		public final Txc cache;
+//		public final SignedTransaction signed;
+//		public final int sequence;
+//		
+//		public OnSubmitCache(Txc cache, SignedTransaction signed, int sequence) {
+//			super();
+//			this.cache = cache;
+//			this.signed = signed;
+//			this.sequence = sequence;
+//		}
+//	}
+//	
 
 	public static class SubmitTxBlob{
 		public final String txBlob;

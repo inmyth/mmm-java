@@ -20,7 +20,7 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 
-public class SubmitCache extends Base {
+public class Txc extends Base {
 
 	private final RLOrder outbound;
 	private Hash256 hash;
@@ -29,12 +29,9 @@ public class SubmitCache extends Base {
 	private RxBus bus = RxBusProvider.getInstance();
 	private final CompositeDisposable disposables = new CompositeDisposable();
 	
-	private SubmitCache(RLOrder outbound, Hash256 hash, int maxLedger, int seq) {
-		super(MyLogger.getLogger(String.format("%s sequence : %d", SubmitCache.class.getName(), seq)), null);
+	private Txc(RLOrder outbound) {
+		super(MyLogger.getLogger(String.format(Txc.class.getName())), null);
 		this.outbound = outbound;
-		this.maxLedger = maxLedger;
-		this.hash = hash;
-		this.seq = seq;
 	}
 
 	private void initBus() {
@@ -56,11 +53,17 @@ public class SubmitCache extends Base {
 							bus.send(new CacheEvents.RequestRemove(seq));
 							bus.send(new Submitter.Retry(outbound));	
 						}
-				}	else if (o instanceof Common.OnResponseFail) {
+				} else if (o instanceof Common.OnAccountInfoSequence){
+					
+				}
+				
+				else if (o instanceof Common.OnResponseFail) {
 					OnResponseFail event = (OnResponseFail) o;
 
 					if (event.engineResult.equals("terQUEUED")) {
-						// "Held until escalated fee drops". May show up in later ledger.
+						disposables.dispose();
+						bus.send(new CacheEvents.RequestRemove(seq));
+						bus.send(new Submitter.Retry(outbound));
 						return;
 					}
 					
@@ -78,8 +81,14 @@ public class SubmitCache extends Base {
 					}
 
 					if (event.engineResult.equals(EngineResult.terINSUF_FEE_B)) {
+						// no fund
 						bus.send(new WebSocketClient.WSRequestDisconnect());
 						return;
+					}
+					
+					if (event.engineResult.equals(EngineResult.telINSUF_FEE_P)){
+						// retry next ledger
+						
 					}
 						
 					// any other error insuf_fee_p etc 
@@ -91,7 +100,9 @@ public class SubmitCache extends Base {
 					disposables.dispose();
 					bus.send(new CacheEvents.RequestRemove(seq));
 					bus.send(new Submitter.Retry(outbound));
-				}				
+				}	else if (o instanceof Common.OnLedgerClosed){
+					
+				}
 			}
 
 			@Override
@@ -112,8 +123,8 @@ public class SubmitCache extends Base {
 		return seq;
 	}
 
-	public static SubmitCache newInstance(RLOrder outbound, Hash256 hash, int maxLEdger, int sequence) {
-		SubmitCache res = new SubmitCache(outbound, hash, maxLEdger, sequence);
+	public static Txc newInstance(RLOrder outbound) {
+		Txc res = new Txc(outbound);
 		res.initBus();
 		return res;
 	}

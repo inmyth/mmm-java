@@ -1,27 +1,26 @@
 package com.mbcu.mmm.sequences.state;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
-import com.mbcu.mmm.main.WebSocketClient;
 import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.models.internal.LedgerEvent;
+import com.mbcu.mmm.models.internal.RLOrder;
 import com.mbcu.mmm.models.internal.cache.CacheEvents;
 import com.mbcu.mmm.models.internal.cache.CacheEvents.RequestRemove;
-import com.mbcu.mmm.models.internal.cache.SubmitCache;
+import com.mbcu.mmm.models.internal.cache.Txc;
 import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.sequences.Base;
 import com.mbcu.mmm.sequences.Common;
 import com.mbcu.mmm.sequences.Common.OnLedgerClosed;
 import com.mbcu.mmm.sequences.Common.OnOfferCreate;
-import com.mbcu.mmm.sequences.Common.OnResponseFail;
 import com.mbcu.mmm.sequences.Submitter;
-import com.mbcu.mmm.sequences.Submitter.OnSubmitCache;
 import com.mbcu.mmm.utils.MyLogger;
 import com.ripple.core.coretypes.uint.UInt32;
-import com.ripple.core.serialized.enums.EngineResult;
 
 import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
@@ -32,7 +31,8 @@ public class State extends Base {
 	private final AtomicInteger ledgerClosed = new AtomicInteger(0);
 	private final AtomicInteger ledgerValidated = new AtomicInteger(0);
 	private final AtomicInteger sequence = new AtomicInteger(0);
-	private final ConcurrentHashMap<Integer, SubmitCache> pending = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<Integer, Txc> pending = new ConcurrentHashMap<>();
+	private final ConcurrentLinkedQueue<RLOrder> outbound = new ConcurrentLinkedQueue<>();
 	private RxBus bus = RxBusProvider.getInstance();
 
 	public State(Config config) {
@@ -54,18 +54,27 @@ public class State extends Base {
 						setSequence(event.sequence);
 						pending.remove(event.sequence.intValue());
 					}
-				}else if (o instanceof Submitter.OnSubmitCache){				
-					OnSubmitCache event = (Submitter.OnSubmitCache) o;
-					pending.putIfAbsent(event.sequence, event.cache);
-					bus.send(new Submitter.SubmitTxBlob(event.signed.tx_blob));
-				}else if (o instanceof Common.OnLedgerClosed){
+				}
+				else if (o instanceof OnOrderReady){
+					
+				}
+				
+				
+				else if (o instanceof Submitter.OnSubmitCache){		
+						OnSubmitCache event = (Submitter.OnSubmitCache) o;
+						pending.putIfAbsent(event.sequence, event.cache);
+						bus.send(new Submitter.SubmitTxBlob(event.signed.tx_blob));
+				}
+				
+				
+				else if (o instanceof Common.OnLedgerClosed){
 					OnLedgerClosed event = (OnLedgerClosed) o;		
 					log(event.ledgerEvent.toString());
-					setLedgerIndex(event.ledgerEvent);
+					setLedgerIndex(event.ledgerEvent);							
 				}else if (o instanceof CacheEvents.RequestRemove){
 					RequestRemove event = (RequestRemove) o;
 					pending.remove(event.seq);
-				}
+				} 
 			}
 
 			@Override
@@ -116,21 +125,21 @@ public class State extends Base {
 	public int getIncrementSequence(){
 		return this.sequence.getAndIncrement();
 	}
-	
-	private void revertSequence(int usableSequence){
-		if (usableSequence < this.sequence.get()){
-			this.sequence.set(usableSequence);
-		}
-	}
-	
+		
 	public static class OnOrderValidated{
 		public int seq;
 
 		public OnOrderValidated(int seq) {
 			super();
 			this.seq = seq;
-		}
-			
+		}			
+	}
+	
+	public static class OnOrderReady {
+		public RLOrder outbound;
+		
+		
+		
 	}
 
 }

@@ -73,8 +73,6 @@ public class Starter extends Base{
 	
 	
 	public void start() throws IOException, WebSocketException{
-//	Tester tester = Tester.newInstance(state);
-//	tester.loop();
 		log("Initiating ...");
 		Common.newInstance(config);
 		WebSocketClient webSocketClient = new WebSocketClient(super.config);

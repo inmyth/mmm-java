@@ -89,8 +89,7 @@ public class Yuki extends Base implements Counter {
 		if (isDirectionMatch) {
 			Amount newQuantity = origin.getQuantity().multiply(new BigDecimal("-1"));
 			BigDecimal newRate = origin.getAsk().add(botConfig.getGridSpace());
-			Amount newTotalPrice = RLOrder.amount(newQuantity.value().multiply(newRate), oldTotalPrice.currency(),
-					oldTotalPrice.issuer());
+			Amount newTotalPrice = RLOrder.amount(newQuantity.value().multiply(newRate), oldTotalPrice.currency(), oldTotalPrice.issuer());
 			res = RLOrder.rateUnneeded(Direction.SELL, newQuantity, newTotalPrice);
 		} else {
 			Amount newQuantity = origin.getTotalPrice().multiply(new BigDecimal("-1"));
