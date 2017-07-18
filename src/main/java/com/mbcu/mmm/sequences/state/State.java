@@ -59,14 +59,6 @@ public class State extends Base {
 					
 				}
 				
-				
-				else if (o instanceof Submitter.OnSubmitCache){		
-						OnSubmitCache event = (Submitter.OnSubmitCache) o;
-						pending.putIfAbsent(event.sequence, event.cache);
-						bus.send(new Submitter.SubmitTxBlob(event.signed.tx_blob));
-				}
-				
-				
 				else if (o instanceof Common.OnLedgerClosed){
 					OnLedgerClosed event = (OnLedgerClosed) o;		
 					log(event.ledgerEvent.toString());
