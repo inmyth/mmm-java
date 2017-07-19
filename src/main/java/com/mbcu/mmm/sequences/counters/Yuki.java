@@ -14,6 +14,7 @@ import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.sequences.Base;
 import com.mbcu.mmm.sequences.Common;
 import com.mbcu.mmm.sequences.Common.OnOfferExecuted;
+import com.mbcu.mmm.sequences.state.State;
 import com.mbcu.mmm.utils.MyLogger;
 import com.ripple.core.coretypes.Amount;
 
@@ -106,6 +107,6 @@ public class Yuki extends Base implements Counter {
 
 	@Override
 	public void onCounterReady(RLOrder counter) {
-		bus.send(new Counter.CounterReady(counter));
+		bus.send(new State.OnOrderReady(counter));
 	}
 }

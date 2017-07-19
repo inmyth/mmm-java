@@ -68,7 +68,7 @@ public class Common extends Base {
 						log(event.e.getMessage(), Level.SEVERE);
 					} else if (o instanceof WebSocketClient.WSGotText) {						
 						WebSocketClient.WSGotText event = (WSGotText) o;
-						log(event.raw, Level.FINER);													
+//						log(event.raw, Level.FINER);													
 						reroute(event.raw);
 					}						
 				}
@@ -123,7 +123,7 @@ public class Common extends Base {
 			UInt32 sequence = new UInt32(result.getJSONObject("account_data").getInt("Sequence"));
 			bus.send(new OnAccountInfoSequence(sequence));	
 		}else if (result.has("validated_ledgers")){
-			bus.send(new OnResponseLedgerClosed(result));		
+			bus.send(new OnLedgerClosed(result));		
 		}
 
 	}
@@ -486,15 +486,7 @@ public class Common extends Base {
 		}		
 	}
 	
-	public static class OnResponseLedgerClosed{
-		public final LedgerEvent ledgerEvent;
 
-		public OnResponseLedgerClosed(JSONObject root) {
-			super();
-			this.ledgerEvent = LedgerEvent.fromJSON(root);
-		}
-	}
-	
 	public static class OnLedgerClosed{
 		public final LedgerEvent ledgerEvent;
 		
@@ -512,6 +504,7 @@ public class Common extends Base {
 			this.sequence = sequence;
 		} 			
 	}
+	
 	
 	
 }

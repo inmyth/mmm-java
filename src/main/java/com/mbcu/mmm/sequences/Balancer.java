@@ -1,9 +1,7 @@
-package com.mbcu.mmm.sequences.balancer;
+package com.mbcu.mmm.sequences;
 
 import com.mbcu.mmm.models.internal.Config;
-import com.mbcu.mmm.models.internal.RLOrder;
-import com.mbcu.mmm.sequences.Base;
-import com.mbcu.mmm.sequences.Starter;
+import com.mbcu.mmm.sequences.state.State;
 import com.mbcu.mmm.utils.MyLogger;
 
 import io.reactivex.Observer;
@@ -49,7 +47,7 @@ public class Balancer extends Base{
 		.flatMap(l->l.stream())
 		.forEach(seed -> {
 			System.out.println(seed.stringify());
-			bus.send(new SeedReady(seed));		
+			bus.send(new State.OnOrderReady(seed));		
 		});
 	}
 	
@@ -57,13 +55,6 @@ public class Balancer extends Base{
 		return new Balancer(config);
 	}
 	
-	public static class SeedReady {
-		public final RLOrder seed;
 
-		public SeedReady(RLOrder seed) {
-			super();
-			this.seed = seed;
-		}		
-	}
 	
 }

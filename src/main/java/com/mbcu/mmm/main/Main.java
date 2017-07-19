@@ -9,12 +9,12 @@ import com.neovisionaries.ws.client.WebSocketException;
 
 public class Main {
 
-	public static void main(String[] args) throws IOException, WebSocketException {
+	public static void main(String[] args) throws IOException, WebSocketException, InterruptedException{
 		start(args);
 //		Counter.sign();
 	}
 
-	private static void start(String[] args) throws IOException, WebSocketException{	
+	private static void start(String[] args) throws IOException, WebSocketException, InterruptedException{	
 		MyLogger.setup();
 		Config config = Config.build(args[0]);
 		Starter manager = Starter.newInstance(config);

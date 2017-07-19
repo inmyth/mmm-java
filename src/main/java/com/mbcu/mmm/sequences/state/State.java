@@ -1,38 +1,46 @@
 package com.mbcu.mmm.sequences.state;
 
+import java.math.BigDecimal;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
+import com.mbcu.mmm.main.WebSocketClient;
 import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.models.internal.LedgerEvent;
 import com.mbcu.mmm.models.internal.RLOrder;
-import com.mbcu.mmm.models.internal.cache.CacheEvents;
-import com.mbcu.mmm.models.internal.cache.CacheEvents.RequestRemove;
-import com.mbcu.mmm.models.internal.cache.Txc;
+import com.mbcu.mmm.models.request.AccountInfo;
+import com.mbcu.mmm.models.request.Submit;
 import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.sequences.Base;
 import com.mbcu.mmm.sequences.Common;
+import com.mbcu.mmm.sequences.Txc;
+import com.mbcu.mmm.sequences.Common.OnAccountInfoSequence;
 import com.mbcu.mmm.sequences.Common.OnLedgerClosed;
 import com.mbcu.mmm.sequences.Common.OnOfferCreate;
-import com.mbcu.mmm.sequences.Submitter;
+import com.mbcu.mmm.sequences.Txc.RequestRemove;
 import com.mbcu.mmm.utils.MyLogger;
 import com.ripple.core.coretypes.uint.UInt32;
+import com.ripple.core.types.known.tx.signed.SignedTransaction;
 
 import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
 public class State extends Base {
+	private static final BigDecimal DEFAULT_FEES_DROPS = new BigDecimal("0.000015");
+	private static final int DEFAULT_MAX_LEDGER_GAP = 2;
 	
 	private final AtomicInteger ledgerClosed = new AtomicInteger(0);
 	private final AtomicInteger ledgerValidated = new AtomicInteger(0);
 	private final AtomicInteger sequence = new AtomicInteger(0);
 	private final ConcurrentHashMap<Integer, Txc> pending = new ConcurrentHashMap<>();
-	private final ConcurrentLinkedQueue<RLOrder> outbound = new ConcurrentLinkedQueue<>();
+	private final ConcurrentLinkedQueue<RLOrder> qWait = new ConcurrentLinkedQueue<>();
+	private final AtomicBoolean flagWaitSeq = new AtomicBoolean(false);
+	private final AtomicBoolean flagWaitLedger = new AtomicBoolean(false);
 	private RxBus bus = RxBusProvider.getInstance();
 
 	public State(Config config) {
@@ -56,17 +64,48 @@ public class State extends Base {
 					}
 				}
 				else if (o instanceof OnOrderReady){
-					
-				}
-				
+					OnOrderReady event = (OnOrderReady) o;
+					if (flagWaitSeq.get() || flagWaitLedger.get()){
+						qWait.add(event.outbound);												
+					}else {
+						process(event.outbound);						
+					}	
+				}			
 				else if (o instanceof Common.OnLedgerClosed){
 					OnLedgerClosed event = (OnLedgerClosed) o;		
 					log(event.ledgerEvent.toString());
-					setLedgerIndex(event.ledgerEvent);							
-				}else if (o instanceof CacheEvents.RequestRemove){
+					setLedgerIndex(event.ledgerEvent);	
+						synchronized (flagWaitLedger) {
+							if (flagWaitLedger.get()){
+								flagWaitLedger.set(false);
+								drain();
+							}
+						}
+					
+				}
+				else if (o instanceof Common.OnAccountInfoSequence){
+					OnAccountInfoSequence event = (OnAccountInfoSequence) o;
+					synchronized (flagWaitSeq) {
+						setSequence(event.sequence);
+						flagWaitSeq.set(false);
+						drain();
+					}				
+				}
+				else if (o instanceof Txc.RequestRemove){
 					RequestRemove event = (RequestRemove) o;
 					pending.remove(event.seq);
-				} 
+				}
+				else if (o instanceof Txc.RequestSequenceSync){
+					synchronized (flagWaitLedger) {
+						if (!flagWaitLedger.get()){
+							flagWaitSeq.set(true);
+							bus.send(new WebSocketClient.WSRequestSendText(AccountInfo.of(config).stringify()));		
+						}		
+					}
+				}
+				else if (o instanceof Txc.RequestWaitNextLedger){
+					flagWaitLedger.compareAndSet(false, true);					
+				}
 			}
 
 			@Override
@@ -75,9 +114,7 @@ public class State extends Base {
 			}
 
 			@Override
-			public void onComplete() {
-				// TODO Auto-generated method stub
-				
+			public void onComplete() {				
 			}
 		});		
 	}
@@ -94,28 +131,37 @@ public class State extends Base {
 		
 	}
 	
-	public void setSequence(UInt32 seq){
-		synchronized (sequence) {
-			if (this.sequence.get() < seq.intValue()){
-				sequence.set(seq.intValue());
-			}
+	private void setSequence(UInt32 seq){
+		sequence.set(seq.intValue());			
+	}
+	
+	private int getIncrementSequence(){
+		return this.sequence.getAndIncrement();
+	}
+	
+	private void drain(){
+		while(!qWait.isEmpty()){
+			process(qWait.poll());
 		}
 	}
 	
-	public int getSequence(){
-		return this.sequence.intValue();
+	private void process(RLOrder outbound){
+		int seq = getIncrementSequence();
+		int maxLedger = ledgerValidated.get() + DEFAULT_MAX_LEDGER_GAP;	
+		SignedTransaction signed = sign(outbound, seq, maxLedger, DEFAULT_FEES_DROPS);
+		Txc txc = Txc.newInstance(outbound, signed.hash, seq, maxLedger);		
+		pending.put(txc.getSeq(), txc);
+		submit(signed.tx_blob);
 	}
 	
-	public int getLedgerClosed(){
-		return this.ledgerClosed.get();
+
+	private SignedTransaction sign(RLOrder order, int seq, int maxLedger, BigDecimal fees){
+		SignedTransaction signed = order.sign(config, seq, maxLedger, fees);
+		return signed;
 	}
 	
-	public int getLedgerValidated() {
-		return this.ledgerValidated.get();
-	}
-	
-	public int getIncrementSequence(){
-		return this.sequence.getAndIncrement();
+	private void submit(String txBlob){
+		bus.send(new WebSocketClient.WSRequestSendText(Submit.build(txBlob).stringify()));
 	}
 		
 	public static class OnOrderValidated{
@@ -129,9 +175,12 @@ public class State extends Base {
 	
 	public static class OnOrderReady {
 		public RLOrder outbound;
-		
-		
-		
+
+		public OnOrderReady(RLOrder outbound) {
+			super();
+			this.outbound = outbound;
+		}	
 	}
 
+	public static class RequestSynchronizeSequence{}
 }

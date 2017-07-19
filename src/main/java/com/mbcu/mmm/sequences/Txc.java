@@ -1,4 +1,4 @@
-package com.mbcu.mmm.models.internal.cache;
+package com.mbcu.mmm.sequences;
 
 import java.util.logging.Level;
 
@@ -6,12 +6,10 @@ import com.mbcu.mmm.main.WebSocketClient;
 import com.mbcu.mmm.models.internal.RLOrder;
 import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
-import com.mbcu.mmm.sequences.Base;
-import com.mbcu.mmm.sequences.Common;
 import com.mbcu.mmm.sequences.Common.OnLedgerClosed;
 import com.mbcu.mmm.sequences.Common.OnOfferCreate;
 import com.mbcu.mmm.sequences.Common.OnResponseFail;
-import com.mbcu.mmm.sequences.Submitter;
+import com.mbcu.mmm.sequences.state.State;
 import com.mbcu.mmm.utils.MyLogger;
 import com.ripple.core.coretypes.hash.Hash256;
 import com.ripple.core.serialized.enums.EngineResult;
@@ -23,15 +21,18 @@ import io.reactivex.schedulers.Schedulers;
 public class Txc extends Base {
 
 	private final RLOrder outbound;
-	private Hash256 hash;
-	private int seq;
-	private int maxLedger;
+	private final Hash256 hash;
+	private final int seq;
+	private final int maxLedger;
 	private RxBus bus = RxBusProvider.getInstance();
 	private final CompositeDisposable disposables = new CompositeDisposable();
 	
-	private Txc(RLOrder outbound) {
+	private Txc(RLOrder outbound, Hash256 hash, int seq, int maxLedger) {
 		super(MyLogger.getLogger(String.format(Txc.class.getName())), null);
 		this.outbound = outbound;
+		this.hash = hash;
+		this.seq = seq;
+		this.maxLedger = maxLedger;
 	}
 
 	private void initBus() {
@@ -44,65 +45,63 @@ public class Txc extends Base {
 					OnOfferCreate event = (OnOfferCreate) o;
 					if (event.sequence.intValue() == seq) {
 						disposables.dispose();
-						bus.send(new CacheEvents.RequestRemove(seq));		
+						bus.send(new RequestRemove(seq));		
 					}
-				} else if (o instanceof Common.OnLedgerClosed) {
+				} 
+				else if (o instanceof Common.OnLedgerClosed) {
 						OnLedgerClosed event = (OnLedgerClosed) o;
 						if (event.ledgerEvent.getValidated() > maxLedger){ // failed to enter ledger
 							disposables.dispose();
-							bus.send(new CacheEvents.RequestRemove(seq));
-							bus.send(new Submitter.Retry(outbound));	
+							bus.send(new RequestRemove(seq));
+							bus.send(new State.OnOrderReady(outbound));	
 						}
-				} else if (o instanceof Common.OnAccountInfoSequence){
-					
-				}
-				
+				} 				
 				else if (o instanceof Common.OnResponseFail) {
 					OnResponseFail event = (OnResponseFail) o;
+					String er = event.engineResult;
 
-					if (event.engineResult.equals("terQUEUED")) {
+					if (er.equals("terQUEUED")) {
 						disposables.dispose();
-						bus.send(new CacheEvents.RequestRemove(seq));
-						bus.send(new Submitter.Retry(outbound));
+						bus.send(new RequestRemove(seq));
 						return;
-					}
-					
-					if (event.engineResult.equals(EngineResult.tefALREADY.toString())){
-						// This means a tx with the same sequence is already queued.
+					}					
+//					if (er.equals(EngineResult.tefALREADY.toString())){
+//						// This means a tx with the same sequence number is already queued.
+//						disposables.dispose();
+//						bus.send(new RequestRemove(seq));
+//						return;
+//					}
+					if (er.equals(EngineResult.terPRE_SEQ.toString())	|| er.equals(EngineResult.tefPAST_SEQ.toString())) {
 						disposables.dispose();
-						bus.send(new CacheEvents.RequestRemove(seq));
+						bus.send(new RequestSequenceSync());
+						bus.send(new RequestRemove(seq));
+						bus.send(new State.OnOrderReady(outbound));
 						return;
 					}
 
-					if (event.engineResult.equals(EngineResult.terPRE_SEQ.toString())
-							|| event.engineResult.equals(EngineResult.tefPAST_SEQ.toString())) {
-						// this triggers Account Info
-						return;
-					}
-
-					if (event.engineResult.equals(EngineResult.terINSUF_FEE_B)) {
+					if (er.equals(EngineResult.terINSUF_FEE_B)) {
 						// no fund
 						bus.send(new WebSocketClient.WSRequestDisconnect());
 						return;
 					}
 					
-					if (event.engineResult.equals(EngineResult.telINSUF_FEE_P)){
+					if (er.equals(EngineResult.telINSUF_FEE_P)){
 						// retry next ledger
-						
+						disposables.dispose();
+						bus.send(new RequestWaitNextLedger());
+						bus.send(new RequestRemove(seq));
+						bus.send(new State.OnOrderReady(outbound));
 					}
 						
-					// any other error insuf_fee_p etc 
-					
+					// any other error 				
 					// int usableSequence = event.sequence.intValue();
 					// revertSequence(usableSequence);
 					// SubmitCache retry = pending.get(usableSequence);
 					// pending.remove(event.sequence.intValue());
 					disposables.dispose();
-					bus.send(new CacheEvents.RequestRemove(seq));
-					bus.send(new Submitter.Retry(outbound));
-				}	else if (o instanceof Common.OnLedgerClosed){
-					
-				}
+					bus.send(new RequestRemove(seq));
+					bus.send(new State.OnOrderReady(outbound));
+				}	
 			}
 
 			@Override
@@ -118,14 +117,26 @@ public class Txc extends Base {
 	
 	}
 
-	@Override
-	public int hashCode() {
+	public int getSeq() {
 		return seq;
 	}
-
-	public static Txc newInstance(RLOrder outbound) {
-		Txc res = new Txc(outbound);
+	
+	public static Txc newInstance(RLOrder outbound, Hash256 hash, int seq, int maxLedger) {
+		Txc res = new Txc(outbound, hash, seq,maxLedger);
 		res.initBus();
 		return res;
 	}
+	
+	public static class RequestRemove {
+		public int seq;
+
+		public RequestRemove(int seq) {
+			super();
+			this.seq = seq;
+		}
+	}
+	
+	public static class RequestSequenceSync{}
+	
+	public static class RequestWaitNextLedger{}
 }

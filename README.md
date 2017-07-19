@@ -11,6 +11,10 @@ How to use:
 ```
 java -jar mmm.jar <path_to_config_file>
 ```
+v.012
+- alpha State. This would be equal to mmm in node.js
+- State manages order submission and trial
+
 v.011
 - tested on Arbitrage without autobridge.
 - fixed some calculation errors.
@@ -77,3 +81,4 @@ TODOS
 - (done)define Counter class
 - (fixed) v.009 value precision of 18 is greater than maximum iou precision of 16
 - (v.011) test new counter on autobridge
+- tefALREADY needs retrial ? 

@@ -29,7 +29,7 @@ public class Tester {
 	}
 	
 	private void doPeriodicWork(){
-		System.out.println("Current sequence " + state.getSequence());
+//		System.out.println("Current sequence " + state.getSequence());
 	}
 	
 }
