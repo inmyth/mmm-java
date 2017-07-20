@@ -5,7 +5,8 @@ import com.mbcu.mmm.models.Base;
 public abstract class  Request extends Base{
 
 	public enum Command {
-		SUBSCRIBE("subscribe"), SUBMIT("submit"), ACCOUNT_INFO("account_info"), LEDGER_CLOSED("ledger_closed");
+		SUBSCRIBE("subscribe"), SUBMIT("submit"), ACCOUNT_INFO("account_info"), LEDGER_CLOSED("ledger_closed"),
+		TX("tx");
 
 		private String text;
 

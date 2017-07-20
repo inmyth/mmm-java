@@ -31,8 +31,8 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
 public class State extends Base {
-	private static final BigDecimal DEFAULT_FEES_DROPS = new BigDecimal("0.000015");
-	private static final int DEFAULT_MAX_LEDGER_GAP = 2;
+	private static final BigDecimal DEFAULT_FEES_DROPS = new BigDecimal("0.000012");
+	private static final int DEFAULT_MAX_LEDGER_GAP = 5;
 	
 	private final AtomicInteger ledgerClosed = new AtomicInteger(0);
 	private final AtomicInteger ledgerValidated = new AtomicInteger(0);
@@ -76,19 +76,20 @@ public class State extends Base {
 					log(event.ledgerEvent.toString());
 					setLedgerIndex(event.ledgerEvent);	
 						synchronized (flagWaitLedger) {
-							if (flagWaitLedger.get()){
-								flagWaitLedger.set(false);
+							flagWaitLedger.set(false);
+							if (!flagWaitLedger.get() && !flagWaitSeq.get()){
 								drain();
 							}
-						}
-					
+						}					
 				}
 				else if (o instanceof Common.OnAccountInfoSequence){
 					OnAccountInfoSequence event = (OnAccountInfoSequence) o;
 					synchronized (flagWaitSeq) {
 						setSequence(event.sequence);
 						flagWaitSeq.set(false);
-						drain();
+						if (!flagWaitLedger.get() && !flagWaitSeq.get()){
+							drain();
+						}
 					}				
 				}
 				else if (o instanceof Txc.RequestRemove){
@@ -104,7 +105,7 @@ public class State extends Base {
 					}
 				}
 				else if (o instanceof Txc.RequestWaitNextLedger){
-					flagWaitLedger.compareAndSet(false, true);					
+					flagWaitLedger.set(true);					
 				}
 			}
 
@@ -151,6 +152,7 @@ public class State extends Base {
 		SignedTransaction signed = sign(outbound, seq, maxLedger, DEFAULT_FEES_DROPS);
 		Txc txc = Txc.newInstance(outbound, signed.hash, seq, maxLedger);		
 		pending.put(txc.getSeq(), txc);
+		log("submitting : " + signed.hash + " " + seq);
 		submit(signed.tx_blob);
 	}
 	

@@ -113,7 +113,7 @@ public class Common extends Base {
 				AccountID accId = AccountID.fromAddress(result.optJSONObject("tx_json").optString("Account"));
 				String engResult = result.optString("engine_result");					
 				UInt32 sequence = new UInt32(result.getJSONObject("tx_json").getInt("Sequence"));
-				log(engResult + " " +  accId + " ,hash " + hash + " ,seq" + sequence);
+				log(engResult + " " +  accId + " " + hash + " " + sequence);
 				if (engResult.equals(EngineResult.tesSUCCESS.toString())){
 					bus.send(new OnResponseTesSuccess(accId, hash, sequence));
 				}else{				

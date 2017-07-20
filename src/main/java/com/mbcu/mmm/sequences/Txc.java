@@ -9,6 +9,7 @@ import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.sequences.Common.OnLedgerClosed;
 import com.mbcu.mmm.sequences.Common.OnOfferCreate;
 import com.mbcu.mmm.sequences.Common.OnResponseFail;
+import com.mbcu.mmm.sequences.Common.OnResponseTesSuccess;
 import com.mbcu.mmm.sequences.state.State;
 import com.mbcu.mmm.utils.MyLogger;
 import com.ripple.core.coretypes.hash.Hash256;
@@ -26,6 +27,7 @@ public class Txc extends Base {
 	private final int maxLedger;
 	private RxBus bus = RxBusProvider.getInstance();
 	private final CompositeDisposable disposables = new CompositeDisposable();
+	private boolean isTesSuccess;
 	
 	private Txc(RLOrder outbound, Hash256 hash, int seq, int maxLedger) {
 		super(MyLogger.getLogger(String.format(Txc.class.getName())), null);
@@ -49,20 +51,27 @@ public class Txc extends Base {
 					}
 				} 
 				else if (o instanceof Common.OnLedgerClosed) {
-						OnLedgerClosed event = (OnLedgerClosed) o;
-						if (event.ledgerEvent.getValidated() > maxLedger){ // failed to enter ledger
-							disposables.dispose();
-							bus.send(new RequestRemove(seq));
-							bus.send(new State.OnOrderReady(outbound));	
-						}
-				} 				
+					OnLedgerClosed event = (OnLedgerClosed) o;
+					if (isTesSuccess && event.ledgerEvent.getValidated() > maxLedger){ // failed to enter ledger
+						disposables.dispose();
+						bus.send(new RequestRemove(seq));
+						bus.send(new State.OnOrderReady(outbound));	
+					}
+				} 
+				else if (o instanceof Common.OnResponseTesSuccess){
+					OnResponseTesSuccess event = (OnResponseTesSuccess) o;
+					if (event.hash.compareTo(hash) == 0){
+						isTesSuccess = true;
+					}
+				}
 				else if (o instanceof Common.OnResponseFail) {
 					OnResponseFail event = (OnResponseFail) o;
 					String er = event.engineResult;
 
 					if (er.equals("terQUEUED")) {
-						disposables.dispose();
-						bus.send(new RequestRemove(seq));
+//						terQUEUED behaves like tesSUCCESS
+//						disposables.dispose();
+//						bus.send(new RequestRemove(seq));
 						return;
 					}					
 //					if (er.equals(EngineResult.tefALREADY.toString())){
@@ -79,25 +88,20 @@ public class Txc extends Base {
 						return;
 					}
 
-					if (er.equals(EngineResult.terINSUF_FEE_B)) {
+					if (er.equals(EngineResult.terINSUF_FEE_B.toString())) {
 						// no fund
 						bus.send(new WebSocketClient.WSRequestDisconnect());
 						return;
 					}
 					
-					if (er.equals(EngineResult.telINSUF_FEE_P)){
+					if (er.equals(EngineResult.telINSUF_FEE_P.toString())){
 						// retry next ledger
 						disposables.dispose();
 						bus.send(new RequestWaitNextLedger());
 						bus.send(new RequestRemove(seq));
 						bus.send(new State.OnOrderReady(outbound));
+						return;
 					}
-						
-					// any other error 				
-					// int usableSequence = event.sequence.intValue();
-					// revertSequence(usableSequence);
-					// SubmitCache retry = pending.get(usableSequence);
-					// pending.remove(event.sequence.intValue());
 					disposables.dispose();
 					bus.send(new RequestRemove(seq));
 					bus.send(new State.OnOrderReady(outbound));
