@@ -6,19 +6,30 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.Assert.assertNotEquals;
 
 import org.junit.Test;
 
+import com.mbcu.mmm.main.WebSocketClient;
+import com.mbcu.mmm.models.request.AccountInfo;
+import com.mbcu.mmm.rx.RxBus;
+import com.mbcu.mmm.rx.RxBusProvider;
 import com.ripple.core.coretypes.AccountID;
 import com.ripple.core.coretypes.Amount;
 import com.ripple.core.coretypes.Currency;
 
+import io.reactivex.subjects.PublishSubject;
+import io.reactivex.subjects.Subject;
+
 public class UtilsTest {
 	
-	
-	
+	private final AtomicBoolean flagWaitSeq1 = new AtomicBoolean(true);
+	private final AtomicBoolean flagWaitSeq2 = new AtomicBoolean(false);
+
+  private Subject<Boolean> seqSyncObs = PublishSubject.create();  
+
 	@Test
 	public void testRemoveFirstChar(){
 		String s = "-0.0525506494749084/RJP/rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS";
@@ -55,6 +66,18 @@ public class UtilsTest {
 		MathContext mc = new MathContext(16, RoundingMode.HALF_DOWN);
 		BigDecimal c = a.round(mc);
 		assertEquals(c.toString(), "345.2424536474568");
+	}
+	
+	@Test
+	public void testObs(){
+		seqSyncObs.subscribe(flag -> {
+			System.out.println(flag);
+		});
+		
+		seqSyncObs.onNext(flagWaitSeq1.compareAndSet(false, true)); // false
+		seqSyncObs.onNext(flagWaitSeq2.compareAndSet(false, true)); // true
+
+
 	}
 	
 }

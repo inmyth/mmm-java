@@ -29,6 +29,8 @@ import com.ripple.core.types.known.tx.signed.SignedTransaction;
 import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
+import io.reactivex.subjects.PublishSubject;
+import io.reactivex.subjects.Subject;
 
 public class State extends Base {
 	private static final BigDecimal DEFAULT_FEES_DROPS = new BigDecimal("0.000012");
@@ -42,6 +44,8 @@ public class State extends Base {
 	private final AtomicBoolean flagWaitSeq = new AtomicBoolean(false);
 	private final AtomicBoolean flagWaitLedger = new AtomicBoolean(false);
 	private RxBus bus = RxBusProvider.getInstance();
+	
+  private Subject<Boolean> seqSyncObs = PublishSubject.create();  
 
 	public State(Config config) {
 		super(MyLogger.getLogger(Common.class.getName()), config);
@@ -75,34 +79,31 @@ public class State extends Base {
 					OnLedgerClosed event = (OnLedgerClosed) o;		
 					log(event.ledgerEvent.toString());
 					setLedgerIndex(event.ledgerEvent);	
-						synchronized (flagWaitLedger) {
-							flagWaitLedger.set(false);
-							if (!flagWaitLedger.get() && !flagWaitSeq.get()){
-								drain();
-							}
-						}					
+					flagWaitLedger.set(false);
+					if (!flagWaitLedger.get() && !flagWaitSeq.get()){
+						drain();
+					}										
 				}
 				else if (o instanceof Common.OnAccountInfoSequence){
 					OnAccountInfoSequence event = (OnAccountInfoSequence) o;
-					synchronized (flagWaitSeq) {
-						setSequence(event.sequence);
-						flagWaitSeq.set(false);
-						if (!flagWaitLedger.get() && !flagWaitSeq.get()){
-							drain();
-						}
-					}				
+					System.out.println("New Sequence " + event.sequence);
+					setSequence(event.sequence);
+					flagWaitSeq.set(false);
+					if (!flagWaitLedger.get() && !flagWaitSeq.get()){
+						drain();
+					}									
 				}
 				else if (o instanceof Txc.RequestRemove){
 					RequestRemove event = (RequestRemove) o;
 					pending.remove(event.seq);
 				}
 				else if (o instanceof Txc.RequestSequenceSync){
-					synchronized (flagWaitLedger) {
-						if (!flagWaitLedger.get()){
-							flagWaitSeq.set(true);
-							bus.send(new WebSocketClient.WSRequestSendText(AccountInfo.of(config).stringify()));		
-						}		
-					}
+					seqSyncObs.onNext(flagWaitSeq.compareAndSet(false, true));
+
+//					if (!flagWaitLedger.get()){
+//						flagWaitSeq.set(true);
+//						bus.send(new WebSocketClient.WSRequestSendText(AccountInfo.of(config).stringify()));		
+//					}						
 				}
 				else if (o instanceof Txc.RequestWaitNextLedger){
 					flagWaitLedger.set(true);					
@@ -118,6 +119,13 @@ public class State extends Base {
 			public void onComplete() {				
 			}
 		});		
+		
+		seqSyncObs.subscribe(flag -> {
+			if(flag){
+				bus.send(new WebSocketClient.WSRequestSendText(AccountInfo.of(config).stringify()));		
+			}	
+		});
+						
 	}
 	
 	public void setLedgerIndex(LedgerEvent event){

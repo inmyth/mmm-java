@@ -11,6 +11,12 @@ How to use:
 ```
 java -jar mmm.jar <path_to_config_file>
 ```
+
+v.013
+-  bug1: Txc OnResponseFail was not matched against own hash or sequence. 
+- removed synchronized in State
+- need to test on preSeq or pastSeq 
+
 v.012
 - alpha State. This would be equal to mmm in node.js
 - State manages order submission and trial

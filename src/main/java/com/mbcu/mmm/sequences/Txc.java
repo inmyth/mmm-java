@@ -46,16 +46,16 @@ public class Txc extends Base {
 				if (o instanceof Common.OnOfferCreate) {
 					OnOfferCreate event = (OnOfferCreate) o;
 					if (event.sequence.intValue() == seq) {
-						disposables.dispose();
 						bus.send(new RequestRemove(seq));		
+						disposables.dispose();
 					}
 				} 
 				else if (o instanceof Common.OnLedgerClosed) {
 					OnLedgerClosed event = (OnLedgerClosed) o;
 					if (isTesSuccess && event.ledgerEvent.getValidated() > maxLedger){ // failed to enter ledger
-						disposables.dispose();
 						bus.send(new RequestRemove(seq));
 						bus.send(new State.OnOrderReady(outbound));	
+						disposables.dispose();
 					}
 				} 
 				else if (o instanceof Common.OnResponseTesSuccess){
@@ -66,6 +66,9 @@ public class Txc extends Base {
 				}
 				else if (o instanceof Common.OnResponseFail) {
 					OnResponseFail event = (OnResponseFail) o;
+					if (event.sequence.intValue() != seq || event.hash != hash){
+						return;
+					}
 					String er = event.engineResult;
 
 					if (er.equals("terQUEUED")) {
@@ -81,10 +84,10 @@ public class Txc extends Base {
 //						return;
 //					}
 					if (er.equals(EngineResult.terPRE_SEQ.toString())	|| er.equals(EngineResult.tefPAST_SEQ.toString())) {
-						disposables.dispose();
 						bus.send(new RequestSequenceSync());
 						bus.send(new RequestRemove(seq));
 						bus.send(new State.OnOrderReady(outbound));
+						disposables.dispose();
 						return;
 					}
 
@@ -96,15 +99,16 @@ public class Txc extends Base {
 					
 					if (er.equals(EngineResult.telINSUF_FEE_P.toString())){
 						// retry next ledger
-						disposables.dispose();
 						bus.send(new RequestWaitNextLedger());
 						bus.send(new RequestRemove(seq));
 						bus.send(new State.OnOrderReady(outbound));
+						disposables.dispose();
 						return;
 					}
-					disposables.dispose();
 					bus.send(new RequestRemove(seq));
 					bus.send(new State.OnOrderReady(outbound));
+					disposables.dispose();
+
 				}	
 			}
 
