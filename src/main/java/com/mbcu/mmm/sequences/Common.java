@@ -1,5 +1,6 @@
 package com.mbcu.mmm.sequences;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -213,22 +214,34 @@ public class Common extends Base {
 					}
 				}
 				oes.addAll(fa.process());
+				if (offerCreated == null){
+					RLOrder test = RLOrder.fromLastExecuted(txn.get(Amount.TakerPays), txn.get(Amount.TakerGets));
+					System.out.println(test.stringify());
+				}
 			}else{
 				for (Offer offer : offersExecuteds) {
 					STObject finalFields = offer.get(STObject.FinalFields);
 					if (finalFields != null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
 						oes.add(RLOrder.fromOfferExecuted(offer, true));
+						
+						if (offer.get(STObject.FinalFields).get(Amount.TakerGets).value().compareTo(BigDecimal.ZERO) == 0){
+							RLOrder test = RLOrder.fromLastExecuted(offer.get(Amount.TakerPays), offer.get(Amount.TakerGets));
+							System.out.println("Consumed " + test.stringify());
+						}
 					}
 				}
 			}
-		}
-			
+		}			
 		else if (txType.equals("Payment") && !txn.account().address.equals(config.getCredentials().getAddress())) {
 			// we only care about payment not from ours.
 			for (Offer offer : offersExecuteds) {
 				STObject finalFields = offer.get(STObject.FinalFields);
 				if (finalFields != null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
 					oes.add(RLOrder.fromOfferExecuted(offer, true));
+					if (offer.get(STObject.FinalFields).get(Amount.TakerGets).value().compareTo(BigDecimal.ZERO) == 0){
+						RLOrder test = RLOrder.fromLastExecuted(offer.get(Amount.TakerPays), offer.get(Amount.TakerGets));
+						System.out.println("Consumed " + test.stringify());
+					}
 				}
 			}
 		}
@@ -241,7 +254,6 @@ public class Common extends Base {
 			log(sb.toString());
 			bus.send(new OnOfferExecuted(oes));
 		}
-
 	}
 
 	private static class FilterAutobridged {
@@ -433,8 +445,6 @@ public class Common extends Base {
 		}
 	}
 	
-	
-	
 	public static class OnOfferEdited {
 		public final AccountID ocAccount;
 		public final Hash256 newHash;
@@ -457,6 +467,15 @@ public class Common extends Base {
 			super();
 			this.oes = oes;
 		}
+	}
+	
+	public static class OnLastOfferExecuted {
+		public RLOrder loe;
+
+		public OnLastOfferExecuted(RLOrder loe) {
+			super();
+			this.loe = loe;
+		}	
 	}
 	
 	public static class OnResponseTesSuccess{
@@ -486,7 +505,6 @@ public class Common extends Base {
 		}		
 	}
 	
-
 	public static class OnLedgerClosed{
 		public final LedgerEvent ledgerEvent;
 		
@@ -504,7 +522,5 @@ public class Common extends Base {
 			this.sequence = sequence;
 		} 			
 	}
-	
-	
 	
 }

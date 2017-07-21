@@ -1,7 +1,6 @@
 package com.mbcu.mmm.models.internal;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -148,6 +147,13 @@ public final class RLOrder extends Base{
 		RLOrder res = new RLOrder(Direction.BUY, rlGot, rlPaid, ask, pair);	
 		System.out.println("RLORDER \n " + res.stringify());
 		return res;
+	}
+	
+	public static RLOrder fromLastExecuted(Amount takerPays, Amount takerGets){
+		String pair = buildPair(takerGets, takerPays);
+		BigDecimal ask = takerGets.value().divide(takerPays.value(), MathContext.DECIMAL64);
+		RLOrder res = new RLOrder(Direction.BUY, takerPays, takerGets, ask, pair);
+		return res;		
 	}
 	
 	public static List<RLOrder> fromAutobridge(Map<String, ArrayList<Offer>> map){

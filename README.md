@@ -11,6 +11,9 @@ How to use:
 ```
 java -jar mmm.jar <path_to_config_file>
 ```
+v.015
+- building whole counter and percentage of original order
+
 v.014
 - alpha. double orders are caused by resubmitting terPRE_SEQ.
 
@@ -91,3 +94,4 @@ TODOS
 - (fixed) v.009 value precision of 18 is greater than maximum iou precision of 16
 - (v.011) test new counter on autobridge
 - tefALREADY needs retrial ? 
+- build listener for remaining order after taken and original quantity and rate if it's fully taken
