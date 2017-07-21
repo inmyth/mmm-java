@@ -17,12 +17,12 @@ import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.sequences.Base;
 import com.mbcu.mmm.sequences.Common;
-import com.mbcu.mmm.sequences.Txc;
 import com.mbcu.mmm.sequences.Common.OnAccountInfoSequence;
 import com.mbcu.mmm.sequences.Common.OnLedgerClosed;
 import com.mbcu.mmm.sequences.Common.OnOfferCreate;
-import com.mbcu.mmm.sequences.Txc.RequestRemove;
+import com.mbcu.mmm.sequences.Txc;
 import com.mbcu.mmm.utils.MyLogger;
+import com.ripple.core.coretypes.hash.Hash256;
 import com.ripple.core.coretypes.uint.UInt32;
 import com.ripple.core.types.known.tx.signed.SignedTransaction;
 
@@ -33,7 +33,7 @@ import io.reactivex.subjects.PublishSubject;
 import io.reactivex.subjects.Subject;
 
 public class State extends Base {
-	private static final BigDecimal DEFAULT_FEES_DROPS = new BigDecimal("0.000012");
+	private static final BigDecimal DEFAULT_FEES_DROPS = new BigDecimal("0.000010");
 	private static final int DEFAULT_MAX_LEDGER_GAP = 5;
 	
 	private final AtomicInteger ledgerClosed = new AtomicInteger(0);
@@ -69,6 +69,9 @@ public class State extends Base {
 				}
 				else if (o instanceof OnOrderReady){
 					OnOrderReady event = (OnOrderReady) o;
+					if (event.from != null){
+						log("retry from " + event.from + " " + event.memo);
+					}
 					if (flagWaitSeq.get() || flagWaitLedger.get()){
 						qWait.add(event.outbound);												
 					}else {
@@ -86,26 +89,21 @@ public class State extends Base {
 				}
 				else if (o instanceof Common.OnAccountInfoSequence){
 					OnAccountInfoSequence event = (OnAccountInfoSequence) o;
-					System.out.println("New Sequence " + event.sequence);
+					log("new Sequence %d" + event.sequence);
 					setSequence(event.sequence);
 					flagWaitSeq.set(false);
 					if (!flagWaitLedger.get() && !flagWaitSeq.get()){
 						drain();
 					}									
 				}
-				else if (o instanceof Txc.RequestRemove){
+				else if (o instanceof RequestRemove){
 					RequestRemove event = (RequestRemove) o;
 					pending.remove(event.seq);
 				}
-				else if (o instanceof Txc.RequestSequenceSync){
-					seqSyncObs.onNext(flagWaitSeq.compareAndSet(false, true));
-
-//					if (!flagWaitLedger.get()){
-//						flagWaitSeq.set(true);
-//						bus.send(new WebSocketClient.WSRequestSendText(AccountInfo.of(config).stringify()));		
-//					}						
+				else if (o instanceof RequestSequenceSync){
+					seqSyncObs.onNext(flagWaitSeq.compareAndSet(false, true));					
 				}
-				else if (o instanceof Txc.RequestWaitNextLedger){
+				else if (o instanceof RequestWaitNextLedger){
 					flagWaitLedger.set(true);					
 				}
 			}
@@ -148,8 +146,8 @@ public class State extends Base {
 		return this.sequence.getAndIncrement();
 	}
 	
-	private void drain(){
-		while(!qWait.isEmpty()){
+	private void drain() {
+		while (!qWait.isEmpty()) {
 			process(qWait.poll());
 		}
 	}
@@ -185,12 +183,31 @@ public class State extends Base {
 	
 	public static class OnOrderReady {
 		public RLOrder outbound;
+		public Hash256 from;
+		public String memo;
 
 		public OnOrderReady(RLOrder outbound) {
 			super();
 			this.outbound = outbound;
 		}	
+		
+		public OnOrderReady(RLOrder outbound, Hash256 from, String memo){
+			this(outbound);
+			this.from = from;
+			this.memo = memo;
+		}
 	}
 
-	public static class RequestSynchronizeSequence{}
+	public static class RequestRemove {
+		public int seq;
+
+		public RequestRemove(int seq) {
+			super();
+			this.seq = seq;
+		}
+	}
+	
+	public static class RequestSequenceSync{}
+	
+	public static class RequestWaitNextLedger{}
 }

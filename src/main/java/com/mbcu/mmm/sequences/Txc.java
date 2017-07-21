@@ -46,16 +46,16 @@ public class Txc extends Base {
 				if (o instanceof Common.OnOfferCreate) {
 					OnOfferCreate event = (OnOfferCreate) o;
 					if (event.sequence.intValue() == seq) {
-						bus.send(new RequestRemove(seq));		
 						disposables.dispose();
+						bus.send(new State.RequestRemove(seq));		
 					}
 				} 
 				else if (o instanceof Common.OnLedgerClosed) {
 					OnLedgerClosed event = (OnLedgerClosed) o;
 					if (isTesSuccess && event.ledgerEvent.getValidated() > maxLedger){ // failed to enter ledger
-						bus.send(new RequestRemove(seq));
-						bus.send(new State.OnOrderReady(outbound));	
 						disposables.dispose();
+						bus.send(new State.RequestRemove(seq));
+						bus.send(new State.OnOrderReady(outbound, hash, " MaxLedger passed"));	
 					}
 				} 
 				else if (o instanceof Common.OnResponseTesSuccess){
@@ -66,13 +66,20 @@ public class Txc extends Base {
 				}
 				else if (o instanceof Common.OnResponseFail) {
 					OnResponseFail event = (OnResponseFail) o;
-					if (event.sequence.intValue() != seq || event.hash != hash){
+					if (event.sequence.intValue() != seq || event.hash.compareTo(hash) != 0){
 						return;
 					}
 					String er = event.engineResult;
-
-					if (er.equals("terQUEUED")) {
-//						terQUEUED behaves like tesSUCCESS
+					
+					if (er.equals(EngineResult.terINSUF_FEE_B.toString())) {
+						// no fund
+						bus.send(new WebSocketClient.WSRequestDisconnect());
+						return;
+					}
+					
+					if (er.startsWith("ter")) {
+//						this includes terQUEUED and terPRE_SEQ and behave like tesSUCCESS
+//						https://www.xrpchat.com/topic/2654-transaction-failed-with-terpre_seq-but-still-executed/?page=2
 //						disposables.dispose();
 //						bus.send(new RequestRemove(seq));
 						return;
@@ -83,31 +90,26 @@ public class Txc extends Base {
 //						bus.send(new RequestRemove(seq));
 //						return;
 //					}
-					if (er.equals(EngineResult.terPRE_SEQ.toString())	|| er.equals(EngineResult.tefPAST_SEQ.toString())) {
-						bus.send(new RequestSequenceSync());
-						bus.send(new RequestRemove(seq));
-						bus.send(new State.OnOrderReady(outbound));
+					if (er.equals(EngineResult.tefPAST_SEQ.toString())) {
 						disposables.dispose();
+						bus.send(new State.RequestSequenceSync());
+						bus.send(new State.RequestRemove(seq));
+						bus.send(new State.OnOrderReady(outbound, hash, " retry terPreseq or Pastseq"));
 						return;
 					}
-
-					if (er.equals(EngineResult.terINSUF_FEE_B.toString())) {
-						// no fund
-						bus.send(new WebSocketClient.WSRequestDisconnect());
-						return;
-					}
-					
+				
 					if (er.equals(EngineResult.telINSUF_FEE_P.toString())){
 						// retry next ledger
-						bus.send(new RequestWaitNextLedger());
-						bus.send(new RequestRemove(seq));
-						bus.send(new State.OnOrderReady(outbound));
 						disposables.dispose();
+						bus.send(new State.RequestWaitNextLedger());
+						bus.send(new State.RequestSequenceSync());
+						bus.send(new State.RequestRemove(seq));
+						bus.send(new State.OnOrderReady(outbound, hash, " retry insufFee"));
 						return;
 					}
-					bus.send(new RequestRemove(seq));
-					bus.send(new State.OnOrderReady(outbound));
 					disposables.dispose();
+					bus.send(new State.RequestRemove(seq));
+					bus.send(new State.OnOrderReady(outbound, hash, "retry " + er));
 
 				}	
 			}
@@ -135,16 +137,5 @@ public class Txc extends Base {
 		return res;
 	}
 	
-	public static class RequestRemove {
-		public int seq;
 
-		public RequestRemove(int seq) {
-			super();
-			this.seq = seq;
-		}
-	}
-	
-	public static class RequestSequenceSync{}
-	
-	public static class RequestWaitNextLedger{}
 }

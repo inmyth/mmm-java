@@ -11,6 +11,8 @@ How to use:
 ```
 java -jar mmm.jar <path_to_config_file>
 ```
+v.014
+- alpha. double orders are caused by resubmitting terPRE_SEQ.
 
 v.013
 -  bug1: Txc OnResponseFail was not matched against own hash or sequence. 
@@ -18,7 +20,7 @@ v.013
 - need to test on preSeq or pastSeq 
 
 v.012
-- alpha State. This would be equal to mmm in node.js
+- pre-alpha State. This would be equal to mmm in node.js
 - State manages order submission and trial
 
 v.011
@@ -68,6 +70,7 @@ NOTES
 - payment and OC belonging to others will result in many OEs. Find only those belonging for us
 - do not instantiate Amount directly. Use RLOrder#amount
 - pair in Config determines the unit of rate and gridSpace
+- ter errors including terQUEUED and terPRE_SEQ behave like tesSUCCESS https://www.xrpchat.com/topic/2654-transaction-failed-with-terpre_seq-but-still-executed/?page=2
 
 TODOS
 - (done cancel-order.txt) see delete offer response 
