@@ -12,17 +12,17 @@ How to use:
 java -jar mmm.jar <path_to_config_file>
 ```
 Config
-`pair` : String 
+-`pair` : String 
 Currency or IOU with base.baseIssuer/quote.quoteIssuer format.
-`startMiddlePrice` : float
+-`startMiddlePrice` : float
 Starting rate for seeder.
-`gridSpace` : float
+-`gridSpace` : float
 Margin between seed and counter orders. 
-`buyGridLevels` and `sellGridLevels` : int
+-`buyGridLevels` and `sellGridLevels` : int
 Number of seed orders for each side.
-`buyOrderQuantity` and `sellOrderQuantity` : float
+-`buyOrderQuantity` and `sellOrderQuantity` : float
 Amount of seed or counter order.
-`percentToCounter` : int (from 0 to 100)
+-`percentToCounter` : int (from 0 to 100)
 Percentage of order consumed before it is countered. 
 At 0 the bot will counter every consumed order regardless of size with rates of the consumed orders. 
 If not zero then all orders will be countered with seed rate from botconfig. 
