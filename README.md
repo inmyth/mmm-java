@@ -13,7 +13,7 @@ java -jar mmm.jar <path_to_config_file>
 ```
 Config
 
--`pair` : String 
+`pair` : String 
 
 Currency or IOU with base.baseIssuer/quote.quoteIssuer format.
 
