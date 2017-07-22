@@ -11,6 +11,33 @@ How to use:
 ```
 java -jar mmm.jar <path_to_config_file>
 ```
+Config
+`pair` : String 
+Currency or IOU with base.baseIssuer/quote.quoteIssuer format.
+`startMiddlePrice` : float
+Starting rate for seeder.
+`gridSpace` : float
+Margin between seed and counter orders. 
+`buyGridLevels` and `sellGridLevels` : int
+Number of seed orders for each side.
+`buyOrderQuantity` and `sellOrderQuantity` : float
+Amount of seed or counter order.
+`percentToCounter` : int (from 0 to 100)
+Percentage of order consumed before it is countered. 
+At 0 the bot will counter every consumed order regardless of size with rates of the consumed orders. 
+If not zero then all orders will be countered with seed rate from botconfig. 
+```
+quantity = orderQuantity - remainder
+rate = botconfig seed rate
+```
+At 100 the bot will only counter an order if it's fully consumed.
+At 40 the bot counters an order if the remaining order is less than 40% of original.
+WARNING : when setting this parameter above 0, you should first cancel all orders in the orderbook.
+  
+v.016
+- alpha remainder counter (counter if a percentage of original order is taken)
+- tested on consume and consumed
+
 v.015
 - building whole counter and percentage of original order
 
@@ -94,4 +121,6 @@ TODOS
 - (fixed) v.009 value precision of 18 is greater than maximum iou precision of 16
 - (v.011) test new counter on autobridge
 - tefALREADY needs retrial ? 
-- build listener for remaining order after taken and original quantity and rate if it's fully taken
+- (done) build listener for remaining order after taken and original quantity and rate if it's fully taken
+- list all OR in a list
+- rearrange log

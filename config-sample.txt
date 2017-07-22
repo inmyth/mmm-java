@@ -12,7 +12,8 @@
 			"buyGridLevels": 10,
 			"sellGridLevels": 9,
 			"buyOrderQuantity": 2,
-			"sellOrderQuantity": 1.9
+			"sellOrderQuantity": 1.9,
+			"percentToCounter" : 50
 		},
 		{
 			"pair": "RJP.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS/JPY.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
@@ -21,7 +22,9 @@
 			"buyGridLevels": 3,
 			"sellGridLevels": 2,
 			"buyOrderQuantity": 200,
-			"sellOrderQuantity": 0.00001
+			"sellOrderQuantity": 0.00001,
+			"percentToCounter" : 100
+			
 		},
 		{
 			"pair": "JPY.r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN/JPY.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
@@ -30,7 +33,9 @@
 			"buyGridLevels": 3,
 			"sellGridLevels": 2,
 			"buyOrderQuantity": 2,
-			"sellOrderQuantity": 2
+			"sellOrderQuantity": 2,
+			"percentToCounter" : 0
+			
 		},
 		{
 			"pair": "XRP/USD.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
@@ -39,7 +44,8 @@
 			"buyGridLevels": 3,
 			"sellGridLevels": 2,
 			"buyOrderQuantity": 2,
-			"sellOrderQuantity": 1.20
+			"sellOrderQuantity": 1.20,
+			"percentToCounter" : 0		
 		}
 	]
 }

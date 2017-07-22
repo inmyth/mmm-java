@@ -1,6 +1,7 @@
 package com.mbcu.mmm.sequences;
 
 import com.mbcu.mmm.models.internal.Config;
+import com.mbcu.mmm.models.internal.RLOrder;
 import com.mbcu.mmm.sequences.state.State;
 import com.mbcu.mmm.utils.MyLogger;
 
@@ -42,7 +43,7 @@ public class Balancer extends Base{
 		config.getBotConfigMap().values()
 		.stream()
 		.map(bot -> { 
-			return bot.buildSeed();
+			return RLOrder.buildSeed(bot);
 		})
 		.flatMap(l->l.stream())
 		.forEach(seed -> {

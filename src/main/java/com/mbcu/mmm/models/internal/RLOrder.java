@@ -6,8 +6,10 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 
 import com.mbcu.mmm.models.Base;
+import com.mbcu.mmm.models.internal.RLOrder.Direction;
 import com.ripple.core.coretypes.AccountID;
 import com.ripple.core.coretypes.Amount;
 import com.ripple.core.coretypes.Currency;
@@ -149,12 +151,19 @@ public final class RLOrder extends Base{
 		return res;
 	}
 	
-	public static RLOrder fromLastExecuted(Amount takerPays, Amount takerGets){
-		String pair = buildPair(takerGets, takerPays);
-		BigDecimal ask = takerGets.value().divide(takerPays.value(), MathContext.DECIMAL64);
-		RLOrder res = new RLOrder(Direction.BUY, takerPays, takerGets, ask, pair);
-		return res;		
+	public static BefAf toBA(Amount bTakerPays, Amount bTakerGets, Amount aTakerPays, Amount aTakerGets){		
+		String bPair = buildPair(bTakerGets, bTakerPays);		
+		BigDecimal bAsk = bTakerGets.value().divide(bTakerPays.value(), MathContext.DECIMAL64);
+		RLOrder before = new RLOrder(Direction.BUY, bTakerPays, bTakerGets, bAsk, bPair);	
+		if (aTakerPays == null){
+			aTakerPays = new Amount(new BigDecimal("0"), bTakerPays.currency(), bTakerPays.issuer());
+			aTakerGets = new Amount(new BigDecimal("0"), bTakerGets.currency(), bTakerGets.issuer());
+		}
+		RLOrder after = RLOrder.rateUnneeded(Direction.BUY, aTakerPays, aTakerGets);		
+		return new BefAf(before, after);		
 	}
+	
+	
 	
 	public static List<RLOrder> fromAutobridge(Map<String, ArrayList<Offer>> map){
 		List<RLOrder> res = new ArrayList<>();
@@ -267,6 +276,42 @@ public final class RLOrder extends Base{
 		return signed;	
 	}
 
+	public static ArrayList<RLOrder> buildSeed(BotConfig bot){
+		ArrayList<RLOrder> res = new ArrayList<>();
+		BigDecimal middlePrice = new BigDecimal(bot.startMiddlePrice);
+		BigDecimal margin = new BigDecimal(bot.gridSpace);
+		Queue<Integer> buyLevels = bot.getLevels(bot.buyGridLevels);
+		Queue<Integer> sellLevels = bot.getLevels(bot.sellGridLevels);
+		
+		while (true){
+			if (buyLevels.isEmpty() && sellLevels.isEmpty()){
+				break;
+			}
+			if (!buyLevels.isEmpty()){
+				Amount quantity =	bot.base.add(bot.getBuyOrderQuantity());	
+				
+				BigDecimal rate = middlePrice.subtract(margin.multiply(new BigDecimal(buyLevels.remove()), MathContext.DECIMAL64));
+				if (rate.compareTo(BigDecimal.ZERO) <= 0){
+					buyLevels.clear();				
+				}else{
+					BigDecimal totalPriceValue = quantity.value().multiply(rate, MathContext.DECIMAL64);
+					Amount totalPrice =  RLOrder.amount(totalPriceValue, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
+					RLOrder buy = RLOrder.rateUnneeded(Direction.BUY, quantity, totalPrice);
+					res.add(buy);
+				}
+			}
+			if (!sellLevels.isEmpty()){
+				Amount quantity = bot.base.add(bot.getSellOrderQuantity());
+				BigDecimal rate = middlePrice.add(margin.multiply(new BigDecimal(sellLevels.remove()), MathContext.DECIMAL64));
+				BigDecimal totalPriceValue = quantity.value().multiply(rate, MathContext.DECIMAL64);
+				Amount totalPrice = RLOrder.amount(totalPriceValue, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
+				RLOrder sell = RLOrder.rateUnneeded(Direction.SELL, quantity, totalPrice);
+				res.add(sell);	
+			}			
+		}	
+		return res;
+	}
+	
 	@Override
 	public String stringify() {	
 		StringBuffer sb = new StringBuffer(direction);
@@ -285,5 +330,6 @@ public final class RLOrder extends Base{
 		sb.append("\n");
 		return sb.toString();		
 	}
+	
 	
 }

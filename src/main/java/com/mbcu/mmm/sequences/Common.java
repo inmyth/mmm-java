@@ -11,6 +11,7 @@ import org.json.JSONObject;
 import com.mbcu.mmm.main.WebSocketClient;
 import com.mbcu.mmm.main.WebSocketClient.WSError;
 import com.mbcu.mmm.main.WebSocketClient.WSGotText;
+import com.mbcu.mmm.models.internal.BefAf;
 import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.models.internal.LedgerEvent;
 import com.mbcu.mmm.models.internal.RLOrder;
@@ -215,19 +216,24 @@ public class Common extends Base {
 				}
 				oes.addAll(fa.process());
 				if (offerCreated == null){
-					RLOrder test = RLOrder.fromLastExecuted(txn.get(Amount.TakerPays), txn.get(Amount.TakerGets));
-					System.out.println(test.stringify());
+					BefAf ba = RLOrder.toBA(txn.get(Amount.TakerPays), txn.get(Amount.TakerGets), null, null);
+					bus.send(new OnRemainder(ba));
+				}else{
+					BefAf ba = RLOrder.toBA(txn.get(Amount.TakerPays), txn.get(Amount.TakerGets), offerCreated.takerPays(), offerCreated.takerGets());
+					bus.send(new OnRemainder(ba));
 				}
 			}else{
 				for (Offer offer : offersExecuteds) {
 					STObject finalFields = offer.get(STObject.FinalFields);
 					if (finalFields != null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
-						oes.add(RLOrder.fromOfferExecuted(offer, true));
+						oes.add(RLOrder.fromOfferExecuted(offer, true));						
+						BefAf ba = RLOrder.toBA(offer.takerPays(), offer.takerGets(), finalFields.get(Amount.TakerPays), finalFields.get(Amount.TakerGets));
+						bus.send(new OnRemainder(ba));
 						
-						if (offer.get(STObject.FinalFields).get(Amount.TakerGets).value().compareTo(BigDecimal.ZERO) == 0){
-							RLOrder test = RLOrder.fromLastExecuted(offer.get(Amount.TakerPays), offer.get(Amount.TakerGets));
-							System.out.println("Consumed " + test.stringify());
-						}
+					}
+					if (finalFields == null && offer.account().address.equals(this.config.getCredentials().getAddress())){
+						BefAf ba = RLOrder.toBA(offer.takerPays(), offer.takerGets(), null, null);
+						bus.send(new OnRemainder(ba));
 					}
 				}
 			}
@@ -239,9 +245,13 @@ public class Common extends Base {
 				if (finalFields != null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
 					oes.add(RLOrder.fromOfferExecuted(offer, true));
 					if (offer.get(STObject.FinalFields).get(Amount.TakerGets).value().compareTo(BigDecimal.ZERO) == 0){
-						RLOrder test = RLOrder.fromLastExecuted(offer.get(Amount.TakerPays), offer.get(Amount.TakerGets));
-						System.out.println("Consumed " + test.stringify());
+						BefAf ba = RLOrder.toBA(offer.takerPays(), offer.takerGets(), finalFields.get(Amount.TakerPays), finalFields.get(Amount.TakerGets));
+						bus.send(new OnRemainder(ba));
 					}
+				}
+				if (finalFields == null && offer.account().address.equals(this.config.getCredentials().getAddress())){
+					BefAf ba = RLOrder.toBA(offer.takerPays(), offer.takerGets(), null, null);
+					bus.send(new OnRemainder(ba));
 				}
 			}
 		}
@@ -469,12 +479,12 @@ public class Common extends Base {
 		}
 	}
 	
-	public static class OnLastOfferExecuted {
-		public RLOrder loe;
+	public static class OnRemainder {
+		public BefAf ba;
 
-		public OnLastOfferExecuted(RLOrder loe) {
+		public OnRemainder(BefAf ba) {
 			super();
-			this.loe = loe;
+			this.ba = ba;
 		}	
 	}
 	

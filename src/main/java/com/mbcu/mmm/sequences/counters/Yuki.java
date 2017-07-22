@@ -5,6 +5,7 @@ import java.math.MathContext;
 import java.util.List;
 import java.util.logging.Level;
 
+import com.mbcu.mmm.models.internal.BefAf;
 import com.mbcu.mmm.models.internal.BotConfig;
 import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.models.internal.RLOrder;
@@ -42,7 +43,11 @@ public class Yuki extends Base implements Counter {
 			public void onNext(Object o) {
 				if (o instanceof Common.OnOfferExecuted) {
 					OnOfferExecuted event = (OnOfferExecuted) o;
-					counter(event.oes);
+					counterOE(event.oes);
+				}
+				else if (o instanceof Common.OnRemainder){
+					Common.OnRemainder event = (Common.OnRemainder) o;
+					counterOR(event.ba);
 				}
 			}
 
@@ -62,28 +67,62 @@ public class Yuki extends Base implements Counter {
 		Yuki counter = new Yuki(config);
 		return counter;
 	}
+	
+	public void counterOR(BefAf ba){
+		BotConfigDirection bcd = new BotConfigDirection(config, ba.before);
+		if (bcd.botConfig == null || bcd.botConfig.getPercentToCounter() == 0) {
+			return;
+		}
+		Amount quantity = bcd.isDirectionMatch ? ba.after.getQuantity() : ba.after.getTotalPrice();
+		Amount totalPrice = bcd.isDirectionMatch ? ba.after.getTotalPrice() : ba.after.getQuantity();
+		BigDecimal rate = bcd.isDirectionMatch ? ba.before.getAsk() : BigDecimal.ONE.divide(ba.before.getAsk(), MathContext.DECIMAL64);		
+		BigDecimal botQuantity = bcd.isDirectionMatch ? bcd.botConfig.getBuyOrderQuantity() : bcd.botConfig.getSellOrderQuantity();
+		
+		Amount remainder = quantity.subtract(botQuantity).abs();
+		BigDecimal reference = botQuantity.multiply(new BigDecimal(bcd.botConfig.getPercentToCounter()), MathContext.DECIMAL64).divide(new BigDecimal("100"), MathContext.DECIMAL64);
+		
+		if (remainder.value().compareTo(reference) >= 0){
+			Amount newTotalPrice = new Amount(remainder.multiply(rate).value(), totalPrice.currency(), totalPrice.issuer());			
+			RLOrder counter = RLOrder.rateUnneeded(Direction.BUY, remainder, newTotalPrice);
+			System.out.println("OFFER REMAINDER COUNTER\n" + counter.stringify());		
+			onCounterReady(counter);
+			
+		}
+	}
 
-	public void counter(List<RLOrder> oes) {
+	public void counterOE(List<RLOrder> oes) {
 		oes.forEach(oe -> {
-			RLOrder counter = buildCounter(oe);
+			RLOrder counter = buildOECounter(oe);
 			if (counter != null) {
 				onCounterReady(counter);
 			}
-
 		});
+	}
+	
+	
+	private static class BotConfigDirection {
+		boolean isDirectionMatch = true;
+		BotConfig botConfig;
+		
+		BotConfigDirection(Config config, RLOrder offer){
+			botConfig = config.getBotConfigMap().get(offer.getPair());
+			if (botConfig == null) {
+				botConfig = config.getBotConfigMap().get(offer.getReversePair());
+				isDirectionMatch = false;
+			}
+		}	
 	}
 
 	@Nullable
-	public RLOrder buildCounter(RLOrder origin) {
-		boolean isDirectionMatch = true;
-		BotConfig botConfig = config.getBotConfigMap().get(origin.getPair());
-		if (botConfig == null) {
-			botConfig = config.getBotConfigMap().get(origin.getReversePair());
-			isDirectionMatch = false;
-		}
-		if (botConfig == null) {
+	public RLOrder buildOECounter(RLOrder origin) {
+		
+		BotConfigDirection bcd = new BotConfigDirection(config, origin);
+		if (bcd.botConfig == null || bcd.botConfig.getPercentToCounter() != 0) {
 			return null;
 		}
+		boolean isDirectionMatch = bcd.isDirectionMatch;
+		BotConfig botConfig = bcd.botConfig;
+
 		Amount oldQuantity = origin.getQuantity();
 		Amount oldTotalPrice = origin.getTotalPrice();
 		RLOrder res = null;

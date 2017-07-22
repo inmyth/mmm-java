@@ -28,6 +28,7 @@ public class BotConfig {
 	String sellOrderQuantity;	
 	transient Amount base;
 	transient Amount quote;
+	int percentToCounter;
 
 	public static HashMap<String, BotConfig> buildMap(ArrayList<BotConfig> bots)  {
 		HashMap<String, BotConfig> res = new HashMap<>();
@@ -105,6 +106,9 @@ public class BotConfig {
 		return new BigDecimal(sellOrderQuantity);
 	}
 	
+	public int getPercentToCounter() {
+		return percentToCounter;
+	}
 	
 	public Amount getBase() {
 		return base;
@@ -114,7 +118,7 @@ public class BotConfig {
 		return quote;
 	}
 
-	private Queue<Integer> getLevels(int max){
+	Queue<Integer> getLevels(int max){
 		Queue<Integer> res = new LinkedList<>();
 		IntStream.range(1, max + 1).forEach(a -> {res.add(a);});
 		return res;
@@ -122,40 +126,6 @@ public class BotConfig {
 
 
 	
-	public ArrayList<RLOrder> buildSeed(){
-		ArrayList<RLOrder> res = new ArrayList<>();
-		BigDecimal middlePrice = new BigDecimal(this.startMiddlePrice);
-		BigDecimal margin = new BigDecimal(this.gridSpace);
-		Queue<Integer> buyLevels = getLevels(this.buyGridLevels);
-		Queue<Integer> sellLevels = getLevels(this.sellGridLevels);
-		
-		while (true){
-			if (buyLevels.isEmpty() && sellLevels.isEmpty()){
-				break;
-			}
-			if (!buyLevels.isEmpty()){
-				Amount quantity =	base.add(getBuyOrderQuantity());	
-				
-				BigDecimal rate = middlePrice.subtract(margin.multiply(new BigDecimal(buyLevels.remove()), MathContext.DECIMAL64));
-				if (rate.compareTo(BigDecimal.ZERO) <= 0){
-					buyLevels.clear();				
-				}else{
-					BigDecimal totalPriceValue = quantity.value().multiply(rate, MathContext.DECIMAL64);
-					Amount totalPrice =  RLOrder.amount(totalPriceValue, Currency.fromString(quote.currencyString()), AccountID.fromAddress(quote.issuerString()));
-					RLOrder buy = RLOrder.rateUnneeded(Direction.BUY, quantity, totalPrice);
-					res.add(buy);
-				}
-			}
-			if (!sellLevels.isEmpty()){
-				Amount quantity = base.add(getSellOrderQuantity());
-				BigDecimal rate = middlePrice.add(margin.multiply(new BigDecimal(sellLevels.remove()), MathContext.DECIMAL64));
-				BigDecimal totalPriceValue = quantity.value().multiply(rate, MathContext.DECIMAL64);
-				Amount totalPrice = RLOrder.amount(totalPriceValue, Currency.fromString(quote.currencyString()), AccountID.fromAddress(quote.issuerString()));
-				RLOrder sell = RLOrder.rateUnneeded(Direction.SELL, quantity, totalPrice);
-				res.add(sell);	
-			}			
-		}	
-		return res;
-	}
+
 
 }
