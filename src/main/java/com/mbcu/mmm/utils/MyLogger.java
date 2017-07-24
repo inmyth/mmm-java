@@ -11,6 +11,8 @@ import java.util.logging.SimpleFormatter;
 public class MyLogger {
 
 	private static final String LOG_NAME = "log.txt";
+	private static final int  limit = 1024 * 1024 * 20; // 20 Mb
+	private static final int numLogFiles = 20;
 	
 	public static void setup(boolean...isConsole) throws IOException {
 
@@ -18,7 +20,7 @@ public class MyLogger {
 		Logger logger = Logger.getLogger("");
 
 		logger.setLevel(Level.ALL);
-		FileHandler fileHandler = new FileHandler(LOG_NAME, true);
+		FileHandler fileHandler = new FileHandler(LOG_NAME, limit, numLogFiles, true);
 
 		// Create txt Formatter
 		SimpleFormatter formatter = new SimpleFormatter();

@@ -79,8 +79,8 @@ public class QualityTest {
 	}
 	
 	/* SUMMARY
-	 * Sequence increases when we jave Order Created
-	 * Any FinalFields with prices zero means order fully consumed. But thw owner is another story.
+	 * Sequence increases when we have OrderCreate, not necessarily OrderCreated
+	 * Any FinalFields with prices zero means order fully consumed. But the owner is another story.
 	 * Payment doesn't have autobridge. 
 	 * OC belogning to other don't have autobridge either
 	 * hash also appears in executedoffer so we can trace it back to orderbook

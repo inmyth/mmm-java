@@ -260,11 +260,11 @@ public final class RLOrder extends Base{
 	public SignedTransaction sign(Config config, int sequence, int maxLedger, BigDecimal fees){	
 		OfferCreate offerCreate = new OfferCreate();
 		if (this.direction.equals(Direction.BUY.text())){
-			offerCreate.takerGets(totalPrice);
-			offerCreate.takerPays(quantity);
+			offerCreate.takerGets(clearXRPIssuer(totalPrice));
+			offerCreate.takerPays(clearXRPIssuer(quantity));
 		}else if (this.direction.equals(Direction.SELL.text())){
-			offerCreate.takerGets(quantity);
-			offerCreate.takerPays(totalPrice);			
+			offerCreate.takerGets(clearXRPIssuer(quantity));
+			offerCreate.takerPays(clearXRPIssuer(totalPrice));			
 		}else{
 			throw new IllegalArgumentException("Direction not valid");
 		}
@@ -274,6 +274,13 @@ public final class RLOrder extends Base{
 		offerCreate.account(AccountID.fromAddress(config.getCredentials().getAddress()));
 		SignedTransaction signed = offerCreate.sign(config.getCredentials().getSecret());
 		return signed;	
+	}
+	
+	private static Amount clearXRPIssuer(Amount in){		
+		if (in.issuer() != null && in.issuer().address.equals("rrrrrrrrrrrrrrrrrrrrrhoLvTp")){
+			return new Amount(in.value());		
+		}
+		return in;		
 	}
 
 	public static ArrayList<RLOrder> buildSeed(BotConfig bot){

@@ -91,6 +91,8 @@ public class Common extends Base {
 	}
 
 	private void reroute(String raw) {
+		
+		
 		if (raw.contains("response")) {
 			filterResponse(raw);
 		} else if (raw.contains("transaction")) {
@@ -104,10 +106,17 @@ public class Common extends Base {
 		JSONObject whole = new JSONObject(raw);	
 		bus.send(new OnLedgerClosed(whole));		
 	}
-	
+
 	private void filterResponse(String raw){
 		JSONObject whole = new JSONObject(raw);	
 		JSONObject result = whole.optJSONObject("result");
+
+		if (whole.getString("status").equals("error")){ // this is error
+			StringBuilder er = new StringBuilder("ERROR :\n");
+			er.append(raw);
+			log(er.toString(), Level.SEVERE);
+			return;
+		}
 		
 		if (result.has("tx_json")){
 			if ((raw.contains("OfferCreate") || raw.contains("OfferCancel"))){
@@ -143,6 +152,7 @@ public class Common extends Base {
 		}
 				
 		ArrayList<RLOrder> oes = new ArrayList<>();
+		ArrayList<BefAf> ors = new ArrayList<>();
 		Offer offerCreated = null;
 		JSONObject transaction = new JSONObject(raw);
 
@@ -216,24 +226,19 @@ public class Common extends Base {
 				}
 				oes.addAll(fa.process());
 				if (offerCreated == null){
-					BefAf ba = RLOrder.toBA(txn.get(Amount.TakerPays), txn.get(Amount.TakerGets), null, null);
-					bus.send(new OnRemainder(ba));
+					ors.add(RLOrder.toBA(txn.get(Amount.TakerPays), txn.get(Amount.TakerGets), null, null));
 				}else{
-					BefAf ba = RLOrder.toBA(txn.get(Amount.TakerPays), txn.get(Amount.TakerGets), offerCreated.takerPays(), offerCreated.takerGets());
-					bus.send(new OnRemainder(ba));
+					ors.add(RLOrder.toBA(txn.get(Amount.TakerPays), txn.get(Amount.TakerGets), offerCreated.takerPays(), offerCreated.takerGets()));
 				}
 			}else{
 				for (Offer offer : offersExecuteds) {
 					STObject finalFields = offer.get(STObject.FinalFields);
 					if (finalFields != null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
 						oes.add(RLOrder.fromOfferExecuted(offer, true));						
-						BefAf ba = RLOrder.toBA(offer.takerPays(), offer.takerGets(), finalFields.get(Amount.TakerPays), finalFields.get(Amount.TakerGets));
-						bus.send(new OnRemainder(ba));
-						
+						ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), finalFields.get(Amount.TakerPays), finalFields.get(Amount.TakerGets)));						
 					}
 					if (finalFields == null && offer.account().address.equals(this.config.getCredentials().getAddress())){
-						BefAf ba = RLOrder.toBA(offer.takerPays(), offer.takerGets(), null, null);
-						bus.send(new OnRemainder(ba));
+						ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), null, null));
 					}
 				}
 			}
@@ -245,13 +250,11 @@ public class Common extends Base {
 				if (finalFields != null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
 					oes.add(RLOrder.fromOfferExecuted(offer, true));
 					if (offer.get(STObject.FinalFields).get(Amount.TakerGets).value().compareTo(BigDecimal.ZERO) == 0){
-						BefAf ba = RLOrder.toBA(offer.takerPays(), offer.takerGets(), finalFields.get(Amount.TakerPays), finalFields.get(Amount.TakerGets));
-						bus.send(new OnRemainder(ba));
+						ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), finalFields.get(Amount.TakerPays), finalFields.get(Amount.TakerGets)));
 					}
 				}
 				if (finalFields == null && offer.account().address.equals(this.config.getCredentials().getAddress())){
-					BefAf ba = RLOrder.toBA(offer.takerPays(), offer.takerGets(), null, null);
-					bus.send(new OnRemainder(ba));
+					ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), null, null));
 				}
 			}
 		}
@@ -264,6 +267,10 @@ public class Common extends Base {
 			log(sb.toString());
 			bus.send(new OnOfferExecuted(oes));
 		}
+		if (!ors.isEmpty()){
+			bus.send(new OnRemainder(ors));
+		}
+		
 	}
 
 	private static class FilterAutobridged {
@@ -480,11 +487,11 @@ public class Common extends Base {
 	}
 	
 	public static class OnRemainder {
-		public BefAf ba;
+		public List<BefAf> bas;
 
-		public OnRemainder(BefAf ba) {
+		public OnRemainder(List<BefAf> bas) {
 			super();
-			this.ba = ba;
+			this.bas = bas;
 		}	
 	}
 	

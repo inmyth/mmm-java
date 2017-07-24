@@ -47,7 +47,7 @@ public class Yuki extends Base implements Counter {
 				}
 				else if (o instanceof Common.OnRemainder){
 					Common.OnRemainder event = (Common.OnRemainder) o;
-					counterOR(event.ba);
+					counterOR(event.bas);
 				}
 			}
 
@@ -68,10 +68,20 @@ public class Yuki extends Base implements Counter {
 		return counter;
 	}
 	
-	public void counterOR(BefAf ba){
+	public void counterOR(List<BefAf> bas){
+		bas.forEach(ba -> {
+			RLOrder counter = buildORCounter(ba);
+			if (counter != null) {
+				onCounterReady(counter);
+			}
+		});
+	}
+	
+	public RLOrder buildORCounter(BefAf ba){
+		RLOrder res = null;
 		BotConfigDirection bcd = new BotConfigDirection(config, ba.before);
 		if (bcd.botConfig == null || bcd.botConfig.getPercentToCounter() == 0) {
-			return;
+			return null;
 		}
 		Amount quantity = bcd.isDirectionMatch ? ba.after.getQuantity() : ba.after.getTotalPrice();
 		Amount totalPrice = bcd.isDirectionMatch ? ba.after.getTotalPrice() : ba.after.getQuantity();
@@ -85,9 +95,9 @@ public class Yuki extends Base implements Counter {
 			Amount newTotalPrice = new Amount(remainder.multiply(rate).value(), totalPrice.currency(), totalPrice.issuer());			
 			RLOrder counter = RLOrder.rateUnneeded(Direction.BUY, remainder, newTotalPrice);
 			System.out.println("OFFER REMAINDER COUNTER\n" + counter.stringify());		
-			onCounterReady(counter);
-			
+			res =  counter;
 		}
+		return res;
 	}
 
 	public void counterOE(List<RLOrder> oes) {
