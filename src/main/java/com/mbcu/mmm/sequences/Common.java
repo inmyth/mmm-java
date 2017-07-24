@@ -92,7 +92,6 @@ public class Common extends Base {
 
 	private void reroute(String raw) {
 		
-		
 		if (raw.contains("response")) {
 			filterResponse(raw);
 		} else if (raw.contains("transaction")) {

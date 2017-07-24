@@ -40,11 +40,11 @@ public class Yuki extends Base implements Counter {
 			}
 
 			@Override
-			public void onNext(Object o) {
+			public void onNext(Object o){				
 				if (o instanceof Common.OnOfferExecuted) {
 					OnOfferExecuted event = (OnOfferExecuted) o;
 					counterOE(event.oes);
-				}
+				}				
 				else if (o instanceof Common.OnRemainder){
 					Common.OnRemainder event = (Common.OnRemainder) o;
 					counterOR(event.bas);
@@ -79,6 +79,14 @@ public class Yuki extends Base implements Counter {
 	
 	public RLOrder buildORCounter(BefAf ba){
 		RLOrder res = null;
+		RLOrder origin = buildReplacement(ba);	
+//	  res = origin == null ? res : RLOrder.rateUnneeded(origin.getDirection().equals(Direction.BUY.toString()) ? Direction.SELL : Direction.BUY, origin.getQuantity(), origin.getTotalPrice());
+		return origin;
+	}
+	
+	@Nullable
+	public RLOrder buildReplacement(BefAf ba){
+		RLOrder res = null;
 		BotConfigDirection bcd = new BotConfigDirection(config, ba.before);
 		if (bcd.botConfig == null || bcd.botConfig.getPercentToCounter() == 0) {
 			return null;
@@ -86,20 +94,27 @@ public class Yuki extends Base implements Counter {
 		Amount quantity = bcd.isDirectionMatch ? ba.after.getQuantity() : ba.after.getTotalPrice();
 		Amount totalPrice = bcd.isDirectionMatch ? ba.after.getTotalPrice() : ba.after.getQuantity();
 		BigDecimal rate = bcd.isDirectionMatch ? ba.before.getAsk() : BigDecimal.ONE.divide(ba.before.getAsk(), MathContext.DECIMAL64);		
-		BigDecimal botQuantity = bcd.isDirectionMatch ? bcd.botConfig.getBuyOrderQuantity() : bcd.botConfig.getSellOrderQuantity();
-		
+		BigDecimal botQuantity = bcd.isDirectionMatch ? bcd.botConfig.getBuyOrderQuantity() : bcd.botConfig.getSellOrderQuantity();		
 		Amount remainder = quantity.subtract(botQuantity).abs();
 		BigDecimal reference = botQuantity.multiply(new BigDecimal(bcd.botConfig.getPercentToCounter()), MathContext.DECIMAL64).divide(new BigDecimal("100"), MathContext.DECIMAL64);
 		
 		if (remainder.value().compareTo(reference) >= 0){
+//			Direction direction = bcd.isDirectionMatch ? Direction.BUY : Direction.SELL;
 			Amount newTotalPrice = new Amount(remainder.multiply(rate).value(), totalPrice.currency(), totalPrice.issuer());			
-			RLOrder counter = RLOrder.rateUnneeded(Direction.BUY, remainder, newTotalPrice);
-			System.out.println("OFFER REMAINDER COUNTER\n" + counter.stringify());		
+			RLOrder counter = null;
+			counter = RLOrder.rateUnneeded(Direction.SELL, remainder, newTotalPrice);
+
+//			if (direction == Direction.BUY){
+//				counter = RLOrder.rateUnneeded(direction, remainder, newTotalPrice);
+//			} else {
+//				counter = RLOrder.rateUnneeded(direction, newTotalPrice, remainder);
+//			}
+			log("OFFER REMAINDER\n" + counter.stringify());		
 			res =  counter;
 		}
 		return res;
 	}
-
+	
 	public void counterOE(List<RLOrder> oes) {
 		oes.forEach(oe -> {
 			RLOrder counter = buildOECounter(oe);
@@ -108,7 +123,6 @@ public class Yuki extends Base implements Counter {
 			}
 		});
 	}
-	
 	
 	private static class BotConfigDirection {
 		boolean isDirectionMatch = true;

@@ -137,6 +137,7 @@ TODOS
 - [x] (done) build listener for remaining order after taken and original quantity and rate if it's fully taken
 - [x] (done) list all OR in a list
 - rearrange log
+- [] fix the remainder counter Check BeAf
 
 
 ## NOTES

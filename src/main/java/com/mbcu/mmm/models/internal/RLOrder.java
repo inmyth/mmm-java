@@ -138,7 +138,7 @@ public final class RLOrder extends Base{
 	}
 
 	public static RLOrder fromOfferExecuted(Offer offer, boolean isOCOwn) {
-		// All OE's paid and got are negative and need to be reversed
+		// All OE's paid and got are negative
 		BigDecimal ask = isOCOwn ? BigDecimal.ONE.divide(askFrom(offer), MathContext.DECIMAL64) : askFrom(offer);
 		STObject executed = offer.executed(offer.get(STObject.FinalFields));
 		Amount paid = executed.get(Amount.TakerPays);
@@ -147,7 +147,6 @@ public final class RLOrder extends Base{
 		Amount rlPaid = isOCOwn ? amount(got.value(), got.currency(), got.issuer()) :amount(paid.value(), paid.currency(), paid.issuer()) ;
 		String pair = buildPair(isOCOwn ? got : paid , isOCOwn ? paid: got);
 		RLOrder res = new RLOrder(Direction.BUY, rlGot, rlPaid, ask, pair);	
-		System.out.println("RLORDER \n " + res.stringify());
 		return res;
 	}
 	
