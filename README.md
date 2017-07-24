@@ -3,6 +3,7 @@
 An automated program to market make on Ripple network.
 
 Consists of:
+
 **Parser**  : parses response from stream and listens to events of interest
 
 **Counter** : counters each order in consumed with a new order
@@ -41,13 +42,17 @@ Percentage of order consumed before it is countered.
 At 0 the bot will counter every consumed order regardless of size with rates of the consumed orders. 
 If not zero then all orders will be countered with seed rate from botconfig. 
 
-quantity = orderQuantity - remainder
-rate = botconfig seed rate
+> quantity = orderQuantity - remainder
+
+> rate = botconfig seed rate
 
 At 100 the bot will only counter an order if it's fully consumed.
 At 40 the bot counters an order if the remaining order is less than 40% of original.
-WARNING : when setting this parameter above 0, you should first cancel all orders in the orderbook.
 
+**WARNING** : when setting this parameter above 0, you should first cancel all orders in the orderbook.
+
+**Version History**
+ 
 v.017
 - fixed bug in tx submission. XRP should be sent as native without issuer  
 - limited log files at 20MB with 20 rotations
@@ -191,5 +196,6 @@ Summary
 - OE contains previousTxnId  
 - It's possible to create new OC with more funds than the account has
 
-Version
+Version Log
+
 01701 : sending XRP tx with form <val>/XRP/rrrrrrrrrrrrrrrrrrrrrhoLvTp will not work. It has to be done natively by the lib. 
