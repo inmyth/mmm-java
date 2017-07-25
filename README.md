@@ -51,8 +51,11 @@ At 40 the bot counters an order if the remaining order is less than 40% of origi
 
 **WARNING** : when setting this parameter above 0, you should first cancel all orders in the orderbook.
 
-**Version History**
- 
+**Version History** 
+
+v.018 
+- fixed the remainder counter but partial counter for this strategy is not logical because at the same rate it cancels the previous order.
+
 v.017
 - fixed bug in tx submission. XRP should be sent as native without issuer  
 - limited log files at 20MB with 20 rotations
@@ -138,6 +141,8 @@ TODOS
 - [x] (done) list all OR in a list
 - rearrange log
 - [] fix the remainder counter Check BeAf
+- [] partial remainder counter is not logical. If the partial amount is countered with the same rate then the previous order will
+be canceled. 
 
 
 ## NOTES
@@ -152,6 +157,7 @@ RESPONSE
 - pair in Config determines the unit of rate and gridSpace
 - ter errors including terQUEUED and terPRE_SEQ behave like tesSUCCESS https://www.xrpchat.com/topic/2654-transaction-failed-with-terpre_seq-but-still-executed/?page=2
 - any error in the code is wrapped in WebSocketClient#handleCallbackError . This can be parsing error (unhandled response type)
+- sending counter order that crosses the rate of previous remaining order will cancel it. The counter will prevail. 
 
 
 ORDERS

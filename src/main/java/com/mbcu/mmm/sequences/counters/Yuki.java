@@ -27,6 +27,7 @@ import io.reactivex.schedulers.Schedulers;
 public class Yuki extends Base implements Counter {
 	private RxBus bus = RxBusProvider.getInstance();
 	private Config config;
+	private final BigDecimal BD_100 = new BigDecimal("100");
 	int count;
 
 	public Yuki(Config config) {
@@ -77,40 +78,37 @@ public class Yuki extends Base implements Counter {
 		});
 	}
 	
-	public RLOrder buildORCounter(BefAf ba){
-		RLOrder res = null;
-		RLOrder origin = buildReplacement(ba);	
-//	  res = origin == null ? res : RLOrder.rateUnneeded(origin.getDirection().equals(Direction.BUY.toString()) ? Direction.SELL : Direction.BUY, origin.getQuantity(), origin.getTotalPrice());
-		return origin;
-	}
-	
+	/*
+	 * This part can be configured so it instead of countering, the bot will replace taken order. 
+	 */
 	@Nullable
-	public RLOrder buildReplacement(BefAf ba){
+	public RLOrder buildORCounter(BefAf ba){
 		RLOrder res = null;
 		BotConfigDirection bcd = new BotConfigDirection(config, ba.before);
 		if (bcd.botConfig == null || bcd.botConfig.getPercentToCounter() == 0) {
 			return null;
 		}
-		Amount quantity = bcd.isDirectionMatch ? ba.after.getQuantity() : ba.after.getTotalPrice();
-		Amount totalPrice = bcd.isDirectionMatch ? ba.after.getTotalPrice() : ba.after.getQuantity();
-		BigDecimal rate = bcd.isDirectionMatch ? ba.before.getAsk() : BigDecimal.ONE.divide(ba.before.getAsk(), MathContext.DECIMAL64);		
-		BigDecimal botQuantity = bcd.isDirectionMatch ? bcd.botConfig.getBuyOrderQuantity() : bcd.botConfig.getSellOrderQuantity();		
-		Amount remainder = quantity.subtract(botQuantity).abs();
-		BigDecimal reference = botQuantity.multiply(new BigDecimal(bcd.botConfig.getPercentToCounter()), MathContext.DECIMAL64).divide(new BigDecimal("100"), MathContext.DECIMAL64);
+		BigDecimal rate = ba.before.getAsk();	
 		
-		if (remainder.value().compareTo(reference) >= 0){
-//			Direction direction = bcd.isDirectionMatch ? Direction.BUY : Direction.SELL;
-			Amount newTotalPrice = new Amount(remainder.multiply(rate).value(), totalPrice.currency(), totalPrice.issuer());			
-			RLOrder counter = null;
-			counter = RLOrder.rateUnneeded(Direction.SELL, remainder, newTotalPrice);
-
-//			if (direction == Direction.BUY){
-//				counter = RLOrder.rateUnneeded(direction, remainder, newTotalPrice);
-//			} else {
-//				counter = RLOrder.rateUnneeded(direction, newTotalPrice, remainder);
-//			}
-			log("OFFER REMAINDER\n" + counter.stringify());		
-			res =  counter;
+		if (bcd.isDirectionMatch){
+			BigDecimal botQuantity = bcd.botConfig.getBuyOrderQuantity();		
+			Amount remainder = ba.after.getQuantity().subtract(bcd.botConfig.getBuyOrderQuantity()).abs();
+			BigDecimal reference = botQuantity.multiply(new BigDecimal(bcd.botConfig.getPercentToCounter()), MathContext.DECIMAL64).divide(BD_100, MathContext.DECIMAL64);				
+			if (remainder.value().compareTo(reference) >= 0 ){
+				Amount afterTotalPrice = ba.after.getTotalPrice();
+				Amount newTotalPrice = RLOrder.amount(remainder.multiply(rate).value(), afterTotalPrice.currency(), afterTotalPrice.issuer());			
+				res = RLOrder.rateUnneeded(Direction.SELL, remainder, newTotalPrice);
+			}
+		}
+		else{
+			BigDecimal botQuantity = bcd.botConfig.getSellOrderQuantity();
+			Amount remainder = ba.after.getTotalPrice().subtract(botQuantity).abs();
+			BigDecimal reference = botQuantity.multiply(new BigDecimal(bcd.botConfig.getPercentToCounter()), MathContext.DECIMAL64).divide(BD_100, MathContext.DECIMAL64);				
+			if (remainder.value().compareTo(reference) >= 0){
+				Amount afterQuantity = ba.after.getQuantity();
+				Amount newQuantity = RLOrder.amount(remainder.divide(rate).value(), afterQuantity.currency(), afterQuantity.issuer());
+				res = RLOrder.rateUnneeded(Direction.SELL, newQuantity, remainder);		
+			}		
 		}
 		return res;
 	}
@@ -161,8 +159,7 @@ public class Yuki extends Base implements Counter {
 			if (newRate.compareTo(BigDecimal.ZERO) <= 0) {
 				log("counter rate below zero " + newRate + " " + origin.getPair(), Level.SEVERE);
 			}
-			Amount newTotalPrice = RLOrder.amount(newQuantity.value().multiply(newRate), oldQuantity.currency(),
-					oldQuantity.issuer());
+			Amount newTotalPrice = RLOrder.amount(newQuantity.value().multiply(newRate), oldQuantity.currency(), oldQuantity.issuer());
 			res = RLOrder.rateUnneeded(Direction.BUY, newQuantity, newTotalPrice);
 		}
 		return res;
