@@ -36,22 +36,18 @@ Number of seed orders for each side.
 
 Amount of seed or counter order.
 
-`percentToCounter` : int (from 0 to 100)
+`isReplaceMode` : boolean
 
-Percentage of order consumed before it is countered. 
-At 0 the bot will counter every consumed order regardless of size with rates of the consumed orders. 
-If not zero then all orders will be countered with seed rate from botconfig. 
+If false, the bot counters any order that takes fully or partially our order. The new rate is calculated from real rate and gridSpace.  
 
-> quantity = orderQuantity - remainder
+If true, the bot will replace (on the opposing side of orderbook) our order which has been fully consumed. The new rate is the same as the old rate.   
 
-> rate = botconfig seed rate
-
-At 100 the bot will only counter an order if it's fully consumed.
-At 40 the bot counters an order if the remaining order is less than 40% of original.
-
-**WARNING** : when setting this parameter above 0, you should first cancel all orders in the orderbook.
 
 **Version History** 
+
+v.019
+- added isReplaceMode in bot config. 
+- cleaned up replacement counter
 
 v.018 
 - fixed the remainder counter but partial counter for this strategy is not logical because at the same rate it cancels the previous order.
@@ -141,8 +137,7 @@ TODOS
 - [x] (done) list all OR in a list
 - rearrange log
 - [] fix the remainder counter Check BeAf
-- [] partial remainder counter is not logical. If the partial amount is countered with the same rate then the previous order will
-be canceled. 
+- [x] partial remainder counter is not logical. If the partial amount is countered with the same rate then the previous order will be canceled. 
 
 
 ## NOTES

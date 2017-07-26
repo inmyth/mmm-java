@@ -1,7 +1,6 @@
 package com.mbcu.mmm.models.internal;
 
 import java.math.BigDecimal;
-import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -11,7 +10,6 @@ import java.util.stream.IntStream;
 import org.parceler.Parcel;
 
 import com.mbcu.mmm.models.Asset;
-import com.mbcu.mmm.models.internal.RLOrder.Direction;
 import com.ripple.core.coretypes.AccountID;
 import com.ripple.core.coretypes.Amount;
 import com.ripple.core.coretypes.Currency;
@@ -26,9 +24,10 @@ public class BotConfig {
 	int sellGridLevels;
 	String buyOrderQuantity;
 	String sellOrderQuantity;	
+	boolean isReplaceMode;
+
 	transient Amount base;
 	transient Amount quote;
-	int percentToCounter;
 
 	public static HashMap<String, BotConfig> buildMap(ArrayList<BotConfig> bots)  {
 		HashMap<String, BotConfig> res = new HashMap<>();
@@ -106,8 +105,8 @@ public class BotConfig {
 		return new BigDecimal(sellOrderQuantity);
 	}
 	
-	public int getPercentToCounter() {
-		return percentToCounter;
+	public boolean isReplaceMode() {
+		return isReplaceMode;
 	}
 	
 	public Amount getBase() {

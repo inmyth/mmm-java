@@ -46,8 +46,8 @@ public class Yuki extends Base implements Counter {
 					OnOfferExecuted event = (OnOfferExecuted) o;
 					counterOE(event.oes);
 				}				
-				else if (o instanceof Common.OnRemainder){
-					Common.OnRemainder event = (Common.OnRemainder) o;
+				else if (o instanceof Common.OnFullyConsumed){
+					Common.OnFullyConsumed event = (Common.OnFullyConsumed) o;
 					counterOR(event.bas);
 				}
 			}
@@ -71,7 +71,7 @@ public class Yuki extends Base implements Counter {
 	
 	public void counterOR(List<BefAf> bas){
 		bas.forEach(ba -> {
-			RLOrder counter = buildORCounter(ba);
+			RLOrder counter = buildReplaceCounter(ba);
 			if (counter != null) {
 				onCounterReady(counter);
 			}
@@ -82,33 +82,27 @@ public class Yuki extends Base implements Counter {
 	 * This part can be configured so it instead of countering, the bot will replace taken order. 
 	 */
 	@Nullable
-	public RLOrder buildORCounter(BefAf ba){
+	public RLOrder buildReplaceCounter(BefAf ba){
 		RLOrder res = null;
 		BotConfigDirection bcd = new BotConfigDirection(config, ba.before);
-		if (bcd.botConfig == null || bcd.botConfig.getPercentToCounter() == 0) {
+		if (bcd.botConfig == null || !bcd.botConfig.isReplaceMode()) {
 			return null;
 		}
 		BigDecimal rate = ba.before.getAsk();	
 		
 		if (bcd.isDirectionMatch){
 			BigDecimal botQuantity = bcd.botConfig.getBuyOrderQuantity();		
-			Amount remainder = ba.after.getQuantity().subtract(bcd.botConfig.getBuyOrderQuantity()).abs();
-			BigDecimal reference = botQuantity.multiply(new BigDecimal(bcd.botConfig.getPercentToCounter()), MathContext.DECIMAL64).divide(BD_100, MathContext.DECIMAL64);				
-			if (remainder.value().compareTo(reference) >= 0 ){
-				Amount afterTotalPrice = ba.after.getTotalPrice();
-				Amount newTotalPrice = RLOrder.amount(remainder.multiply(rate).value(), afterTotalPrice.currency(), afterTotalPrice.issuer());			
-				res = RLOrder.rateUnneeded(Direction.SELL, remainder, newTotalPrice);
-			}
+			Amount quantity = ba.after.getQuantity().subtract(botQuantity).abs();
+			Amount afterTotalPrice = ba.after.getTotalPrice();
+			Amount newTotalPrice = RLOrder.amount(quantity.multiply(rate).value(), afterTotalPrice.currency(), afterTotalPrice.issuer());			
+			res = RLOrder.rateUnneeded(Direction.SELL, quantity, newTotalPrice);		
 		}
 		else{
 			BigDecimal botQuantity = bcd.botConfig.getSellOrderQuantity();
-			Amount remainder = ba.after.getTotalPrice().subtract(botQuantity).abs();
-			BigDecimal reference = botQuantity.multiply(new BigDecimal(bcd.botConfig.getPercentToCounter()), MathContext.DECIMAL64).divide(BD_100, MathContext.DECIMAL64);				
-			if (remainder.value().compareTo(reference) >= 0){
-				Amount afterQuantity = ba.after.getQuantity();
-				Amount newQuantity = RLOrder.amount(remainder.divide(rate).value(), afterQuantity.currency(), afterQuantity.issuer());
-				res = RLOrder.rateUnneeded(Direction.SELL, newQuantity, remainder);		
-			}		
+			Amount totalPrice = ba.after.getTotalPrice().subtract(botQuantity).abs();			
+			Amount afterQuantity = ba.after.getQuantity();
+			Amount newQuantity = RLOrder.amount(totalPrice.divide(rate).value(), afterQuantity.currency(), afterQuantity.issuer());
+			res = RLOrder.rateUnneeded(Direction.SELL, newQuantity, totalPrice);						
 		}
 		return res;
 	}
@@ -139,7 +133,7 @@ public class Yuki extends Base implements Counter {
 	public RLOrder buildOECounter(RLOrder origin) {
 		
 		BotConfigDirection bcd = new BotConfigDirection(config, origin);
-		if (bcd.botConfig == null || bcd.botConfig.getPercentToCounter() != 0) {
+		if (bcd.botConfig == null || bcd.botConfig.isReplaceMode()) {
 			return null;
 		}
 		boolean isDirectionMatch = bcd.isDirectionMatch;

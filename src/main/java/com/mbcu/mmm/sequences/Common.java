@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 import org.json.JSONObject;
 
@@ -226,7 +227,8 @@ public class Common extends Base {
 				oes.addAll(fa.process());
 				if (offerCreated == null){
 					ors.add(RLOrder.toBA(txn.get(Amount.TakerPays), txn.get(Amount.TakerGets), null, null));
-				}else{
+				}
+				else{
 					ors.add(RLOrder.toBA(txn.get(Amount.TakerPays), txn.get(Amount.TakerGets), offerCreated.takerPays(), offerCreated.takerGets()));
 				}
 			}else{
@@ -266,10 +268,9 @@ public class Common extends Base {
 			log(sb.toString());
 			bus.send(new OnOfferExecuted(oes));
 		}
-		if (!ors.isEmpty()){
-			bus.send(new OnRemainder(ors));
-		}
-		
+		bus.send(new OnFullyConsumed(ors.stream().filter(ba -> {
+				return ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0 && ba.after.getTotalPrice().value().compareTo(BigDecimal.ZERO) ==0;
+		}).collect(Collectors.toList())));	
 	}
 
 	private static class FilterAutobridged {
@@ -485,10 +486,10 @@ public class Common extends Base {
 		}
 	}
 	
-	public static class OnRemainder {
+	public static class OnFullyConsumed {
 		public List<BefAf> bas;
 
-		public OnRemainder(List<BefAf> bas) {
+		public OnFullyConsumed(List<BefAf> bas) {
 			super();
 			this.bas = bas;
 		}	
