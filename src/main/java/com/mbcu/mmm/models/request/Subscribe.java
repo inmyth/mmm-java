@@ -2,7 +2,7 @@ package com.mbcu.mmm.models.request;
 
 import java.util.ArrayList;
 
-import com.mbcu.mmm.models.internal.Config;
+import com.mbcu.mmm.models.internal.BotConfig;
 import com.ripple.core.coretypes.Amount;
 
 public class Subscribe extends Request {
@@ -27,7 +27,7 @@ public class Subscribe extends Request {
 
 	ArrayList<String> accounts;
 	ArrayList<String> streams;
-	ArrayList<Book> books;
+	Book[] books;
 
 	public void addAccount(String account) {
 		if (accounts == null) {
@@ -57,24 +57,15 @@ public class Subscribe extends Request {
 		return this;
 	}
 
-	public Subscribe withOrderbook(Amount takerGets, Amount takerPays){
-		if (this.books == null){
-			this.books = new ArrayList<>();
-		}
-		this.books.add(new Book(takerGets, takerPays));
-		return this;
-	}
-	
-	public Subscribe withOrderbookFromConfig(Config config){
-		config.getBotConfigMap().values().forEach(bot ->{
-			this.withOrderbook(bot.getBase(), bot.getQuote());		
-		});
+	public Subscribe withOrderbook(BotConfig botConfig){
+		this.books = new Book[1];
+		this.books[0] = new Book(botConfig.getQuote(), botConfig.getBase());
 		return this;
 	}
 		
 	private static class Book{
 		NameIssuer taker_gets, taker_pays;
-		boolean snapshot = false;
+		boolean snapshot = true;
 		boolean both = true;
 		public Book(Amount taker_gets, Amount taker_pays) {
 			super();

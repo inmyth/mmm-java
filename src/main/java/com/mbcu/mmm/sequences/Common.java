@@ -118,6 +118,12 @@ public class Common extends Base {
 			return;
 		}
 		
+		if (result.has("offers")){
+			System.out.println("Orderbook");
+			System.out.println(result.getJSONArray("offers").toString());
+			return;
+		}
+		
 		if (result.has("tx_json")){
 			if ((raw.contains("OfferCreate") || raw.contains("OfferCancel"))){
 				Hash256 hash = Hash256.fromHex(result.optJSONObject("tx_json").optString("hash"));
@@ -128,7 +134,8 @@ public class Common extends Base {
 				if (engResult.equals(EngineResult.tesSUCCESS.toString())){
 					bus.send(new OnResponseTesSuccess(accId, hash, sequence));
 				}else{				
-					bus.send(new OnResponseFail(engResult, accId, hash, sequence));		}	
+					bus.send(new OnResponseFail(engResult, accId, hash, sequence));		
+				}	
 			}		
 		}else if (result.has("account_data")){
 			UInt32 sequence = new UInt32(result.getJSONObject("account_data").getInt("Sequence"));
@@ -538,6 +545,11 @@ public class Common extends Base {
 			super();
 			this.sequence = sequence;
 		} 			
+	}
+	
+	public static class OnOrderbook{
+		
+		
 	}
 	
 }

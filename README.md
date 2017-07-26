@@ -45,7 +45,12 @@ If true, the bot will replace (on the opposing side of orderbook) our order whic
 
 **Version History** 
 
+v.020
+- balancer from orderbook start
+- deactivated seed
+
 v.019
+- alpha replace order
 - added isReplaceMode in bot config. 
 - cleaned up replacement counter
 

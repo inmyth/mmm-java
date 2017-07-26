@@ -6,6 +6,8 @@ import java.util.concurrent.CountDownLatch;
 import com.mbcu.mmm.main.WebSocketClient;
 import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.models.request.AccountInfo;
+import com.mbcu.mmm.models.request.Request.Command;
+import com.mbcu.mmm.models.request.Subscribe;
 import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.sequences.counters.Yuki;
@@ -17,11 +19,15 @@ import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
 
 public class Starter extends Base{
-  private final CountDownLatch latch = new CountDownLatch(2);
+	private final int numBases = 2; // AccountInfo and first ledger closed
+  private  CountDownLatch latch;
   private final RxBus bus = RxBusProvider.getInstance();
    
 	private Starter(Config config) {
 		super(MyLogger.getLogger(Starter.class.getName()), config);
+		
+		int numOrderbooks = config.getBotConfigMap().size(); 
+		latch = new CountDownLatch(numOrderbooks + numBases);
 
 		bus.toObservable()
 		.subscribe(new Observer<Object>() {
@@ -35,11 +41,17 @@ public class Starter extends Base{
 			public void onNext(Object o) {
 				if (o instanceof WebSocketClient.WSConnected){
 					bus.send(new WebSocketClient.WSRequestSendText(AccountInfo.of(config).stringify()));						
+					config.getBotConfigMap().values().stream().forEach(botConfig -> {
+						String ob = Subscribe.build(Command.SUBSCRIBE).withOrderbook(botConfig).stringify();
+						bus.send(new WebSocketClient.WSRequestSendText(ob));						
+					});
 				}
 				else if (o instanceof Common.OnAccountInfoSequence){
 					latch.countDown();
 				}
 				else if (o instanceof Common.OnLedgerClosed){
+					latch.countDown();
+				}else if (o instanceof Common.OnOrderbook){
 					latch.countDown();
 				}
 			}
