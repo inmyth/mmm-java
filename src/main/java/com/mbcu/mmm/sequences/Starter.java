@@ -1,6 +1,7 @@
 package com.mbcu.mmm.sequences;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
 
 import com.mbcu.mmm.main.WebSocketClient;
@@ -15,27 +16,68 @@ import com.mbcu.mmm.sequences.state.StateProvider;
 import com.mbcu.mmm.utils.MyLogger;
 import com.neovisionaries.ws.client.WebSocketException;
 
-import io.reactivex.Observer;
-import io.reactivex.disposables.Disposable;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.observers.DisposableObserver;
+import io.reactivex.schedulers.Schedulers;
 
 public class Starter extends Base{
 	private final int numBases = 2; // AccountInfo and first ledger closed
   private  CountDownLatch latch;
   private final RxBus bus = RxBusProvider.getInstance();
-   
+  private int orderbookReturns;
+  
 	private Starter(Config config) {
 		super(MyLogger.getLogger(Starter.class.getName()), config);
 		
 		int numOrderbooks = config.getBotConfigMap().size(); 
 		latch = new CountDownLatch(numOrderbooks + numBases);
+		
+		CompositeDisposable disAccInfo = new CompositeDisposable();
+		disAccInfo
+			.add(bus.toObservable().subscribeOn(Schedulers.newThread())
+			.subscribeWith(new DisposableObserver<Object>() {
 
-		bus.toObservable()
-		.subscribe(new Observer<Object>() {
+				@Override
+				public void onNext(Object o) {
+					if (o instanceof Common.OnAccountInfoSequence){
+						latch.countDown();
+						disAccInfo.dispose();
+					}					
+				}
+
+				@Override
+				public void onError(Throwable e) {}
+
+				@Override
+				public void onComplete() {}
+				
+			}));
+		
+		CompositeDisposable disLedgerClosed = new CompositeDisposable();
+		disLedgerClosed
+		.add(bus.toObservable().subscribeOn(Schedulers.newThread())
+		.subscribeWith(new DisposableObserver<Object>() {
 
 			@Override
-			public void onSubscribe(Disposable d) {
-				// TODO Auto-generated method stub			
+			public void onNext(Object o) {
+				if (o instanceof Common.OnLedgerClosed){
+					latch.countDown();
+					disLedgerClosed.dispose();
+				}					
 			}
+
+			@Override
+			public void onError(Throwable e) {}
+
+			@Override
+			public void onComplete() {}
+			
+		}));
+		
+		CompositeDisposable disOnWSConnected = new CompositeDisposable();
+		disOnWSConnected
+		.add(bus.toObservable().subscribeOn(Schedulers.newThread())
+		.subscribeWith(new DisposableObserver<Object>() {
 
 			@Override
 			public void onNext(Object o) {
@@ -45,28 +87,42 @@ public class Starter extends Base{
 						String ob = Subscribe.build(Command.SUBSCRIBE).withOrderbook(botConfig).stringify();
 						bus.send(new WebSocketClient.WSRequestSendText(ob));						
 					});
-				}
-				else if (o instanceof Common.OnAccountInfoSequence){
-					latch.countDown();
-				}
-				else if (o instanceof Common.OnLedgerClosed){
-					latch.countDown();
-				}else if (o instanceof Common.OnOrderbook){
-					latch.countDown();
-				}
+					disOnWSConnected.dispose();
+				}				
 			}
 
 			@Override
-			public void onError(Throwable e) {
-				// TODO Auto-generated method stub			
-			}
+			public void onError(Throwable e) {}
 
 			@Override
-			public void onComplete() {
-				// TODO Auto-generated method stub				
-			}
-		});
+			public void onComplete() {}
+			
+		}));
 		
+		CompositeDisposable disOrderbooks = new CompositeDisposable();
+		disOrderbooks
+		.add(bus.toObservable().subscribeOn(Schedulers.newThread())
+		.subscribeWith(new DisposableObserver<Object>() {
+
+			@Override
+			public void onNext(Object o) {
+				if (o instanceof Common.OnOrderbook){
+					orderbookReturns++;
+					if (orderbookReturns == config.getBotConfigMap().size()){
+						disOrderbooks.dispose();
+					}
+					latch.countDown();
+				}		
+			}
+
+			@Override
+			public void onError(Throwable e) {}
+
+			@Override
+			public void onComplete() {}
+			
+		}));
+			
 	}
 	
 	public static Starter newInstance(Config config){
@@ -92,8 +148,6 @@ public class Starter extends Base{
 		bus.send(new OnInitiated());	
 	}
 	
-	
 	public static class OnInitiated{}
-
 	
 }

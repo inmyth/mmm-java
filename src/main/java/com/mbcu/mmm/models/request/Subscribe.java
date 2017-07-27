@@ -3,6 +3,7 @@ package com.mbcu.mmm.models.request;
 import java.util.ArrayList;
 
 import com.mbcu.mmm.models.internal.BotConfig;
+import com.mbcu.mmm.models.internal.NameIssuer;
 import com.ripple.core.coretypes.Amount;
 
 public class Subscribe extends Request {
@@ -63,30 +64,20 @@ public class Subscribe extends Request {
 		return this;
 	}
 		
-	private static class Book{
+	public static class Book{
 		NameIssuer taker_gets, taker_pays;
 		boolean snapshot = true;
 		boolean both = true;
 		public Book(Amount taker_gets, Amount taker_pays) {
 			super();
-			this.taker_gets = new NameIssuer(taker_gets);
-			this.taker_pays = new NameIssuer(taker_pays);
+			this.taker_gets = NameIssuer.from(taker_gets);
+			this.taker_pays = NameIssuer.from(taker_pays);
 		}
 	}
 	
-	private static class NameIssuer {
-		String currency;
-		String issuer;
 
-		private NameIssuer(Amount amount) {
-			super();
-			
-			this.currency = amount.currencyString();
-			if (!amount.isNative()){
-				this.issuer = amount.issuerString();
-			}
-		}
-	}
+
+
 	
 	@Override
 	public String stringify(){

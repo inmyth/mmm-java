@@ -89,7 +89,7 @@ public class State extends Base {
 				}
 				else if (o instanceof Common.OnAccountInfoSequence){
 					OnAccountInfoSequence event = (OnAccountInfoSequence) o;
-					log("new Sequence %d" + event.sequence);
+					log(String.format("New Sequence %d", event.sequence.intValue()));
 					setSequence(event.sequence);
 					flagWaitSeq.set(false);
 					if (!flagWaitLedger.get() && !flagWaitSeq.get()){

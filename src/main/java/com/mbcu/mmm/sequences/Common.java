@@ -118,9 +118,10 @@ public class Common extends Base {
 			return;
 		}
 		
-		if (result.has("offers")){
+		if (result.has("asks")){
 			System.out.println("Orderbook");
-			System.out.println(result.getJSONArray("offers").toString());
+//			System.out.println(result.getJSONArray("offers").toString());
+			bus.send(new OnOrderbook());
 			return;
 		}
 		

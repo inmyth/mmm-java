@@ -62,6 +62,14 @@ public class BotConfig {
 	public String getPair() {
 		return pair;
 	}
+	
+	public String getReversePair(){
+		String[] els = pair.split("[/]");
+		StringBuffer res = new StringBuffer(els[1]);
+		res.append("/");
+		res.append(els[0]);
+		return res.toString();
+	}
 
 	public void setPair(String pair) {
 		this.pair = pair;

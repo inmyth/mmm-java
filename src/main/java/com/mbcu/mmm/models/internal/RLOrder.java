@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.Queue;
 
 import com.mbcu.mmm.models.Base;
-import com.mbcu.mmm.models.internal.RLOrder.Direction;
 import com.ripple.core.coretypes.AccountID;
 import com.ripple.core.coretypes.Amount;
 import com.ripple.core.coretypes.Currency;
@@ -163,7 +162,6 @@ public final class RLOrder extends Base{
 	}
 	
 	
-	
 	public static List<RLOrder> fromAutobridge(Map<String, ArrayList<Offer>> map){
 		List<RLOrder> res = new ArrayList<>();
 		
@@ -210,9 +208,7 @@ public final class RLOrder extends Base{
 		}
 		return res;
 	}
-	
-
-	
+		
 	private static BigDecimal oeAvg(ArrayList<Offer> offers){
 		BigDecimal paids = new BigDecimal(0);
 		BigDecimal gots = new BigDecimal(0);
