@@ -17,14 +17,6 @@ public class NameIssuer {
 		return res;
 	}
 	
-	public static NameIssuer from(String string){
-		NameIssuer res = new NameIssuer();
-		String[] els = string.split("[.]");
-		res.currency = els[0];
-		res.issuer = els[1];
-		return res;
-		
-		
-	}
+
 	
 }

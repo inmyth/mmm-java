@@ -82,11 +82,7 @@ public class Starter extends Base{
 			@Override
 			public void onNext(Object o) {
 				if (o instanceof WebSocketClient.WSConnected){
-					bus.send(new WebSocketClient.WSRequestSendText(AccountInfo.of(config).stringify()));						
-					config.getBotConfigMap().values().stream().forEach(botConfig -> {
-						String ob = Subscribe.build(Command.SUBSCRIBE).withOrderbook(botConfig).stringify();
-						bus.send(new WebSocketClient.WSRequestSendText(ob));						
-					});
+					sendInitRequests();
 					disOnWSConnected.dispose();
 				}				
 			}
@@ -106,9 +102,9 @@ public class Starter extends Base{
 
 			@Override
 			public void onNext(Object o) {
-				if (o instanceof Common.OnOrderbook){
+				if (o instanceof Common.OnBookOffers){
 					orderbookReturns++;
-					if (orderbookReturns == config.getBotConfigMap().size()){
+					if (orderbookReturns == config.getBotConfigMap().size() * 2){
 						disOrderbooks.dispose();
 					}
 					latch.countDown();
@@ -121,8 +117,16 @@ public class Starter extends Base{
 			@Override
 			public void onComplete() {}
 			
-		}));
-			
+		}));		
+	}
+	
+	private void sendInitRequests(){
+		bus.send(new WebSocketClient.WSRequestSendText(AccountInfo.of(config).stringify()));						
+		config.getBotConfigMap().values().stream().forEach(botConfig -> {
+			botConfig.getOrderbookRequests().forEach(s -> {
+				bus.send(new WebSocketClient.WSRequestSendText(s));
+			});									
+		});
 	}
 	
 	public static Starter newInstance(Config config){
@@ -130,7 +134,6 @@ public class Starter extends Base{
 		StateProvider.getInstance(config);
 		return res;
 	}
-	
 	
 	public void start() throws IOException, WebSocketException, InterruptedException{
 		log("Initiating ...");

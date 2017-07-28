@@ -118,13 +118,19 @@ public class Common extends Base {
 			return;
 		}
 		
-		if (result.has("asks")){
-			System.out.println("Orderbook");
-//			System.out.println(result.getJSONArray("offers").toString());
-			bus.send(new OnOrderbook());
+		if (result.has("offers")){
+			System.out.println(result.get("offers").toString());
+			bus.send(new OnBookOffers());
 			return;
 		}
 		
+		if (result.has("asks")){
+			System.out.println("Orderbook subscription");
+//			System.out.println(result.getJSONArray("offers").toString());
+//			bus.send(new OnOrderbook());
+			return;
+		}
+
 		if (result.has("tx_json")){
 			if ((raw.contains("OfferCreate") || raw.contains("OfferCancel"))){
 				Hash256 hash = Hash256.fromHex(result.optJSONObject("tx_json").optString("hash"));
@@ -547,9 +553,8 @@ public class Common extends Base {
 			this.sequence = sequence;
 		} 			
 	}
-	
-	public static class OnOrderbook{
 		
+	public static class OnBookOffers{
 		
 	}
 	

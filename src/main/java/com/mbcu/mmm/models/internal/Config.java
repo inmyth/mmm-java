@@ -58,7 +58,7 @@ public class Config {
 			throw new IOException("Bots are empty");
 		}
 		
-		res.setBotConfigMap(BotConfig.buildMap(res.getBots()));
+		res.setBotConfigMap(BotConfig.buildMap(res.getCredentials(), res.getBots()));
 		res.setBots(null);
 		return res;
 	}

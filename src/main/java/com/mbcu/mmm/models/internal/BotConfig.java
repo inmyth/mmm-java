@@ -4,12 +4,14 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.stream.IntStream;
 
 import org.parceler.Parcel;
 
 import com.mbcu.mmm.models.Asset;
+import com.mbcu.mmm.models.request.BookOffers;
 import com.ripple.core.coretypes.AccountID;
 import com.ripple.core.coretypes.Amount;
 import com.ripple.core.coretypes.Currency;
@@ -28,13 +30,15 @@ public class BotConfig {
 
 	transient Amount base;
 	transient Amount quote;
+	transient List<String> orderbookReqs;
 
-	public static HashMap<String, BotConfig> buildMap(ArrayList<BotConfig> bots)  {
+	public static HashMap<String, BotConfig> buildMap(Credentials credentials, ArrayList<BotConfig> bots)  {
 		HashMap<String, BotConfig> res = new HashMap<>();
 		for (BotConfig bot : bots) {
 			String[] pair = buildBaseAndQuote(bot.getPair());
 			bot.base = fromDotForm(pair[0]);
-			bot.quote = fromDotForm(pair[1]);			
+			bot.quote = fromDotForm(pair[1]);	
+			bot.orderbookReqs = BookOffers.buildRequest(credentials.address, bot);
 			res.put(bot.getPair(), bot);
 		}
 		return res;
@@ -111,6 +115,10 @@ public class BotConfig {
 
 	public BigDecimal getSellOrderQuantity() {
 		return new BigDecimal(sellOrderQuantity);
+	}
+	
+	public List<String> getOrderbookRequests() {
+		return orderbookReqs;
 	}
 	
 	public boolean isReplaceMode() {

@@ -8,12 +8,16 @@ Consists of:
 
 **Counter** : counters each order in consumed with a new order
 
-**Balancer**: maintains the number of orders in our orderbook 
+**Balancer**: maintains the number of orders in our orderbook
+
+For the balancer to work you need to cancel all existing orders prior to running the bot.
+The bot only tracks orders it creates during its lifetime.  
 
 How to use:
 ```
 java -jar mmm.jar <path_to_config_file>
 ```
+
 **Config**
 
 `pair` : String 
@@ -44,6 +48,9 @@ If true, the bot will replace (on the opposing side of orderbook) our order whic
 
 
 **Version History** 
+
+v.021
+- orderbook on initiation
 
 v.020
 - balancer from orderbook start
@@ -141,8 +148,9 @@ TODOS
 - [x] (done) build listener for remaining order after taken and original quantity and rate if it's fully taken
 - [x] (done) list all OR in a list
 - rearrange log
-- [] fix the remainder counter Check BeAf
+- [x] fix the remainder counter Check BeAf
 - [x] partial remainder counter is not logical. If the partial amount is countered with the same rate then the previous order will be canceled. 
+- [] continue Txc so it disposes old disposable and turn it into orderbook item
 
 
 ## NOTES
