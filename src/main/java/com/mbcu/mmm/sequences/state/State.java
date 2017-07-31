@@ -33,7 +33,7 @@ import io.reactivex.subjects.PublishSubject;
 import io.reactivex.subjects.Subject;
 
 public class State extends Base {
-	private static final BigDecimal DEFAULT_FEES_DROPS = new BigDecimal("0.000010");
+	private static final BigDecimal DEFAULT_FEES_DROPS = new BigDecimal("0.000015");
 	private static final int DEFAULT_MAX_LEDGER_GAP = 5;
 	
 	private final AtomicInteger ledgerClosed = new AtomicInteger(0);

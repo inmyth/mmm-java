@@ -88,7 +88,7 @@ public class Yuki extends Base implements Counter {
 		if (bcd.botConfig == null || !bcd.botConfig.isReplaceMode()) {
 			return null;
 		}
-		BigDecimal rate = ba.before.getAsk();	
+		BigDecimal rate = ba.before.getRate();	
 		
 		if (bcd.isDirectionMatch){
 			BigDecimal botQuantity = bcd.botConfig.getBuyOrderQuantity();		
@@ -144,12 +144,12 @@ public class Yuki extends Base implements Counter {
 		RLOrder res = null;
 		if (isDirectionMatch) {
 			Amount newQuantity = origin.getQuantity().multiply(new BigDecimal("-1"));
-			BigDecimal newRate = origin.getAsk().add(botConfig.getGridSpace());
+			BigDecimal newRate = origin.getRate().add(botConfig.getGridSpace());
 			Amount newTotalPrice = RLOrder.amount(newQuantity.value().multiply(newRate), oldTotalPrice.currency(), oldTotalPrice.issuer());
 			res = RLOrder.rateUnneeded(Direction.SELL, newQuantity, newTotalPrice);
 		} else {
 			Amount newQuantity = origin.getTotalPrice().multiply(new BigDecimal("-1"));
-			BigDecimal newRate = BigDecimal.ONE.divide(origin.getAsk(), MathContext.DECIMAL128).subtract(botConfig.getGridSpace());
+			BigDecimal newRate = BigDecimal.ONE.divide(origin.getRate(), MathContext.DECIMAL128).subtract(botConfig.getGridSpace());
 			if (newRate.compareTo(BigDecimal.ZERO) <= 0) {
 				log("counter rate below zero " + newRate + " " + origin.getPair(), Level.SEVERE);
 			}

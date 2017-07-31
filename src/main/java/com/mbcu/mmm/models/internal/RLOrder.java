@@ -1,4 +1,4 @@
-package com.mbcu.mmm.models.internal;
+ package com.mbcu.mmm.models.internal;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -43,17 +43,17 @@ public final class RLOrder extends Base{
 	private final boolean passive;
 	private final boolean fillOrKill;
 
-	private final BigDecimal ask;
-    private final String pair;
+	private final BigDecimal rate;
+  private final String pair;
 
-	private RLOrder(Direction direction, Amount quantity, Amount totalPrice, BigDecimal ask, String pair) {
+	private RLOrder(Direction direction, Amount quantity, Amount totalPrice, BigDecimal rate, String pair) {
 		super();
 		this.direction = direction.text;
 		this.quantity = quantity;
 		this.totalPrice = totalPrice;
 		this.passive = false;
 		this.fillOrKill = false;
-		this.ask = ask;
+		this.rate = rate;
 		this.pair = pair;
 	}
 
@@ -90,9 +90,9 @@ public final class RLOrder extends Base{
 		return res.toString();	
 	}
 	
-	public BigDecimal getAsk() {
-		if (ask != null){
-			return ask;
+	public BigDecimal getRate() {
+		if (rate != null){
+			return rate;
 		}
 		return totalPrice.value().divide(quantity.value(), MathContext.DECIMAL128);
 	}
@@ -107,6 +107,13 @@ public final class RLOrder extends Base{
 		}
 	}
 	
+	public static Amount amount(String value, String currency, String issuer){
+		if (currency.equals(Currency.XRP.toString())){
+			return amount(new BigDecimal(value), Currency.XRP, AccountID.XRP_ISSUER);
+		}
+		return amount(new BigDecimal(value), Currency.fromString(currency), AccountID.fromAddress(issuer));
+	}
+
 	/**
 	 * Instantiate RLORder where ask rate is not needed or used for log. This object typically goes to submit or test. 
 	 * @param direction
@@ -325,7 +332,7 @@ public final class RLOrder extends Base{
 		sb.append(totalPrice.toTextFull());
 		sb.append("\n");
 		sb.append("rate:");
-		sb.append(getAsk().toString());
+		sb.append(getRate().toString());
 		sb.append("\n");
 		sb.append("pair:");
 		sb.append(getPair());

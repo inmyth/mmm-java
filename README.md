@@ -150,7 +150,8 @@ TODOS
 - rearrange log
 - [x] fix the remainder counter Check BeAf
 - [x] partial remainder counter is not logical. If the partial amount is countered with the same rate then the previous order will be canceled. 
-- [] continue Txc so it disposes old disposable and turn it into orderbook item
+- (canceled) continue Txc so it disposes old disposable and turn it into orderbook item
+- [] get Amount from account_offers result
 
 
 ## NOTES

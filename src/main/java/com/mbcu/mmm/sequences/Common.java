@@ -7,18 +7,15 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.mbcu.mmm.main.WebSocketClient;
-import com.mbcu.mmm.main.WebSocketClient.WSError;
 import com.mbcu.mmm.main.WebSocketClient.WSGotText;
 import com.mbcu.mmm.models.internal.BefAf;
 import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.models.internal.LedgerEvent;
 import com.mbcu.mmm.models.internal.RLOrder;
-import com.mbcu.mmm.models.request.Request.Command;
-import com.mbcu.mmm.models.request.Subscribe;
-import com.mbcu.mmm.models.request.Subscribe.Stream;
 import com.mbcu.mmm.utils.MyLogger;
 import com.ripple.core.coretypes.AccountID;
 import com.ripple.core.coretypes.Amount;
@@ -41,12 +38,6 @@ public class Common extends Base {
 	private Common(Config config) {
 		super(MyLogger.getLogger(Common.class.getName()), config);
 		this.config = config;
-		String subscribeRequest = Subscribe
-			.build(Command.SUBSCRIBE)
-//				.withOrderbookFromConfig(config)
-			.withStream(Stream.LEDGER)
-			.withAccount(config.getCredentials().getAddress())
-			.stringify();
 
 		bus.toObservable()
 			.subscribeOn(Schedulers.newThread())			
@@ -54,22 +45,11 @@ public class Common extends Base {
 
 				@Override
 				public void onSubscribe(Disposable d) {
-					// TODO Auto-generated method stub						
 				}
 
 				@Override
 				public void onNext(Object o) {
-					if (o instanceof WebSocketClient.WSConnected) {
-						log("connected", Level.FINER);
-						log("Sending subsribe request");
-						log(subscribeRequest);
-						bus.send(new WebSocketClient.WSRequestSendText(subscribeRequest));
-					} else if (o instanceof WebSocketClient.WSDisconnected) {
-						log("disconnected");
-					} else if (o instanceof WebSocketClient.WSError) {
-						WebSocketClient.WSError event = (WSError) o;
-						log(event.e.getMessage(), Level.SEVERE);
-					} else if (o instanceof WebSocketClient.WSGotText) {						
+					if (o instanceof WebSocketClient.WSGotText) {						
 						WebSocketClient.WSGotText event = (WSGotText) o;
 //						log(event.raw, Level.FINER);													
 						reroute(event.raw);
@@ -91,8 +71,7 @@ public class Common extends Base {
 		return new Common(config);
 	}
 
-	private void reroute(String raw) {
-		
+	private void reroute(String raw) {	
 		if (raw.contains("response")) {
 			filterResponse(raw);
 		} else if (raw.contains("transaction")) {
@@ -118,9 +97,13 @@ public class Common extends Base {
 			return;
 		}
 		
-		if (result.has("offers")){
-			System.out.println(result.get("offers").toString());
-			bus.send(new OnBookOffers());
+		if (result.has("offers") && result.has("account")){
+			JSONArray offers = result.getJSONArray("offers");
+			for (int i = 0; i < offers.length(); i++){
+				JSONObject offer = (JSONObject)offers.get(i);			
+				Offer a = (Offer) STObject.fromJSONObject(offer);
+				System.out.println(a.prettyJSON());
+			}		
 			return;
 		}
 		
@@ -140,7 +123,8 @@ public class Common extends Base {
 				log(engResult + " " +  accId + " " + hash + " " + sequence);
 				if (engResult.equals(EngineResult.tesSUCCESS.toString())){
 					bus.send(new OnResponseTesSuccess(accId, hash, sequence));
-				}else{				
+				}
+				else{				
 					bus.send(new OnResponseFail(engResult, accId, hash, sequence));		
 				}	
 			}		
@@ -213,7 +197,6 @@ public class Common extends Base {
 			bus.send(new OnOfferCanceled(txn.account(), txn.sequence(), previousTxnId));
 			return;
 		}
-
 		if (txType.equals("OfferCreate")) {
 			RLOrder offerCreate = RLOrder.fromOfferCreate(txn);
 			log("OFFER CREATE Account: " + txnAccId + " Hash " + txnHash + " Sequence " + txnSequence + "\n" + offerCreate.stringify());
@@ -554,7 +537,7 @@ public class Common extends Base {
 		} 			
 	}
 		
-	public static class OnBookOffers{
+	public static class OnAccountOffers {
 		
 	}
 	

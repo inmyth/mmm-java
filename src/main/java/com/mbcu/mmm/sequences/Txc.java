@@ -37,6 +37,8 @@ public class Txc extends Base {
 		this.maxLedger = maxLedger;
 	}
 
+	
+	
 	private void initBus() {
 		disposables.add(bus.toObservable().subscribeOn(Schedulers.newThread()).
 		subscribeWith(new DisposableObserver<Object>() {

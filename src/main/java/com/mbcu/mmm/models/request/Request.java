@@ -6,7 +6,7 @@ public abstract class  Request extends Base{
 
 	public enum Command {
 		SUBSCRIBE("subscribe"), SUBMIT("submit"), ACCOUNT_INFO("account_info"), LEDGER_CLOSED("ledger_closed"),
-		TX("tx"), BOOK_OFFERS("book_offers");
+		TX("tx"), BOOK_OFFERS("book_offers"), ACCOUNT_OFFERS("account_offers");
 
 		private String text;
 

@@ -1,5 +1,7 @@
 package com.mbcu.mmm.sequences;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.models.internal.RLOrder;
 import com.mbcu.mmm.sequences.state.State;
@@ -9,6 +11,8 @@ import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
 
 public class Balancer extends Base{
+	
+	private final ConcurrentHashMap<Integer, RLOrder> perm = new ConcurrentHashMap<>();
 		
 	public Balancer(Config config) {
 		super(MyLogger.getLogger(Starter.class.getName()), config);
