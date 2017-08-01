@@ -6,9 +6,12 @@ Consists of:
 
 **Parser**  : parses response from stream and listens to events of interest
 
-**Counter** : counters each order in consumed with a new order
+**Counter** : counters each order consumed with a new order
 
-**Balancer**: maintains the number of orders in our orderbook
+**Balancer**: maintains the number of orders in orderbook as set by config
+
+**State**   : keeps track of account sequence number which is used to send an order 
+
 
 For the balancer to work you need to cancel all existing orders prior to running the bot.
 The bot only tracks orders it creates during its lifetime.  
@@ -144,14 +147,17 @@ TODOS
 - [x] (done)define Counter class
 - [x] (fixed) v.009 value precision of 18 is greater than maximum iou precision of 16
 - (v.011) test new counter on autobridge
-- tefALREADY needs retrial ? 
+- tefALREADY needs retry ? 
 - [x] (done) build listener for remaining order after taken and original quantity and rate if it's fully taken
 - [x] (done) list all OR in a list
 - rearrange log
 - [x] fix the remainder counter Check BeAf
 - [x] partial remainder counter is not logical. If the partial amount is countered with the same rate then the previous order will be canceled. 
 - (canceled) continue Txc so it disposes old disposable and turn it into orderbook item
-- [] get Amount from account_offers result
+- [x] get Amount from account_offers result
+- [] bus for account_offers should also have currency pair
+- [] intercept pairs on orderbook or balancer level
+
 
 
 ## NOTES

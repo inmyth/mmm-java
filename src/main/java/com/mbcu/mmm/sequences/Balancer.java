@@ -1,8 +1,10 @@
 package com.mbcu.mmm.sequences;
 
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.List;
 
 import com.mbcu.mmm.models.internal.Config;
+import com.mbcu.mmm.models.internal.Orderbook;
 import com.mbcu.mmm.models.internal.RLOrder;
 import com.mbcu.mmm.sequences.state.State;
 import com.mbcu.mmm.utils.MyLogger;
@@ -12,10 +14,11 @@ import io.reactivex.disposables.Disposable;
 
 public class Balancer extends Base{
 	
-	private final ConcurrentHashMap<Integer, RLOrder> perm = new ConcurrentHashMap<>();
-		
+	private final List<Orderbook> perm = new ArrayList<>();
+	
 	public Balancer(Config config) {
 		super(MyLogger.getLogger(Starter.class.getName()), config);
+		buildOrderbooks();
 		bus.toObservable()
 		.subscribe(new Observer<Object>() {
 
@@ -43,8 +46,15 @@ public class Balancer extends Base{
 		});
 	}
 	
+	private void buildOrderbooks(){
+		super.config.getBotConfigMap().values().stream()
+		.forEach(botConfig -> {
+			perm.add(Orderbook.newInstance(botConfig));
+		});		
+	}
+	
 	private void seed(){
-		config.getBotConfigMap().values()
+		super.config.getBotConfigMap().values()
 		.stream()
 		.map(bot -> { 
 			return RLOrder.buildSeed(bot);

@@ -1,34 +1,54 @@
 package com.mbcu.mmm.models.internal;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.mbcu.mmm.models.Base;
+import com.mbcu.mmm.models.internal.RLOrder.Direction;
+import com.mbcu.mmm.rx.RxBus;
+import com.mbcu.mmm.rx.RxBusProvider;
 
 public class Orderbook extends Base{
 	
-	private final String pair;
-	private final List<RLOrder> buys = Collections.synchronizedList(new ArrayList<>());
-	private final List<RLOrder> sels = Collections.synchronizedList(new ArrayList<>());
+	private final BotConfig botConfig;
+	private final ConcurrentHashMap<Integer, RLOrder> buys = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<Integer, RLOrder> sels = new ConcurrentHashMap<>();
+	private final RxBus bus = RxBusProvider.getInstance();
 
-	private Orderbook(String pair) {
+	private Orderbook(BotConfig botConfig) {
 		super();
-		this.pair = pair;
+		this.botConfig = botConfig;
+		
 	}
 
+	private RLOrder align(RLOrder in){
+		if (botConfig.pair.equals(in.getPair())){
+			return in;
+		}
+		return in.reverse();		
+	}
 	
-	private void pushRLOrder(RLOrder in){
+	private void pushRLOrder(int seq, RLOrder in){
+		if (in.getDirection().equals(Direction.BUY)){
+			buys.put(seq, in);
+		}
+		else {
+			sels.put(seq, in);
+		}		
 	}
 
 	private void balancer(){
 		
 	}
 	
+	
+	public static Orderbook newInstance(BotConfig botConfig){
+		Orderbook res = new Orderbook(botConfig);
+		return res;
+	}
+	
 	@Override
 	public String stringify() {
-		// TODO Auto-generated method stub
-		return null;
+		return botConfig.pair;
 	}
 
 }

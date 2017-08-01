@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.mbcu.mmm.helpers.TAccountOffer;
 import com.mbcu.mmm.main.WebSocketClient;
 import com.mbcu.mmm.main.WebSocketClient.WSGotText;
 import com.mbcu.mmm.models.internal.BefAf;
@@ -100,9 +101,8 @@ public class Common extends Base {
 		if (result.has("offers") && result.has("account")){
 			JSONArray offers = result.getJSONArray("offers");
 			for (int i = 0; i < offers.length(); i++){
-				JSONObject offer = (JSONObject)offers.get(i);			
-				Offer a = (Offer) STObject.fromJSONObject(offer);
-				System.out.println(a.prettyJSON());
+				TAccountOffer offer = TAccountOffer.of((JSONObject) offers.get(i));
+				System.out.println(offer.getOrder().stringify());
 			}		
 			return;
 		}
@@ -128,10 +128,12 @@ public class Common extends Base {
 					bus.send(new OnResponseFail(engResult, accId, hash, sequence));		
 				}	
 			}		
-		}else if (result.has("account_data")){
+		}
+		else if (result.has("account_data")){
 			UInt32 sequence = new UInt32(result.getJSONObject("account_data").getInt("Sequence"));
 			bus.send(new OnAccountInfoSequence(sequence));	
-		}else if (result.has("validated_ledgers")){
+		}
+		else if (result.has("validated_ledgers")){
 			bus.send(new OnLedgerClosed(result));		
 		}
 

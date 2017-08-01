@@ -20,9 +20,7 @@ import com.ripple.core.types.known.tx.signed.SignedTransaction;
 import com.ripple.core.types.known.tx.txns.OfferCreate;
 
 public final class RLOrder extends Base{
-
-	private static final String XRP = "XRP";
-
+	
 	public enum Direction {
 		BUY("buy"), SELL("sell");
 
@@ -48,19 +46,18 @@ public final class RLOrder extends Base{
 
 	private RLOrder(Direction direction, Amount quantity, Amount totalPrice, BigDecimal rate, String pair) {
 		super();
-		this.direction = direction.text;
-		this.quantity = quantity;
-		this.totalPrice = totalPrice;
-		this.passive = false;
+		this.direction 	= direction.text;
+		this.quantity 	= amount(quantity);
+		this.totalPrice = amount(totalPrice);
+		this.passive 		= false;
 		this.fillOrKill = false;
-		this.rate = rate;
-		this.pair = pair;
+		this.rate 			= rate;
+		this.pair 			= pair;
 	}
 
 	public String getDirection() {
 		return direction;
 	}
-
 
 	public Amount getQuantity() {
 		return quantity;
@@ -90,6 +87,16 @@ public final class RLOrder extends Base{
 		return res.toString();	
 	}
 	
+	public RLOrder reverse(){
+		Direction newDirection = this.direction.equals(Direction.BUY.text()) ? Direction.SELL : Direction.BUY;
+		String newPair = getReversePair();
+		Amount newQuantity = totalPrice;
+		Amount newTotalPrice = quantity;
+		BigDecimal rate = newTotalPrice.value().divide(newQuantity.value(), MathContext.DECIMAL64);	
+		RLOrder res = new RLOrder(newDirection, newQuantity, newTotalPrice, rate, newPair);
+		return res;
+	}
+	
 	public BigDecimal getRate() {
 		if (rate != null){
 			return rate;
@@ -98,22 +105,22 @@ public final class RLOrder extends Base{
 	}
 	
 	public static Amount amount(BigDecimal value, Currency currency, AccountID issuer){
-		if(currency.isNative()){
+		if (currency.isNative()){
 			value = value.round(new MathContext(6, RoundingMode.HALF_DOWN));
 			return new Amount(value);
-		}else{
-			value = value.round(new MathContext(16, RoundingMode.HALF_DOWN));
-			return new Amount(value, currency, issuer);
 		}
+		value = value.round(new MathContext(16, RoundingMode.HALF_DOWN));
+		return new Amount(value, currency, issuer);		
+	}
+	public static Amount amount(Amount amount){
+		return amount(amount.value(), amount.currency(), amount.issuer());
 	}
 	
-	public static Amount amount(String value, String currency, String issuer){
-		if (currency.equals(Currency.XRP.toString())){
-			return amount(new BigDecimal(value), Currency.XRP, AccountID.XRP_ISSUER);
-		}
-		return amount(new BigDecimal(value), Currency.fromString(currency), AccountID.fromAddress(issuer));
+	
+	public static Amount amount(BigDecimal value){
+		return amount(value, Currency.XRP, null);
 	}
-
+	
 	/**
 	 * Instantiate RLORder where ask rate is not needed or used for log. This object typically goes to submit or test. 
 	 * @param direction
@@ -229,17 +236,16 @@ public final class RLOrder extends Base{
 	
 	public static String buildPair(String base, String baseIssuer, String quote, String quoteIssuer) {
 		StringBuffer res = new StringBuffer(base);
-		if (!base.equals(XRP)) {
+		if (!base.equals(Currency.XRP.toString())) {
 			res.append(".");
 			res.append(baseIssuer);
 		}
 		res.append("/");
 		res.append(quote);
-		if (!quote.equals(XRP)) {
+		if (!quote.equals(Currency.XRP.toString())) {
 			res.append(".");
 			res.append(quoteIssuer);
 		}
-
 		return res.toString();
 	}
 	
