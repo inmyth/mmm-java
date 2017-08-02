@@ -1,11 +1,14 @@
 package com.mbcu.mmm.sequences.state;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.mbcu.mmm.main.WebSocketClient;
 import com.mbcu.mmm.models.internal.Config;
@@ -15,12 +18,14 @@ import com.mbcu.mmm.models.request.AccountInfo;
 import com.mbcu.mmm.models.request.Submit;
 import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
+import com.mbcu.mmm.sequences.Balancer;
 import com.mbcu.mmm.sequences.Base;
 import com.mbcu.mmm.sequences.Common;
 import com.mbcu.mmm.sequences.Common.OnAccountInfoSequence;
 import com.mbcu.mmm.sequences.Common.OnLedgerClosed;
 import com.mbcu.mmm.sequences.Common.OnOfferCreate;
 import com.mbcu.mmm.sequences.Txc;
+import com.mbcu.mmm.sequences.Balancer.OnRequestNonOrderbookRLOrder;
 import com.mbcu.mmm.utils.MyLogger;
 import com.ripple.core.coretypes.hash.Hash256;
 import com.ripple.core.coretypes.uint.UInt32;
@@ -105,6 +110,14 @@ public class State extends Base {
 				}
 				else if (o instanceof RequestWaitNextLedger){
 					flagWaitLedger.set(true);					
+				}
+				else if (o instanceof Balancer.OnRequestNonOrderbookRLOrder){
+					OnRequestNonOrderbookRLOrder event = (OnRequestNonOrderbookRLOrder) o;
+					List<RLOrder> outbounds = Stream
+							.concat(pending.values().stream().map(txc -> {return txc.getOutbound();}), qWait.stream())
+							.filter(rlo -> event.pair.equals(rlo.getPair()) || event.pair.equals(rlo.getReversePair()))
+							.collect(Collectors.toList());
+					bus.send(new BroadcastTxcRLOrder(outbounds, event.pair));
 				}
 			}
 
@@ -210,4 +223,15 @@ public class State extends Base {
 	public static class RequestSequenceSync{}
 	
 	public static class RequestWaitNextLedger{}
+	
+	public static class BroadcastTxcRLOrder{
+		public final String pair;
+		public final List<RLOrder> outbounds;
+
+		public BroadcastTxcRLOrder(List<RLOrder> outbounds, String pair) {
+			super();
+			this.outbounds = outbounds;
+			this.pair = pair;
+		}
+	}
 }

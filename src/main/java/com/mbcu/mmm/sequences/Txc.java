@@ -36,8 +36,6 @@ public class Txc extends Base {
 		this.seq = seq;
 		this.maxLedger = maxLedger;
 	}
-
-	
 	
 	private void initBus() {
 		disposables.add(bus.toObservable().subscribeOn(Schedulers.newThread()).
@@ -112,8 +110,8 @@ public class Txc extends Base {
 					disposables.dispose();
 					bus.send(new State.RequestRemove(seq));
 					bus.send(new State.OnOrderReady(outbound, hash, "retry " + er));
-
 				}	
+				
 			}
 
 			@Override
@@ -126,11 +124,15 @@ public class Txc extends Base {
 				// TODO Auto-generated method stub				
 			}
 		}));
-	
+
 	}
 
 	public int getSeq() {
 		return seq;
+	}
+	
+	public RLOrder getOutbound() {
+		return outbound;
 	}
 	
 	public static Txc newInstance(RLOrder outbound, Hash256 hash, int seq, int maxLedger) {
@@ -139,5 +141,4 @@ public class Txc extends Base {
 		return res;
 	}
 	
-
 }

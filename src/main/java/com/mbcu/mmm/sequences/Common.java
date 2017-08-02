@@ -75,9 +75,11 @@ public class Common extends Base {
 	private void reroute(String raw) {	
 		if (raw.contains("response")) {
 			filterResponse(raw);
-		} else if (raw.contains("transaction")) {
+		}
+		else if (raw.contains("transaction")) {
 			filterStream2(raw);
-		} else if (raw.contains("ledgerClosed")){
+		} 
+		else if (raw.contains("ledgerClosed")){
 			filterLedgerClosed(raw);
 		}
 	}
@@ -102,7 +104,7 @@ public class Common extends Base {
 			JSONArray offers = result.getJSONArray("offers");
 			for (int i = 0; i < offers.length(); i++){
 				TAccountOffer offer = TAccountOffer.of((JSONObject) offers.get(i));
-				System.out.println(offer.getOrder().stringify());
+				bus.send(new OnAccountOffers(offer));
 			}		
 			return;
 		}
@@ -136,7 +138,6 @@ public class Common extends Base {
 		else if (result.has("validated_ledgers")){
 			bus.send(new OnLedgerClosed(result));		
 		}
-
 	}
 	
 	public void filterStream2(String raw) {
@@ -540,7 +541,12 @@ public class Common extends Base {
 	}
 		
 	public static class OnAccountOffers {
-		
+		public final TAccountOffer accOff;
+
+		public OnAccountOffers(TAccountOffer accOff) {
+			super();
+			this.accOff = accOff;
+		}
 	}
 	
 }

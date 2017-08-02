@@ -70,6 +70,14 @@ public class Balancer extends Base{
 		return new Balancer(config);
 	}
 	
+	public static class OnRequestNonOrderbookRLOrder{		
+		public String pair;
+
+		public OnRequestNonOrderbookRLOrder(String pair) {
+			super();
+			this.pair = pair;
+		}
+	}
 
 	
 }

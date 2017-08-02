@@ -1,6 +1,7 @@
 package com.mbcu.mmm.models.internal;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -30,18 +31,27 @@ public class BotConfig {
 
 	transient Amount base;
 	transient Amount quote;
+	transient BigDecimal totalBuyQuantity, totalSelQuantity; 
 	transient List<String> orderbookReqs;
 
 	public static HashMap<String, BotConfig> buildMap(Credentials credentials, ArrayList<BotConfig> bots)  {
 		HashMap<String, BotConfig> res = new HashMap<>();
 		for (BotConfig bot : bots) {
-			String[] pair = buildBaseAndQuote(bot.getPair());
-			bot.base = fromDotForm(pair[0]);
-			bot.quote = fromDotForm(pair[1]);	
-			bot.orderbookReqs = BookOffers.buildRequest(credentials.address, bot);
+			String[] pair 				= buildBaseAndQuote(bot.getPair());
+			bot.base 							= fromDotForm(pair[0]);
+			bot.quote 						= fromDotForm(pair[1]);	
+			bot.orderbookReqs 		= BookOffers.buildRequest(credentials.address, bot);
+			bot.totalBuyQuantity 	= buildTotalQuantity(bot.buyGridLevels, bot.buyOrderQuantity);
+			bot.totalSelQuantity	= buildTotalQuantity(bot.sellGridLevels, bot.sellOrderQuantity);
 			res.put(bot.getPair(), bot);
 		}
 		return res;
+	}
+	
+	private static BigDecimal buildTotalQuantity(int gridLevels, String orderQuantity){
+		BigDecimal a = new BigDecimal(gridLevels);
+		BigDecimal b = new BigDecimal(orderQuantity);
+		return a.multiply(b, MathContext.DECIMAL64);
 	}
 	
 	public static Amount fromDotForm(String part) throws IllegalArgumentException {
@@ -138,9 +148,5 @@ public class BotConfig {
 		IntStream.range(1, max + 1).forEach(a -> {res.add(a);});
 		return res;
 	}
-
-
-	
-
 
 }

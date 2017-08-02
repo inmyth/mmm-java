@@ -6,7 +6,10 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
@@ -33,6 +36,19 @@ public class UtilsTest {
 	private final AtomicBoolean flagWaitSeq2 = new AtomicBoolean(false);
 
   private Subject<Boolean> seqSyncObs = PublishSubject.create();  
+  
+  
+  @Test
+  public void testStreamFilter(){
+  	
+    List<String> lines = Arrays.asList("spring", "node", "mkyong");
+    List<String> res = lines.stream().filter(line -> "aaa".equals(line))
+    .collect(Collectors.toList());
+    
+    assertNotEquals(res, null);
+    assertEquals(0, res.size());
+    
+  }
 
   @Test
   public void testJsonObjectOrString(){

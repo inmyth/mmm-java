@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -326,6 +327,14 @@ public final class RLOrder extends Base{
 		}	
 		return res;
 	}
+	
+	public static class AscComparator implements Comparator<RLOrder> {
+		
+    @Override
+    public int compare(RLOrder a, RLOrder b) {
+        return b.rate.compareTo(a.rate);
+    }
+}
 	
 	@Override
 	public String stringify() {	

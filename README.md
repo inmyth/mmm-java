@@ -10,7 +10,7 @@ Consists of:
 
 **Balancer**: maintains the number of orders in orderbook as set by config
 
-**State**   : keeps track of account sequence number which is used to send an order 
+**State**   : keeps track of account sequence number which is used to send orders 
 
 
 For the balancer to work you need to cancel all existing orders prior to running the bot.
@@ -156,7 +156,11 @@ TODOS
 - (canceled) continue Txc so it disposes old disposable and turn it into orderbook item
 - [x] get Amount from account_offers result
 - [] bus for account_offers should also have currency pair
-- [] intercept pairs on orderbook or balancer level
+- [x] intercept pairs on orderbook or balancer level
+- [] sort RLOrder by rate
+- [] write orderbook to files
+- [] get RLORder from State#pending and State#qWait  
+- [] cancel order mechanism
 
 
 
@@ -166,7 +170,7 @@ RESPONSE
 - response contains hash so it can be used as key. This hash should be stored in "deleted" node. 
 - Final field in stream indicates executed offer.
 -- hash -> DeletedNodes.FinalFields.PreviousTxnID (old hash), hash (new hash) 
-- offer create for RJP/JPY may not have PreviousFields. This causes parse error for FinalFields. It looks creating new offer also cancels some tx which results in this situation. We can saafel ignore it and use transaction information instead. 
+- offer create for RJP/JPY may not have PreviousFields. This causes parse error for FinalFields. It looks creating new offer also cancels some tx which results in this situation. We can safely ignore it and use transaction information instead. 
 - payment and OC belonging to others will result in many OEs. Find only those belonging for us
 - do not instantiate Amount directly. Use RLOrder#amount
 - pair in Config determines the unit of rate and gridSpace
