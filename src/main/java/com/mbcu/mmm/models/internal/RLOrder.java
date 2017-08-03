@@ -169,7 +169,7 @@ public final class RLOrder extends Base{
 		return res;
 	}
 	
-	public static BefAf toBA(Amount bTakerPays, Amount bTakerGets, Amount aTakerPays, Amount aTakerGets){		
+	public static BefAf toBA(Amount bTakerPays, Amount bTakerGets, Amount aTakerPays, Amount aTakerGets, UInt32 seq){		
 		String bPair = buildPair(bTakerGets, bTakerPays);		
 		BigDecimal bAsk = bTakerGets.value().divide(bTakerPays.value(), MathContext.DECIMAL64);
 		RLOrder before = new RLOrder(Direction.BUY, bTakerPays, bTakerGets, bAsk, bPair);	
@@ -178,7 +178,7 @@ public final class RLOrder extends Base{
 			aTakerGets = new Amount(new BigDecimal("0"), bTakerGets.currency(), bTakerGets.issuer());
 		}
 		RLOrder after = RLOrder.rateUnneeded(Direction.BUY, aTakerPays, aTakerGets);		
-		return new BefAf(before, after);		
+		return new BefAf(before, after, seq);		
 	}
 	
 	

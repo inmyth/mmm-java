@@ -52,6 +52,9 @@ If false, the bot will only counter any order that fully consumes our order.
 
 **Version History** 
 
+v.023
+- testing OnDifference
+
 v.022
 - whole order counter is adjusted with gridSpace
 - normalized partial and whole counters
@@ -161,10 +164,14 @@ TODOS
 - [x] get Amount from account_offers result
 - [] bus for account_offers should also have currency pair
 - [x] intercept pairs on orderbook or balancer level
-- [] sort RLOrder by rate
-- [] write orderbook to files
-- [] get RLORder from State#pending and State#qWait  
+- [x] sort RLOrder by rate
+- [x] write orderbook to files
+- [x] get RLORder from State#pending and State#qWait  
 - [] cancel order mechanism
+- [] BefAf needs sequence
+- [] Orderbook test onDelete
+- [] Orderbook test onEdit
+- [] Orderbook test onRemainder
 
 
 

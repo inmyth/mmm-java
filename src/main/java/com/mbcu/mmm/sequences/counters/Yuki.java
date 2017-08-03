@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 import com.mbcu.mmm.models.internal.BefAf;
 import com.mbcu.mmm.models.internal.BotConfig;
@@ -45,9 +46,14 @@ public class Yuki extends Base implements Counter {
 					OnOfferExecuted event = (OnOfferExecuted) o;
 					counterOE(event.oes);
 				}				
-				else if (o instanceof Common.OnFullyConsumed){
-					Common.OnFullyConsumed event = (Common.OnFullyConsumed) o;
-					counterOR(event.bas);
+				else if (o instanceof Common.OnDifference){
+					Common.OnDifference event = (Common.OnDifference) o;
+					List<BefAf> fullyConsumeds = event.bas.stream()
+							.filter(ba -> {
+								return ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0 && ba.after.getTotalPrice().value().compareTo(BigDecimal.ZERO) == 0;
+							})
+							.collect(Collectors.toList());
+					counterOR(fullyConsumeds);
 				}
 			}
 

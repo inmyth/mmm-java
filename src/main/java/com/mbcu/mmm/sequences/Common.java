@@ -24,6 +24,7 @@ import com.ripple.core.coretypes.STObject;
 import com.ripple.core.coretypes.hash.Hash256;
 import com.ripple.core.coretypes.uint.UInt32;
 import com.ripple.core.fields.Field;
+import com.ripple.core.fields.UInt32Field;
 import com.ripple.core.serialized.enums.EngineResult;
 import com.ripple.core.types.known.sle.LedgerEntry;
 import com.ripple.core.types.known.sle.entries.Offer;
@@ -228,20 +229,21 @@ public class Common extends Base {
 				}
 				oes.addAll(fa.process());
 				if (offerCreated == null){
-					ors.add(RLOrder.toBA(txn.get(Amount.TakerPays), txn.get(Amount.TakerGets), null, null));
+					ors.add(RLOrder.toBA(txn.get(Amount.TakerPays), txn.get(Amount.TakerGets), null, null, txnSequence));
 				}
 				else{
-					ors.add(RLOrder.toBA(txn.get(Amount.TakerPays), txn.get(Amount.TakerGets), offerCreated.takerPays(), offerCreated.takerGets()));
+					ors.add(RLOrder.toBA(txn.get(Amount.TakerPays), txn.get(Amount.TakerGets), offerCreated.takerPays(), offerCreated.takerGets(), txnSequence));
 				}
 			}else{
 				for (Offer offer : offersExecuteds) {
-					STObject finalFields = offer.get(STObject.FinalFields);
+					STObject finalFields 	= offer.get(STObject.FinalFields);
+					UInt32 previousSeq 		= offer.get(UInt32.Sequence);
 					if (finalFields != null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
 						oes.add(RLOrder.fromOfferExecuted(offer, true));						
-						ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), finalFields.get(Amount.TakerPays), finalFields.get(Amount.TakerGets)));						
+						ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), finalFields.get(Amount.TakerPays), finalFields.get(Amount.TakerGets), previousSeq));						
 					}
 					if (finalFields == null && offer.account().address.equals(this.config.getCredentials().getAddress())){
-						ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), null, null));
+						ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), null, null, null));
 					}
 				}
 			}
@@ -250,14 +252,16 @@ public class Common extends Base {
 			// we only care about payment not from ours.
 			for (Offer offer : offersExecuteds) {
 				STObject finalFields = offer.get(STObject.FinalFields);
+				UInt32 previousSeq 		= offer.get(UInt32.Sequence);
+
 				if (finalFields != null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
 					oes.add(RLOrder.fromOfferExecuted(offer, true));
 					if (offer.get(STObject.FinalFields).get(Amount.TakerGets).value().compareTo(BigDecimal.ZERO) == 0){
-						ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), finalFields.get(Amount.TakerPays), finalFields.get(Amount.TakerGets)));
+						ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), finalFields.get(Amount.TakerPays), finalFields.get(Amount.TakerGets), previousSeq));
 					}
 				}
 				if (finalFields == null && offer.account().address.equals(this.config.getCredentials().getAddress())){
-					ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), null, null));
+					ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), null, null, previousSeq));
 				}
 			}
 		}
@@ -270,12 +274,8 @@ public class Common extends Base {
 			log(sb.toString());
 			bus.send(new OnOfferExecuted(oes));
 		}
-		List<BefAf> fullyConsumeds = 	ors.stream()
-				.filter(ba -> {
-					return ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0 && ba.after.getTotalPrice().value().compareTo(BigDecimal.ZERO) == 0;
-				})
-				.collect(Collectors.toList());
-		bus.send(new OnFullyConsumed(fullyConsumeds));
+
+		bus.send(new OnDifference(ors));
 	}
 
 	private static class FilterAutobridged {
@@ -491,10 +491,10 @@ public class Common extends Base {
 		}
 	}
 	
-	public static class OnFullyConsumed {
+	public static class OnDifference {
 		public List<BefAf> bas;
 
-		public OnFullyConsumed(List<BefAf> bas) {
+		public OnDifference(List<BefAf> bas) {
 			super();
 			this.bas = bas;
 		}	
