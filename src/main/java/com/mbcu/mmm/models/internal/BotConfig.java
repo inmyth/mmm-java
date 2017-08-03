@@ -27,7 +27,7 @@ public class BotConfig {
 	int sellGridLevels;
 	String buyOrderQuantity;
 	String sellOrderQuantity;	
-	boolean isReplaceMode;
+	boolean isPartialCounter;
 
 	transient Amount base;
 	transient Amount quote;
@@ -131,8 +131,8 @@ public class BotConfig {
 		return orderbookReqs;
 	}
 	
-	public boolean isReplaceMode() {
-		return isReplaceMode;
+	public boolean isPartialCounter() {
+		return isPartialCounter;
 	}
 	
 	public Amount getBase() {

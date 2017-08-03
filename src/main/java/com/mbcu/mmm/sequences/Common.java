@@ -102,10 +102,12 @@ public class Common extends Base {
 		
 		if (result.has("offers") && result.has("account")){
 			JSONArray offers = result.getJSONArray("offers");
+			List<TAccountOffer> tAccOffs = new ArrayList<>();
 			for (int i = 0; i < offers.length(); i++){
 				TAccountOffer offer = TAccountOffer.of((JSONObject) offers.get(i));
-				bus.send(new OnAccountOffers(offer));
+				tAccOffs.add(offer);
 			}		
+			bus.send(new OnAccountOffers(tAccOffs));
 			return;
 		}
 		
@@ -268,9 +270,12 @@ public class Common extends Base {
 			log(sb.toString());
 			bus.send(new OnOfferExecuted(oes));
 		}
-		bus.send(new OnFullyConsumed(ors.stream().filter(ba -> {
-				return ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0 && ba.after.getTotalPrice().value().compareTo(BigDecimal.ZERO) ==0;
-		}).collect(Collectors.toList())));	
+		List<BefAf> fullyConsumeds = 	ors.stream()
+				.filter(ba -> {
+					return ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0 && ba.after.getTotalPrice().value().compareTo(BigDecimal.ZERO) == 0;
+				})
+				.collect(Collectors.toList());
+		bus.send(new OnFullyConsumed(fullyConsumeds));
 	}
 
 	private static class FilterAutobridged {
@@ -541,11 +546,11 @@ public class Common extends Base {
 	}
 		
 	public static class OnAccountOffers {
-		public final TAccountOffer accOff;
+		public final List<TAccountOffer> accOffs;
 
-		public OnAccountOffers(TAccountOffer accOff) {
+		public OnAccountOffers(List<TAccountOffer> accOffs) {
 			super();
-			this.accOff = accOff;
+			this.accOffs = accOffs;
 		}
 	}
 	

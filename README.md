@@ -43,14 +43,18 @@ Number of seed orders for each side.
 
 Amount of seed or counter order.
 
-`isReplaceMode` : boolean
+`isPartialCounter` : boolean
 
-If false, the bot counters any order that takes fully or partially our order. The new rate is calculated from real rate and gridSpace.  
+If true, the bot will counter any order that fully or partially consumes our order. 
 
-If true, the bot will replace (on the opposing side of orderbook) our order which has been fully consumed. The new rate is the same as the old rate.   
+If false, the bot will only counter any order that fully consumes our order. 
 
 
 **Version History** 
+
+v.022
+- whole order counter is adjusted with gridSpace
+- normalized partial and whole counters
 
 v.021
 - orderbook on initiation

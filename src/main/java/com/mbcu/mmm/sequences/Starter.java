@@ -108,6 +108,7 @@ public class Starter extends Base{
 			public void onNext(Object o) {
 				if (o instanceof WebSocketClient.WSConnected){
 					log("connected", Level.FINER);
+					latch.countDown();
 					sendInitRequests();
 					disOnWSConnected.dispose();
 				}				

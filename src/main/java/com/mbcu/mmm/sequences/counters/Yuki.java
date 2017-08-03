@@ -27,7 +27,6 @@ import io.reactivex.schedulers.Schedulers;
 public class Yuki extends Base implements Counter {
 	private RxBus bus = RxBusProvider.getInstance();
 	private Config config;
-	private final BigDecimal BD_100 = new BigDecimal("100");
 	int count;
 
 	public Yuki(Config config) {
@@ -71,7 +70,7 @@ public class Yuki extends Base implements Counter {
 	
 	public void counterOR(List<BefAf> bas){
 		bas.forEach(ba -> {
-			RLOrder counter = buildReplaceCounter(ba);
+			RLOrder counter = buildWholeCounter(ba);
 			if (counter != null) {
 				onCounterReady(counter);
 			}
@@ -82,28 +81,25 @@ public class Yuki extends Base implements Counter {
 	 * This part can be configured so it instead of countering, the bot will replace taken order. 
 	 */
 	@Nullable
-	public RLOrder buildReplaceCounter(BefAf ba){
+	public RLOrder buildWholeCounter(BefAf ba){
 		RLOrder res = null;
 		BotConfigDirection bcd = new BotConfigDirection(config, ba.before);
-		if (bcd.botConfig == null || !bcd.botConfig.isReplaceMode()) {
+		if (bcd.botConfig == null || bcd.botConfig.isPartialCounter()) {
 			return null;
 		}
 		BigDecimal rate = ba.before.getRate();	
-		
+		RLOrder origin;
 		if (bcd.isDirectionMatch){
-			BigDecimal botQuantity = bcd.botConfig.getBuyOrderQuantity();		
-			Amount quantity = ba.after.getQuantity().subtract(botQuantity).abs();
-			Amount afterTotalPrice = ba.after.getTotalPrice();
-			Amount newTotalPrice = RLOrder.amount(quantity.multiply(rate).value(), afterTotalPrice.currency(), afterTotalPrice.issuer());			
-			res = RLOrder.rateUnneeded(Direction.SELL, quantity, newTotalPrice);		
+			BigDecimal botQuantity 	= bcd.botConfig.getBuyOrderQuantity();		
+			Amount quantity 				= ba.after.getQuantity().subtract(botQuantity);
+			origin = RLOrder.fromWholeConsumed(Direction.BUY, quantity, ba.after.getTotalPrice(), rate);
 		}
-		else{
-			BigDecimal botQuantity = bcd.botConfig.getSellOrderQuantity();
-			Amount totalPrice = ba.after.getTotalPrice().subtract(botQuantity).abs();			
-			Amount afterQuantity = ba.after.getQuantity();
-			Amount newQuantity = RLOrder.amount(totalPrice.divide(rate).value(), afterQuantity.currency(), afterQuantity.issuer());
-			res = RLOrder.rateUnneeded(Direction.SELL, newQuantity, totalPrice);						
-		}
+		else {
+			BigDecimal botQuantity 	= bcd.botConfig.getSellOrderQuantity();
+			Amount totalPrice 			= ba.after.getTotalPrice().subtract(botQuantity);			
+			origin = RLOrder.fromWholeConsumed(Direction.BUY, ba.after.getQuantity(), totalPrice, rate);
+		}		
+		res = yuki(origin, bcd.botConfig, bcd.isDirectionMatch);
 		return res;
 	}
 	
@@ -133,12 +129,16 @@ public class Yuki extends Base implements Counter {
 	public RLOrder buildOECounter(RLOrder origin) {
 		
 		BotConfigDirection bcd = new BotConfigDirection(config, origin);
-		if (bcd.botConfig == null || bcd.botConfig.isReplaceMode()) {
+		if (bcd.botConfig == null || !bcd.botConfig.isPartialCounter()) {
 			return null;
 		}
 		boolean isDirectionMatch = bcd.isDirectionMatch;
 		BotConfig botConfig = bcd.botConfig;
-
+		
+		return yuki(origin, botConfig, isDirectionMatch);
+	}
+	
+	private RLOrder yuki(RLOrder origin, BotConfig botConfig, boolean isDirectionMatch){
 		Amount oldQuantity = origin.getQuantity();
 		Amount oldTotalPrice = origin.getTotalPrice();
 		RLOrder res = null;
@@ -152,6 +152,7 @@ public class Yuki extends Base implements Counter {
 			BigDecimal newRate = BigDecimal.ONE.divide(origin.getRate(), MathContext.DECIMAL128).subtract(botConfig.getGridSpace());
 			if (newRate.compareTo(BigDecimal.ZERO) <= 0) {
 				log("counter rate below zero " + newRate + " " + origin.getPair(), Level.SEVERE);
+				return null;
 			}
 			Amount newTotalPrice = RLOrder.amount(newQuantity.value().multiply(newRate), oldQuantity.currency(), oldQuantity.issuer());
 			res = RLOrder.rateUnneeded(Direction.BUY, newQuantity, newTotalPrice);

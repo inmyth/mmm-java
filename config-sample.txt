@@ -13,7 +13,7 @@
 			"sellGridLevels": 9,
 			"buyOrderQuantity": 2,
 			"sellOrderQuantity": 1.9,
-			"isReplaceMode" : false
+			"isPartialCounter" : false
 		},
 		{
 			"pair": "RJP.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS/JPY.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
@@ -23,7 +23,7 @@
 			"sellGridLevels": 2,
 			"buyOrderQuantity": 200,
 			"sellOrderQuantity": 0.00001,
-			"isReplaceMode" : false
+			"isPartialCounter" : false
 			
 		},
 		{
@@ -34,7 +34,7 @@
 			"sellGridLevels": 2,
 			"buyOrderQuantity": 2,
 			"sellOrderQuantity": 2,
-			"isReplaceMode" : false
+			"isPartialCounter" : false
 			
 		},
 		{
@@ -45,7 +45,7 @@
 			"sellGridLevels": 2,
 			"buyOrderQuantity": 2,
 			"sellOrderQuantity": 1.20,
-			"isReplaceMode" : false		
+			"isPartialCounter" : false		
 		}
 	]
 }

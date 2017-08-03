@@ -134,6 +134,11 @@ public final class RLOrder extends Base{
 		return new RLOrder(direction, quantity, totalPrice, null, pair);
 	}
 	
+	public static RLOrder fromWholeConsumed(Direction direction, Amount quantity, Amount totalPrice, BigDecimal rate){
+		String pair = direction == Direction.BUY ? buildPair(totalPrice, quantity) : buildPair(quantity, totalPrice);
+		return new RLOrder(direction, quantity, totalPrice, rate, pair);
+	}
+	
 	public static RLOrder fromOfferCreate(Transaction txn){
 		Amount gets = txn.get(Amount.TakerPays);
 		Amount pays = txn.get(Amount.TakerGets);

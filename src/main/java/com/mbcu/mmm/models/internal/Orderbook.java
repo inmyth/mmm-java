@@ -41,13 +41,15 @@ public class Orderbook extends Base{
 
 			@Override
 			public void onNext(Object o) {
-				if (o instanceof Common.OnAccountOffers){
+				if (o instanceof Common.OnAccountOffers){					
 					OnAccountOffers event = (OnAccountOffers) o;
-					Boolean isPairMatched = pairMatched(event.accOff.getOrder());
-					if (isPairMatched == null){
-						return;
-					}
-					push(event.accOff.getSeq(), isPairMatched, event.accOff.getOrder());	
+					event.accOffs.forEach(accOff -> {
+						Boolean isPairMatched = pairMatched(accOff.getOrder());
+						if (isPairMatched == null){
+							return;
+						}
+						push(accOff.getSeq(), isPairMatched, accOff.getOrder());	
+					});
 				}				
 				else if (o instanceof Common.OnLedgerClosed){
 					OnLedgerClosed event = (OnLedgerClosed) o;
