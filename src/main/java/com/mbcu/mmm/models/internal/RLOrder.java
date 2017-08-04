@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Queue;
 
 import com.mbcu.mmm.models.Base;
@@ -19,6 +20,8 @@ import com.ripple.core.types.known.sle.entries.Offer;
 import com.ripple.core.types.known.tx.Transaction;
 import com.ripple.core.types.known.tx.signed.SignedTransaction;
 import com.ripple.core.types.known.tx.txns.OfferCreate;
+
+import io.reactivex.annotations.Nullable;
 
 public final class RLOrder extends Base{
 	
@@ -98,9 +101,13 @@ public final class RLOrder extends Base{
 		return res;
 	}
 	
+	@Nullable
 	public BigDecimal getRate() {
 		if (rate != null){
 			return rate;
+		}
+		if (quantity.value().compareTo(BigDecimal.ZERO) == 0){
+			return null;
 		}
 		return totalPrice.value().divide(quantity.value(), MathContext.DECIMAL128);
 	}
@@ -333,14 +340,9 @@ public final class RLOrder extends Base{
 		return res;
 	}
 	
-	public static class AscComparator implements Comparator<RLOrder> {
-		
-    @Override
-    public int compare(RLOrder a, RLOrder b) {
-        return b.rate.compareTo(a.rate);
-    }
-}
-	
+
+
+
 	@Override
 	public String stringify() {	
 		StringBuffer sb = new StringBuffer(direction);
@@ -352,7 +354,8 @@ public final class RLOrder extends Base{
 		sb.append(totalPrice.toTextFull());
 		sb.append("\n");
 		sb.append("rate:");
-		sb.append(getRate().toString());
+		BigDecimal rate = getRate();
+		sb.append(rate != null ? rate.toPlainString() : "rate na");
 		sb.append("\n");
 		sb.append("pair:");
 		sb.append(getPair());

@@ -6,13 +6,13 @@ import com.ripple.core.coretypes.uint.UInt32;
 public class BefAf extends Base{
 	public final RLOrder before;
 	public final RLOrder after;
-	public final UInt32 seq;
+	public final UInt32 befSeq;
 	
-	public BefAf(RLOrder before, RLOrder after, UInt32 seq) {
+	public BefAf(RLOrder before, RLOrder after, UInt32 befSeq) {
 		super();
 		this.before 	= before;
 		this.after 		= after;
-		this.seq 			= seq;
+		this.befSeq 	= befSeq;
 	}
 
 	@Override

@@ -52,6 +52,9 @@ If false, the bot will only counter any order that fully consumes our order.
 
 **Version History** 
 
+v.024
+- Orderbook can be built from stream events, tested on Order canceled, edited, and difference
+
 v.023
 - testing OnDifference
 
@@ -166,14 +169,15 @@ TODOS
 - [x] intercept pairs on orderbook or balancer level
 - [x] sort RLOrder by rate
 - [x] write orderbook to files
-- [x] get RLORder from State#pending and State#qWait  
+- [x] BefAf needs sequence
+- [x] Orderbook test onDelete
+- [x] Orderbook test onEdit
+- [x] Orderbook test onRemainder
+- [] get RLORder from State#pending and State#qWait for Orderbook balancer, synchronously
+- [] balancer can sum all orders, compare with settings
+- [] remove if sum is more than config
+- [] create if sum is less than config
 - [] cancel order mechanism
-- [] BefAf needs sequence
-- [] Orderbook test onDelete
-- [] Orderbook test onEdit
-- [] Orderbook test onRemainder
-
-
 
 ## NOTES
 RESPONSE

@@ -1,28 +1,33 @@
 package com.mbcu.mmm.sequences;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.mbcu.mmm.models.Base;
+import com.mbcu.mmm.models.internal.BefAf;
 import com.mbcu.mmm.models.internal.BotConfig;
 import com.mbcu.mmm.models.internal.RLOrder;
 import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
+import com.ripple.core.coretypes.uint.UInt32;
 
-import io.reactivex.Observable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 
 public class Orderbook extends Base{
+	private final String fileName = "orderbook_%s.txt";
 	
 	private final BotConfig botConfig;
 	private final ConcurrentHashMap<Integer, RLOrder> buys = new ConcurrentHashMap<>();
@@ -34,7 +39,7 @@ public class Orderbook extends Base{
 	private Orderbook(BotConfig botConfig) {
 		super();
 		this.botConfig = botConfig;
-		path = Paths.get("orderbook_" + botConfig.getPair().replaceAll("[/]", "_") + ".txt");
+		path = Paths.get(String.format(fileName, botConfig.getPair().replaceAll("[/]", "_") ));
 		disposables.add(
 		bus.toObservable()
 		.subscribeOn(Schedulers.newThread())
@@ -42,31 +47,35 @@ public class Orderbook extends Base{
 
 			@Override
 			public void onNext(Object o) {
-				if (o instanceof Common.OnAccountOffers){					
-					Common.OnAccountOffers event = (Common.OnAccountOffers) o;
-					event.accOffs.forEach(accOff -> {
-						Boolean isPairMatched = pairMatched(accOff.getOrder());
-						if (isPairMatched == null){
-							return;
-						}
-						push(accOff.getSeq(), isPairMatched, accOff.getOrder());	
-					});
-				}				
-				else if (o instanceof Common.OnLedgerClosed){
+				if (o instanceof Common.OnLedgerClosed){
 					Common.OnLedgerClosed event = (Common.OnLedgerClosed) o;
-					if (event.ledgerEvent.getClosed() % 2 == 0 ){
-						List<RLOrder> sortedSels, sortedBuys;
+					if (event.ledgerEvent.getClosed() % 2 == 0 ){					
+						List<Entry<Integer, RLOrder>> sortedSels, sortedBuys;
 						sortedSels = sortSels();
 						sortedBuys = sortBuys();
-//						dump(event.ledgerEvent.getClosed(), event.ledgerEvent.getValidated(), sortedSels, sortedBuys);
-						dumpWithSeq(event.ledgerEvent.getClosed(), event.ledgerEvent.getValidated());
+						dump(event.ledgerEvent.getClosed(), event.ledgerEvent.getValidated(), sortedSels, sortedBuys);
+//						dumpWithSeq(event.ledgerEvent.getClosed(), event.ledgerEvent.getValidated());
 					}
 				}	
-				else if (o instanceof Common.OnDifference){
-					Common.OnDifference event = (Common.OnDifference) o;
-					event.bas.forEach(ba ->{
-						System.out.println("Orderbook onDifference "  + ba.stringify());		
+				else if (o instanceof Common.OnAccountOffers){					
+					Common.OnAccountOffers event = (Common.OnAccountOffers) o;
+					event.accOffs.forEach(accOff -> {
+						shelve(accOff.getOrder(), accOff.getSeq());
 					});
+				}				
+				else if (o instanceof Common.OnDifference){
+					Common.OnDifference event = (Common.OnDifference) o;			
+					event.bas.forEach(ba ->{
+						shelve(ba.after, ba.befSeq);
+					});
+				}
+				else if (o instanceof Common.OnOfferEdited){
+					Common.OnOfferEdited event = (Common.OnOfferEdited) o;
+					edit(event.ba, event.newSeq);
+				}
+				else if (o instanceof Common.OnOfferCanceled){
+					Common.OnOfferCanceled event = (Common.OnOfferCanceled) o;
+					remove(event.sequence.intValue());
 				}
 			}
 
@@ -82,22 +91,69 @@ public class Orderbook extends Base{
 				
 			}
 			
-		}));
-		
+		}));		
 	}
 	
-	
-	private List<RLOrder> sortBuys(){
-		List<RLOrder> res = new ArrayList<>(buys.values());
-		res.sort((RLOrder o1, RLOrder o2) -> o1.getRate().compareTo(o2.getRate()));
-		return res;
+	private void edit(BefAf ba, UInt32 newSeq){
+		Boolean pairMatched = pairMatched(ba.after);
+		if (pairMatched == null){
+			return;
+		}
+		remove(ba.befSeq.intValue());
+		insert(ba.after, newSeq.intValue(), pairMatched);
 	}
 	
-	private List<RLOrder> sortSels(){
-		List<RLOrder> res = new ArrayList<>(sels.values());
-		res.sort((RLOrder o1, RLOrder o2) -> o2.getRate().compareTo(o1.getRate()));
-		return res;
+	private void shelve(RLOrder after , int seq){
+		Boolean pairMatched = pairMatched(after);
+		if (pairMatched == null){
+			return;
+		}
+		if (after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0){
+			remove(seq);
+			return;
+		}
+		insert(after, seq, pairMatched);
 	}
+
+	private void insert(RLOrder after, int seq, Boolean isAligned){	
+		if (isAligned){
+			buys.put(seq, after);
+		} else {
+			sels.put(seq, after);
+		}
+	}
+	
+	// Because it's map, it's O(1) and idempotent
+	private void remove(int seq){
+		buys.remove(seq);
+		sels.remove(seq);		
+	}
+	
+	private void shelve(RLOrder after, UInt32 seq){
+		shelve(after, seq.intValue());
+	}
+	
+	private List<Entry<Integer, RLOrder>> sortBuys(){
+    Set<Entry<Integer, RLOrder>> entries = buys.entrySet();
+    List<Entry<Integer, RLOrder>> res = new ArrayList<Entry<Integer, RLOrder>>(entries);   
+    Collections.sort(res, Collections.reverseOrder(obMapComparator));
+    return res;
+	}
+	
+	private List<Entry<Integer, RLOrder>> sortSels(){
+    Set<Entry<Integer, RLOrder>> entries = sels.entrySet();
+    List<Entry<Integer, RLOrder>> res = new ArrayList<Entry<Integer, RLOrder>>(entries);   
+    Collections.sort(res, obMapComparator);
+    return res;
+	}
+	
+  public Comparator<Entry<Integer, RLOrder>> obMapComparator = new Comparator<Entry<Integer, RLOrder>>() {
+    
+    @Override
+    public int compare(Entry<Integer, RLOrder> e1, Entry<Integer, RLOrder> e2) {
+    	return e1.getValue().getRate().compareTo(e2.getValue().getRate());
+    }
+  };
 	
 	/** 
 	 * @param in
@@ -113,35 +169,8 @@ public class Orderbook extends Base{
 		return null;
 	}
 	
-	private void dumpWithSeq(int ledgerClosed, int ledgerValidated){
-		StringBuffer sb = new StringBuffer("Ledger closed : ");
-		sb.append(ledgerClosed);
-		sb.append(" ");
-		sb.append("Ledger validated : ");
-		sb.append(ledgerValidated);
-		sb.append("\n\n");
-		sb.append("SELLS\n");
 
-		for (Map.Entry<Integer, RLOrder> entry : sels.entrySet()) {
-			sb.append(entry.getKey());
-			sb.append(orderbookLine(entry.getValue()));		
-			sb.append("\n");
-		}
-		sb.append("BUYS\n");
-		for (Map.Entry<Integer, RLOrder> entry : buys.entrySet()) {
-			sb.append(entry.getKey());
-			sb.append(orderbookLine(entry.getValue()));		
-			sb.append("\n");
-		}
-		byte[] strToBytes = sb.toString().getBytes();	
-    try {
-			Files.write(path, strToBytes);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}	
-	}
-	
-	private void dump(int ledgerClosed, int ledgerValidated, List<RLOrder> sortedSels, List<RLOrder> sortedBuys){
+	private void dump(int ledgerClosed, int ledgerValidated, List<Entry<Integer, RLOrder>> sortedSels, List<Entry<Integer, RLOrder>> sortedBuys){
 		StringBuffer sb = new StringBuffer("Ledger closed : ");
 		sb.append(ledgerClosed);
 		sb.append(" ");
@@ -149,43 +178,38 @@ public class Orderbook extends Base{
 		sb.append(ledgerValidated);
 		sb.append("\n\n");
 		sb.append("SELLS\n");
-    sortedSels.stream().forEach(order ->{
-			sb.append(orderbookLine(order));		
+    sortedSels.stream().forEach(entry ->{
+			sb.append(entry.getValue().getTotalPrice().toText());
+			sb.append(" ");
+			sb.append(entry.getValue().getQuantity());
+			sb.append(" ");
+			sb.append(BigDecimal.ONE.divide(entry.getValue().getRate(), MathContext.DECIMAL32).toPlainString());			
+			sb.append(" ");
+			sb.append(" Seq:");
+			sb.append(entry.getKey());
 			sb.append("\n");
 		});    
+		sb.append("\n");
 		sb.append("BUYS\n");
-		buys.values().stream().forEach(order -> {
-			sb.append(orderbookLine(order));		
+		sortedBuys.stream().forEach(entry -> {
+			sb.append(entry.getValue().getQuantity().toText());
+			sb.append(" ");
+			sb.append(entry.getValue().getTotalPrice());
+			sb.append(" ");
+			sb.append(entry.getValue().getRate().toPlainString());
+			sb.append(" ");
+			sb.append(" Seq:");
+			sb.append(entry.getKey());
 			sb.append("\n");
-		});
+		});		
 		byte[] strToBytes = sb.toString().getBytes();	
     try {
 			Files.write(path, strToBytes);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-    }
+  }
 
-	private String orderbookLine(RLOrder order){
-		StringBuffer sb = new StringBuffer(order.getQuantity().toText());
-		sb.append(" ");
-		sb.append(order.getTotalPrice());
-		sb.append(" ");
-		sb.append(order.getRate().toPlainString());
-		return sb.toString();
-	}
-	
-	private void push (int seq, boolean isAligned, RLOrder in){
-		if (isAligned){
-			buys.put(seq, in);
-		}
-		else {
-			sels.put(seq, in.reverse());
-		}		
-	}
-
-
-	
 	public static Orderbook newInstance(BotConfig botConfig){
 		Orderbook res = new Orderbook(botConfig);
 		return res;
