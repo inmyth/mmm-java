@@ -50,7 +50,7 @@ public class State extends Base {
 	private final AtomicBoolean flagWaitLedger = new AtomicBoolean(false);
 	private RxBus bus = RxBusProvider.getInstance();
 	
-  private Subject<Boolean> seqSyncObs = PublishSubject.create();  
+  private Subject<Boolean> sequenceRefreshObs = PublishSubject.create();  
 
 	public State(Config config) {
 		super(MyLogger.getLogger(Common.class.getName()), config);
@@ -106,7 +106,7 @@ public class State extends Base {
 					pending.remove(event.seq);
 				}
 				else if (o instanceof RequestSequenceSync){
-					seqSyncObs.onNext(flagWaitSeq.compareAndSet(false, true));					
+					sequenceRefreshObs.onNext(flagWaitSeq.compareAndSet(false, true));					
 				}
 				else if (o instanceof RequestWaitNextLedger){
 					flagWaitLedger.set(true);					
@@ -131,7 +131,7 @@ public class State extends Base {
 			}
 		});		
 		
-		seqSyncObs.subscribe(flag -> {
+		sequenceRefreshObs.subscribe(flag -> {
 			if(flag){
 				bus.send(new WebSocketClient.WSRequestSendText(AccountInfo.of(config).stringify()));		
 			}	
