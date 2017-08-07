@@ -202,7 +202,7 @@ public class Common extends Base {
 		if (txType.equals("OfferCancel")) {
 			if (txn.account().address.equals(this.config.getCredentials().getAddress())){
 				log("CANCELED Account: Seq: " + previousSeq + "  prevTxnId: " + previousTxnId);
-				bus.send(new OnOfferCanceled(txn.account(), previousSeq, previousTxnId));
+				bus.send(new OnOfferCanceled(txn.account(), previousSeq, txn.sequence(), previousTxnId));
 			}
 			return;
 		}
@@ -221,7 +221,7 @@ public class Common extends Base {
 					if (ocAccId.address.equals(this.config.getCredentials().getAddress())){
 						log("OFFER EDITED " + previousTxnId + " to " + txn.hash());
 						BefAf ba = RLOrder.toBA(offerCreated.takerPays(), offerCreated.takerGets(), txn.get(Amount.TakerPays), txn.get(Amount.TakerGets), previousSeq);
-						bus.send(new OnOfferEdited(ocAccId, txnHash, previousTxnId, txn.sequence(), ba));	
+						bus.send(new OnOfferEdited(ocAccId, txnHash, previousTxnId, previousSeq, txn.sequence(), ba));	
 					}
 				}
 			}		
@@ -434,15 +434,17 @@ public class Common extends Base {
 	}
 
 	public static class OnOfferCanceled {
-		public AccountID account;
-		public Hash256 previousTxnId;
-		public UInt32 sequence;
+		public final AccountID account;
+		public final Hash256 previousTxnId;
+		public final UInt32 prevSeq;
+		public final UInt32 newSeq;
 
-		public OnOfferCanceled(AccountID account, UInt32 sequence, Hash256 previousTxnId) {
+		public OnOfferCanceled(AccountID account, UInt32 prevSeq, UInt32 newSeq, Hash256 previousTxnId) {
 			super();
 			this.account = account;
 			this.previousTxnId = previousTxnId;
-			this.sequence = sequence;
+			this.prevSeq = prevSeq;
+			this.newSeq = newSeq;
 		}
 	}
 
@@ -478,14 +480,16 @@ public class Common extends Base {
 		public final Hash256 newHash;
 		public final Hash256 previousTxnId;
 		public final UInt32 newSeq;
+		public final UInt32 prevSeq;
 		public final BefAf ba;
 		
-		public OnOfferEdited(AccountID ocAccount, Hash256 newHash, Hash256 previousTxnId, UInt32 newSeq, BefAf ba) {
+		public OnOfferEdited(AccountID ocAccount, Hash256 newHash, Hash256 previousTxnId, UInt32 prevSeq, UInt32 newSeq, BefAf ba) {
 			super();
 			this.ocAccount 			= ocAccount;
 			this.newHash 				= newHash;
 			this.previousTxnId 	= previousTxnId;
 			this.newSeq 				= newSeq;
+			this.prevSeq 				= prevSeq;
 			this.ba 						= ba;
 		}		
 	}

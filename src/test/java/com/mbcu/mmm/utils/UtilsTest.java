@@ -27,6 +27,7 @@ import com.ripple.core.coretypes.AccountID;
 import com.ripple.core.coretypes.Amount;
 import com.ripple.core.coretypes.Currency;
 
+import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 import io.reactivex.subjects.Subject;
 
@@ -37,6 +38,24 @@ public class UtilsTest {
 
   private Subject<Boolean> seqSyncObs = PublishSubject.create();  
   
+  
+  @Test
+  public void testBlockingObs(){
+    Subject<Object> pendingOrdersObs = PublishSubject.create();  
+  	System.out.println("a");
+
+    pendingOrdersObs
+    .subscribeOn(Schedulers.io())
+    .subscribe(o -> {
+    	System.out.println("b");
+    	System.out.println("c");
+
+    	
+    });
+  	System.out.println("d");
+
+  	pendingOrdersObs.onNext(new Object());
+  }
   
   @Test
   public void testStreamFilter(){

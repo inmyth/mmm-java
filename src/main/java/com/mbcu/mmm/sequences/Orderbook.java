@@ -13,13 +13,18 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import com.mbcu.mmm.models.Base;
 import com.mbcu.mmm.models.internal.BefAf;
 import com.mbcu.mmm.models.internal.BotConfig;
 import com.mbcu.mmm.models.internal.RLOrder;
+import com.mbcu.mmm.models.internal.RLOrder.Direction;
 import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
+import com.mbcu.mmm.sequences.state.State;
+import com.mbcu.mmm.sequences.state.State.BroadcastTxcRLOrder;
 import com.ripple.core.coretypes.uint.UInt32;
 
 import io.reactivex.disposables.CompositeDisposable;
@@ -54,6 +59,7 @@ public class Orderbook extends Base{
 						sortedSels = sortSels();
 						sortedBuys = sortBuys();
 						dump(event.ledgerEvent.getClosed(), event.ledgerEvent.getValidated(), sortedSels, sortedBuys);
+						requestPendings();
 //						dumpWithSeq(event.ledgerEvent.getClosed(), event.ledgerEvent.getValidated());
 					}
 				}	
@@ -75,24 +81,58 @@ public class Orderbook extends Base{
 				}
 				else if (o instanceof Common.OnOfferCanceled){
 					Common.OnOfferCanceled event = (Common.OnOfferCanceled) o;
-					remove(event.sequence.intValue());
+					remove(event.newSeq.intValue());
+				}
+				else if (o instanceof State.BroadcastTxcRLOrder){
+					BroadcastTxcRLOrder event = (BroadcastTxcRLOrder) o;
+					if (event.pair.equals(botConfig.getPair())){
+						balancer(event.outbounds);						
+					}
+					
 				}
 			}
 
 			@Override
 			public void onError(Throwable e) {
-				// TODO Auto-generated method stub
-				
+				// TODO Auto-generated method stub				
 			}
 
 			@Override
 			public void onComplete() {
-				// TODO Auto-generated method stub
-				
+				// TODO Auto-generated method stub				
 			}
 			
 		}));		
 	}
+	
+	private void requestPendings(){
+		bus.send(new Balancer.OnRequestNonOrderbookRLOrder(botConfig.getPair()));
+	}
+	
+	
+	private void balancer(List<RLOrder> pendings){			
+		BigDecimal sumBuys  = sum(pendings.stream(), Direction.BUY);	
+		BigDecimal sumSels  = sum(pendings.stream(), Direction.SELL);
+		
+		System.out.println("sumbuys " + sumBuys.toPlainString());
+		System.out.println("sumsels " + sumSels.toPlainString());	
+	}
+	
+	private BigDecimal sum(Stream<RLOrder> pendings, Direction direction){		
+		Predicate<RLOrder> pred;
+		Stream<RLOrder> orderbook;
+		if (direction == Direction.BUY){
+			pred			= rlOrder -> rlOrder.getPair().equals(botConfig.getPair());
+			orderbook = buys.values().stream();
+		} else {
+			pred 			= rlOrder -> rlOrder.getReversePair().equals(botConfig.getPair());
+			orderbook = sels.values().stream();
+		}				
+		return Stream.concat(pendings.filter(pred), orderbook)	
+		.map(rlOrder -> rlOrder.getQuantity().value())
+		.reduce(BigDecimal.ZERO, BigDecimal::add);
+	}
+	
 	
 	private void edit(BefAf ba, UInt32 newSeq){
 		Boolean pairMatched = pairMatched(ba.after);

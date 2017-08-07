@@ -178,6 +178,9 @@ TODOS
 - [] remove if sum is more than config
 - [] create if sum is less than config
 - [] cancel order mechanism
+- [] edit updates sequence
+- [] cancel updates sequence
+- [] compare orderbook sum with setting's sum
 
 ## NOTES
 RESPONSE
