@@ -52,6 +52,9 @@ If false, the bot will only counter any order that fully consumes our order.
 
 **Version History** 
 
+v.025 
+- Fixed no TakerGets error. This should be ignored https://github.com/ripple/rippled/issues/2199
+
 v.024
 - Orderbook can be built from stream events, tested on Order canceled, edited, and difference
 
@@ -181,6 +184,7 @@ TODOS
 - [] edit updates sequence
 - [] cancel updates sequence
 - [] compare orderbook sum with setting's sum
+- [x] (bug) no TaketGets in PreviousFields  . Create null checker to ignore such offer.
 
 ## NOTES
 RESPONSE

@@ -54,18 +54,18 @@ public class State extends Base {
 	
   private Subject<Boolean> sequenceRefreshObs = PublishSubject.create();  
 
-  private void mock(){
-  	List<RLOrder> a = RLOrder.buildSeed(config.getBotConfigMap().get("XRP/JPY.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"));
-  	for (int i = 0; i < a.size(); i++){
-  		pending.put(i, Txc.newInstance(a.get(i), null, i, i + DEFAULT_MAX_LEDGER_GAP));
-  	}
-  	a.forEach(aa -> {qWait.add(aa);});  	
-  }
+//  private void mock(){
+//  	List<RLOrder> a = RLOrder.buildSeed(config.getBotConfigMap().get("XRP/JPY.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"));
+//  	for (int i = 0; i < a.size(); i++){
+//  		pending.put(i, Txc.newInstance(a.get(i), null, i, i + DEFAULT_MAX_LEDGER_GAP));
+//  	}
+//  	a.forEach(aa -> {qWait.add(aa);});  	
+//  }
   
 	public State(Config config) {
 		super(MyLogger.getLogger(Common.class.getName()), config);
 		
-		mock();
+//		mock();
 		bus.toObservable()
 		.subscribeOn(Schedulers.newThread())
 		.subscribe(new Observer<Object>() {
@@ -81,53 +81,53 @@ public class State extends Base {
 					setSequence(event.sequence);
 					pending.remove(event.sequence.intValue());					
 				}
-//				else if (o instanceof Common.OnOfferEdited){
-//					OnOfferEdited event = (OnOfferEdited) o;
-//					setSequence(event.newSeq);
-//				}
-//				else if (o instanceof Common.OnOfferCanceled){
-//					OnOfferCanceled event = (OnOfferCanceled) o;
-//					setSequence(event.newSeq);
-//				}			
-//				else if (o instanceof OnOrderReady){
-//					OnOrderReady event = (OnOrderReady) o;
-//					if (event.from != null){
-//						log("retry from " + event.from + " " + event.memo);
-//					}
-//					if (flagWaitSeq.get() || flagWaitLedger.get()){
-//						qWait.add(event.outbound);												
-//					}else {
-//						process(event.outbound);						
-//					}	
-//				}			
+				else if (o instanceof Common.OnOfferEdited){
+					OnOfferEdited event = (OnOfferEdited) o;
+					setSequence(event.newSeq);
+				}
+				else if (o instanceof Common.OnOfferCanceled){
+					OnOfferCanceled event = (OnOfferCanceled) o;
+					setSequence(event.newSeq);
+				}			
+				else if (o instanceof OnOrderReady){
+					OnOrderReady event = (OnOrderReady) o;
+					if (event.from != null){
+						log("retry from " + event.from + " " + event.memo);
+					}
+					if (flagWaitSeq.get() || flagWaitLedger.get()){
+						qWait.add(event.outbound);												
+					}else {
+						process(event.outbound);						
+					}	
+				}			
 				else if (o instanceof Common.OnLedgerClosed){
 					OnLedgerClosed event = (OnLedgerClosed) o;		
 					log(event.ledgerEvent.toString());
 					setLedgerIndex(event.ledgerEvent);	
 					flagWaitLedger.set(false);
-//					if (!flagWaitLedger.get() && !flagWaitSeq.get()){
-//						drain();
-//					}										
+					if (!flagWaitLedger.get() && !flagWaitSeq.get()){
+						drain();
+					}										
 				}
-//				else if (o instanceof Common.OnAccountInfoSequence){
-//					OnAccountInfoSequence event = (OnAccountInfoSequence) o;
-//					log(String.format("New Sequence %d", event.sequence.intValue()));
-//					setSequence(event.sequence);
-//					flagWaitSeq.set(false);
-//					if (!flagWaitLedger.get() && !flagWaitSeq.get()){
-//						drain();
-//					}									
-//				}
-//				else if (o instanceof RequestRemove){
-//					RequestRemove event = (RequestRemove) o;
-//					pending.remove(event.seq);
-//				}
-//				else if (o instanceof RequestSequenceSync){
-//					sequenceRefreshObs.onNext(flagWaitSeq.compareAndSet(false, true));					
-//				}
-//				else if (o instanceof RequestWaitNextLedger){
-//					flagWaitLedger.set(true);					
-//				}
+				else if (o instanceof Common.OnAccountInfoSequence){
+					OnAccountInfoSequence event = (OnAccountInfoSequence) o;
+					log(String.format("New Sequence %d", event.sequence.intValue()));
+					setSequence(event.sequence);
+					flagWaitSeq.set(false);
+					if (!flagWaitLedger.get() && !flagWaitSeq.get()){
+						drain();
+					}									
+				}
+				else if (o instanceof RequestRemove){
+					RequestRemove event = (RequestRemove) o;
+					pending.remove(event.seq);
+				}
+				else if (o instanceof RequestSequenceSync){
+					sequenceRefreshObs.onNext(flagWaitSeq.compareAndSet(false, true));					
+				}
+				else if (o instanceof RequestWaitNextLedger){
+					flagWaitLedger.set(true);					
+				}
 				else if (o instanceof Balancer.OnRequestNonOrderbookRLOrder){
 					OnRequestNonOrderbookRLOrder event = (OnRequestNonOrderbookRLOrder) o;
 					List<RLOrder> outbounds = Stream

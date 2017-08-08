@@ -114,6 +114,7 @@ public class Orderbook extends Base{
 		BigDecimal sumBuys  = sum(pendings.stream(), Direction.BUY);	
 		BigDecimal sumSels  = sum(pendings.stream(), Direction.SELL);
 		
+		
 		System.out.println("sumbuys " + sumBuys.toPlainString());
 		System.out.println("sumsels " + sumSels.toPlainString());	
 	}

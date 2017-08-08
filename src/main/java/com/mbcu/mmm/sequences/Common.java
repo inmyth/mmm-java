@@ -229,7 +229,7 @@ public class Common extends Base {
 				FilterAutobridged fa = new FilterAutobridged();
 				for (Offer offer : offersExecuteds) {
 					STObject finalFields = offer.get(STObject.FinalFields);
-					if (finalFields != null) {
+					if (finalFields != null && isTakersExist(finalFields)) {
 						fa.push(offer);
 					}
 				}
@@ -240,11 +240,11 @@ public class Common extends Base {
 				else{
 					ors.add(RLOrder.toBA(txn.get(Amount.TakerPays), txn.get(Amount.TakerGets), offerCreated.takerPays(), offerCreated.takerGets(), txnSequence));
 				}
-			}else{
+			} else {
 				for (Offer offer : offersExecuteds) {
 					STObject finalFields 	= offer.get(STObject.FinalFields);
 					UInt32 affectedSeq 		= offer.get(UInt32.Sequence);
-					if (finalFields != null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
+					if (finalFields != null && isTakersExist(finalFields) && offer.account().address.equals(this.config.getCredentials().getAddress())) {
 						oes.add(RLOrder.fromOfferExecuted(offer, true));						
 						ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), finalFields.get(Amount.TakerPays), finalFields.get(Amount.TakerGets), affectedSeq));						
 					}
@@ -260,7 +260,7 @@ public class Common extends Base {
 				STObject finalFields = offer.get(STObject.FinalFields);
 				UInt32 affectedSeq 		= offer.get(UInt32.Sequence);
 
-				if (finalFields != null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
+				if (finalFields != null && isTakersExist(finalFields) && offer.account().address.equals(this.config.getCredentials().getAddress())) {
 					oes.add(RLOrder.fromOfferExecuted(offer, true));
 					if (offer.get(STObject.FinalFields).get(Amount.TakerGets).value().compareTo(BigDecimal.ZERO) == 0){
 						ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), finalFields.get(Amount.TakerPays), finalFields.get(Amount.TakerGets), affectedSeq));
@@ -433,6 +433,12 @@ public class Common extends Base {
 
 	}
 
+	public static boolean isTakersExist(STObject finalFields){
+    Amount testTakerPays = finalFields.get(Amount.TakerPays);
+    Amount testTakerGets = finalFields.get(Amount.TakerGets);
+		return testTakerGets != null && testTakerPays != null;		
+	}
+	
 	public static class OnOfferCanceled {
 		public final AccountID account;
 		public final Hash256 previousTxnId;
