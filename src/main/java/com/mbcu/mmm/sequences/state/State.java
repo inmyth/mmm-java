@@ -53,19 +53,10 @@ public class State extends Base {
 	private RxBus bus = RxBusProvider.getInstance();
 	
   private Subject<Boolean> sequenceRefreshObs = PublishSubject.create();  
-
-//  private void mock(){
-//  	List<RLOrder> a = RLOrder.buildSeed(config.getBotConfigMap().get("XRP/JPY.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"));
-//  	for (int i = 0; i < a.size(); i++){
-//  		pending.put(i, Txc.newInstance(a.get(i), null, i, i + DEFAULT_MAX_LEDGER_GAP));
-//  	}
-//  	a.forEach(aa -> {qWait.add(aa);});  	
-//  }
-  
+ 
 	public State(Config config) {
 		super(MyLogger.getLogger(Common.class.getName()), config);
 		
-//		mock();
 		bus.toObservable()
 		.subscribeOn(Schedulers.newThread())
 		.subscribe(new Observer<Object>() {

@@ -52,8 +52,12 @@ If false, the bot will only counter any order that fully consumes our order.
 
 **Version History** 
 
+v.026 
+- Cleaned up pos TakerGets error. 
+- Disabled Balancer
+
 v.025 
-- Fixed no TakerGets error. This should be ignored https://github.com/ripple/rippled/issues/2199
+- Fixed no TakerGets error. This offer should be ignored https://github.com/ripple/rippled/issues/2199
 
 v.024
 - Orderbook can be built from stream events, tested on Order canceled, edited, and difference

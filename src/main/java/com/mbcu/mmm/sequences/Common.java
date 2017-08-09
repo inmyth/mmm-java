@@ -23,7 +23,6 @@ import com.ripple.core.coretypes.STObject;
 import com.ripple.core.coretypes.hash.Hash256;
 import com.ripple.core.coretypes.uint.UInt32;
 import com.ripple.core.fields.Field;
-import com.ripple.core.fields.UInt32Field;
 import com.ripple.core.serialized.enums.EngineResult;
 import com.ripple.core.types.known.sle.LedgerEntry;
 import com.ripple.core.types.known.sle.entries.Offer;
@@ -392,7 +391,6 @@ public class Common extends Base {
 		deletedNodes.forEach(dn -> {
 			LedgerEntry le = (LedgerEntry) dn.nodeAsFinal();
 			STObject finalFields = dn.get(STObject.FinalFields);
-
 			Hash256 previousTxnId = le.get(Hash256.PreviousTxnID);
 			if (previousTxnId != null) {
 				System.out.println(previousTxnId.toString());
