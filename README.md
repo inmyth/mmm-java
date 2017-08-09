@@ -52,8 +52,11 @@ If false, the bot will only counter any order that fully consumes our order.
 
 **Version History** 
 
+v.027
+- Made ter to behave like tesSuccess
+
 v.026 
-- Cleaned up pos TakerGets error. 
+- Cleaned up post TakerGets error. 
 - Disabled Balancer
 
 v.025 
@@ -189,6 +192,7 @@ TODOS
 - [] cancel updates sequence
 - [] compare orderbook sum with setting's sum
 - [x] (bug) no TaketGets in PreviousFields  . Create null checker to ignore such offer.
+- [x] ter in Txc sets isTesSuccess true because they have the same behavior.
 
 ## NOTES
 RESPONSE

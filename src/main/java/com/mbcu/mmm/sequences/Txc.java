@@ -78,10 +78,13 @@ public class Txc extends Base {
 					}
 					
 					if (er.startsWith("ter")) {
-//						this includes terQUEUED and terPRE_SEQ and behave like tesSUCCESS
-//						https://www.xrpchat.com/topic/2654-transaction-failed-with-terpre_seq-but-still-executed/?page=2
-//						disposables.dispose();
-//						bus.send(new RequestRemove(seq));
+//					this includes terQUEUED and terPRE_SEQ and behave like tesSUCCESS
+//					https://www.xrpchat.com/topic/2654-transaction-failed-with-terpre_seq-but-still-executed/?page=2
+//					disposables.dispose();
+//					bus.send(new RequestRemove(seq));
+						if (event.hash.compareTo(hash) == 0){
+							isTesSuccess = true;
+						}
 						return;
 					}					
 //					if (er.equals(EngineResult.tefALREADY.toString())){
@@ -94,7 +97,7 @@ public class Txc extends Base {
 						disposables.dispose();
 						bus.send(new State.RequestSequenceSync());
 						bus.send(new State.RequestRemove(seq));
-						bus.send(new State.OnOrderReady(outbound, hash, " retry terPreseq or Pastseq"));
+						bus.send(new State.OnOrderReady(outbound, hash, " retry tefPAST_SEQ"));
 						return;
 					}
 				
@@ -109,7 +112,7 @@ public class Txc extends Base {
 					}
 					disposables.dispose();
 					bus.send(new State.RequestRemove(seq));
-					bus.send(new State.OnOrderReady(outbound, hash, "retry " + er));
+//					bus.send(new State.OnOrderReady(outbound, hash, "retry " + er));
 				}	
 				
 			}
