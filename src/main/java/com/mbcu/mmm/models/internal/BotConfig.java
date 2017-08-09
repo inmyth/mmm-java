@@ -31,7 +31,7 @@ public class BotConfig {
 
 	transient Amount base;
 	transient Amount quote;
-	transient BigDecimal totalBuyQuantity, totalSelQuantity; 
+	transient BigDecimal totalBuyQty, totalSelQty; 
 	transient List<String> orderbookReqs;
 
 	public static HashMap<String, BotConfig> buildMap(Credentials credentials, ArrayList<BotConfig> bots)  {
@@ -41,8 +41,8 @@ public class BotConfig {
 			bot.base 							= fromDotForm(pair[0]);
 			bot.quote 						= fromDotForm(pair[1]);	
 			bot.orderbookReqs 		= BookOffers.buildRequest(credentials.address, bot);
-			bot.totalBuyQuantity 	= buildTotalQuantity(bot.buyGridLevels, bot.buyOrderQuantity);
-			bot.totalSelQuantity	= buildTotalQuantity(bot.sellGridLevels, bot.sellOrderQuantity);
+			bot.totalBuyQty 	= buildTotalQuantity(bot.buyGridLevels, bot.buyOrderQuantity);
+			bot.totalSelQty	= buildTotalQuantity(bot.sellGridLevels, bot.sellOrderQuantity);
 			res.put(bot.getPair(), bot);
 		}
 		return res;
@@ -143,6 +143,14 @@ public class BotConfig {
 		return quote;
 	}
 
+	public BigDecimal getTotalBuyQty() {
+		return totalBuyQty;
+	}
+	
+	public BigDecimal getTotalSelQty() {
+		return totalSelQty;
+	}
+	
 	public Queue<Integer> getLevels(int max){
 		Queue<Integer> res = new LinkedList<>();
 		IntStream.range(1, max + 1).forEach(a -> {res.add(a);});

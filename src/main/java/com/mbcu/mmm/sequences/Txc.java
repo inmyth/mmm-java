@@ -8,8 +8,8 @@ import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.sequences.Common.OnLedgerClosed;
 import com.mbcu.mmm.sequences.Common.OnOfferCreate;
-import com.mbcu.mmm.sequences.Common.OnResponseFail;
-import com.mbcu.mmm.sequences.Common.OnResponseTesSuccess;
+import com.mbcu.mmm.sequences.Common.OnRPCTesFail;
+import com.mbcu.mmm.sequences.Common.OnRPCTesSuccess;
 import com.mbcu.mmm.sequences.state.State;
 import com.mbcu.mmm.utils.MyLogger;
 import com.ripple.core.coretypes.hash.Hash256;
@@ -58,14 +58,14 @@ public class Txc extends Base {
 						bus.send(new State.OnOrderReady(outbound, hash, " MaxLedger passed"));	
 					}
 				} 
-				else if (o instanceof Common.OnResponseTesSuccess){
-					OnResponseTesSuccess event = (OnResponseTesSuccess) o;
+				else if (o instanceof Common.OnRPCTesSuccess){
+					OnRPCTesSuccess event = (OnRPCTesSuccess) o;
 					if (event.hash.compareTo(hash) == 0){
 						isTesSuccess = true;
 					}
 				}
-				else if (o instanceof Common.OnResponseFail) {
-					OnResponseFail event = (OnResponseFail) o;
+				else if (o instanceof Common.OnRPCTesFail) {
+					OnRPCTesFail event = (OnRPCTesFail) o;
 					if (event.sequence.intValue() != seq || event.hash.compareTo(hash) != 0){
 						return;
 					}

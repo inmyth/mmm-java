@@ -125,10 +125,10 @@ public class Common extends Base {
 				UInt32 sequence = new UInt32(result.getJSONObject("tx_json").getInt("Sequence"));
 				log(engResult + " " +  accId + " " + hash + " " + sequence);
 				if (engResult.equals(EngineResult.tesSUCCESS.toString())){
-					bus.send(new OnResponseTesSuccess(accId, hash, sequence));
+					bus.send(new OnRPCTesSuccess(accId, hash, sequence));
 				}
 				else{				
-					bus.send(new OnResponseFail(engResult, accId, hash, sequence));		
+					bus.send(new OnRPCTesFail(engResult, accId, hash, sequence));		
 				}	
 			}		
 		}
@@ -516,12 +516,12 @@ public class Common extends Base {
 		}	
 	}
 	
-	public static class OnResponseTesSuccess{
+	public static class OnRPCTesSuccess{
 		public AccountID accountID;
 		public Hash256 hash;
 		public UInt32 sequence;
 		
-		public OnResponseTesSuccess(AccountID accountID, Hash256 hash, UInt32 sequence) {
+		public OnRPCTesSuccess(AccountID accountID, Hash256 hash, UInt32 sequence) {
 			super();
 			this.accountID = accountID;
 			this.hash = hash;
@@ -529,12 +529,12 @@ public class Common extends Base {
 		}
 	}
 	
-	public static class OnResponseFail{
+	public static class OnRPCTesFail{
 		public String engineResult;
 		public AccountID accountID;
 		public Hash256 hash;
 		public UInt32 sequence;
-		public OnResponseFail(String engineResult, AccountID accountID, Hash256 hash, UInt32 sequence) {
+		public OnRPCTesFail(String engineResult, AccountID accountID, Hash256 hash, UInt32 sequence) {
 			super();
 			this.engineResult = engineResult;
 			this.accountID = accountID;

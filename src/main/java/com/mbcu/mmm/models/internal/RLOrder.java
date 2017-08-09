@@ -16,9 +16,11 @@ import com.ripple.core.coretypes.Amount;
 import com.ripple.core.coretypes.Currency;
 import com.ripple.core.coretypes.STObject;
 import com.ripple.core.coretypes.uint.UInt32;
+import com.ripple.core.fields.Field;
 import com.ripple.core.types.known.sle.entries.Offer;
 import com.ripple.core.types.known.tx.Transaction;
 import com.ripple.core.types.known.tx.signed.SignedTransaction;
+import com.ripple.core.types.known.tx.txns.OfferCancel;
 import com.ripple.core.types.known.tx.txns.OfferCreate;
 
 import io.reactivex.annotations.Nullable;
@@ -278,7 +280,7 @@ public final class RLOrder extends Base{
 		return offer.directoryAskQuality().stripTrailingZeros();
 	}
 	
-	public SignedTransaction sign(Config config, int sequence, int maxLedger, BigDecimal fees){	
+	public SignedTransaction signOfferCreate(Config config, int sequence, int maxLedger, BigDecimal fees){	
 		OfferCreate offerCreate = new OfferCreate();
 		if (this.direction.equals(Direction.BUY.text())){
 			offerCreate.takerGets(clearXRPIssuer(totalPrice));
@@ -295,6 +297,18 @@ public final class RLOrder extends Base{
 		offerCreate.account(AccountID.fromAddress(config.getCredentials().getAddress()));
 		SignedTransaction signed = offerCreate.sign(config.getCredentials().getSecret());
 		return signed;	
+	}
+	
+	public static SignedTransaction signOfferCancel(Config config, int seq, int newSeq, int maxLedger, BigDecimal fees){
+		OfferCancel res = new OfferCancel();
+		res.put(Field.OfferSequence, new UInt32(String.valueOf(seq)));
+		res.sequence(new UInt32(String.valueOf(seq)));
+		res.fee(new Amount(fees));
+		res.lastLedgerSequence(new UInt32(String.valueOf(maxLedger)));
+		res.account(AccountID.fromAddress(config.getCredentials().getAddress()));
+
+		SignedTransaction signed = res.sign(config.getCredentials().getSecret());
+		return signed;
 	}
 	
 	private static Amount clearXRPIssuer(Amount in){		

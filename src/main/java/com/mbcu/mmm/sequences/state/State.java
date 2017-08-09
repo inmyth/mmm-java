@@ -48,6 +48,7 @@ public class State extends Base {
 	private final AtomicInteger sequence = new AtomicInteger(0);
 	private final ConcurrentHashMap<Integer, Txc> pending = new ConcurrentHashMap<>();
 	private final ConcurrentLinkedQueue<RLOrder> qWait = new ConcurrentLinkedQueue<>();
+	private final ConcurrentLinkedQueue<Integer> cancels = new ConcurrentLinkedQueue<>();
 	private final AtomicBoolean flagWaitSeq = new AtomicBoolean(false);
 	private final AtomicBoolean flagWaitLedger = new AtomicBoolean(false);
 	private RxBus bus = RxBusProvider.getInstance();
@@ -185,7 +186,7 @@ public class State extends Base {
 	
 
 	private SignedTransaction sign(RLOrder order, int seq, int maxLedger, BigDecimal fees){
-		SignedTransaction signed = order.sign(config, seq, maxLedger, fees);
+		SignedTransaction signed = order.signOfferCreate(config, seq, maxLedger, fees);
 		return signed;
 	}
 	
@@ -241,5 +242,14 @@ public class State extends Base {
 			this.outbounds = outbounds;
 			this.pair = pair;
 		}
+	}
+	
+	public static class RequestOrderCancel {
+		public final int seq;
+
+		public RequestOrderCancel(int seq) {
+			super();
+			this.seq = seq;
+		}	
 	}
 }

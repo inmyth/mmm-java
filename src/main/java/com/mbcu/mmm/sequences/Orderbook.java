@@ -114,10 +114,22 @@ public class Orderbook extends Base{
 		BigDecimal sumBuys  = sum(pendings.stream(), Direction.BUY);	
 		BigDecimal sumSels  = sum(pendings.stream(), Direction.SELL);
 		
+		int compare = sumBuys.compareTo(botConfig.getTotalBuyQty());
+		
+		if (compare < 0){
+			
+		} else if (compare > 0){
+			int levels = sumBuys.subtract(botConfig.getTotalBuyQty()).divide(botConfig.getBuyOrderQuantity(), MathContext.DECIMAL64).intValue();
+			levels = Math.abs(levels);
+			
+		}
 		
 		System.out.println("sumbuys " + sumBuys.toPlainString());
 		System.out.println("sumsels " + sumSels.toPlainString());	
 	}
+	
+	
+	
 	
 	private BigDecimal sum(Stream<RLOrder> pendings, Direction direction){		
 		Predicate<RLOrder> pred;
