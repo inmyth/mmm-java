@@ -54,8 +54,10 @@ public class Txc extends Base {
 					OnLedgerClosed event = (OnLedgerClosed) o;
 					if (isTesSuccess && event.ledgerEvent.getValidated() > maxLedger){ // failed to enter ledger
 						disposables.dispose();
+						bus.send(new State.RequestSequenceSync());
 						bus.send(new State.RequestRemove(seq));
 						bus.send(new State.OnOrderReady(outbound, hash, " MaxLedger passed"));	
+						return;
 					}
 				} 
 				else if (o instanceof Common.OnRPCTesSuccess){
@@ -82,9 +84,7 @@ public class Txc extends Base {
 //					https://www.xrpchat.com/topic/2654-transaction-failed-with-terpre_seq-but-still-executed/?page=2
 //					disposables.dispose();
 //					bus.send(new RequestRemove(seq));
-						if (event.hash.compareTo(hash) == 0){
-							isTesSuccess = true;
-						}
+						isTesSuccess = true;							
 						return;
 					}					
 //					if (er.equals(EngineResult.tefALREADY.toString())){

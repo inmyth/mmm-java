@@ -52,6 +52,12 @@ If false, the bot will only counter any order that fully consumes our order.
 
 **Version History** 
 
+v.029
+- Orderbook sum modified for sells. Need to check
+
+v.028
+- Made MaxLedger to call sequence sync, otherwise it will loop into terPreSeqs. 
+
 v.027
 - Made ter to behave like tesSuccess
 
@@ -193,6 +199,9 @@ TODOS
 - [] compare orderbook sum with setting's sum
 - [x] (bug) no TaketGets in PreviousFields  . Create null checker to ignore such offer.
 - [x] ter in Txc sets isTesSuccess true because they have the same behavior.
+- [x] as ter behaves like tesSUCCESS then MaxLedger passed should refresh sequence, otherwise it will go into terPastSeq loop. 
+- [] orderbook sum doesn't return the right sum
+
 
 ## NOTES
 RESPONSE

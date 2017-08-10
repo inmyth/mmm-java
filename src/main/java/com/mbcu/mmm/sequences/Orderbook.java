@@ -13,10 +13,10 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import com.mbcu.mmm.models.Base;
 import com.mbcu.mmm.models.internal.BefAf;
 import com.mbcu.mmm.models.internal.BotConfig;
 import com.mbcu.mmm.models.internal.RLOrder;
@@ -25,6 +25,7 @@ import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.sequences.state.State;
 import com.mbcu.mmm.sequences.state.State.BroadcastTxcRLOrder;
+import com.mbcu.mmm.utils.MyLogger;
 import com.ripple.core.coretypes.uint.UInt32;
 
 import io.reactivex.disposables.CompositeDisposable;
@@ -42,7 +43,7 @@ public class Orderbook extends Base{
   private final Path path;
 
 	private Orderbook(BotConfig botConfig) {
-		super();
+		super(MyLogger.getLogger(String.format(Txc.class.getName())), null);
 		this.botConfig = botConfig;
 		path = Paths.get(String.format(fileName, botConfig.getPair().replaceAll("[/]", "_") ));
 		disposables.add(
@@ -87,8 +88,7 @@ public class Orderbook extends Base{
 					BroadcastTxcRLOrder event = (BroadcastTxcRLOrder) o;
 					if (event.pair.equals(botConfig.getPair())){
 						balancer(event.outbounds);						
-					}
-					
+					}					
 				}
 			}
 
@@ -124,26 +124,52 @@ public class Orderbook extends Base{
 			
 		}
 		
-		System.out.println("sumbuys " + sumBuys.toPlainString());
-		System.out.println("sumsels " + sumSels.toPlainString());	
+		log(printLog(sumBuys, sumSels, count(pendings, Direction.BUY), count(pendings, Direction.SELL)));
 	}
 	
+	private String printLog(BigDecimal sumBuys, BigDecimal sumSels, int countBuys, int countSels){
+		StringBuffer res = new StringBuffer("\nOrderbook ");
+		res.append(botConfig.getPair());
+		res.append("\nBUYS : ");
+		res.append("n: ");
+		res.append(countBuys);
+		res.append(" totalQty ");
+		res.append(sumBuys.toPlainString());
+		res.append("\nSELLS : ");
+		res.append("n: ");
+		res.append(countSels);
+		res.append(" totalQty ");
+		res.append(sumSels.toPlainString());
+		res.append("\n");
+		return res.toString();
+	}
 	
-	
+	private int count(List<RLOrder> pendings, Direction direction){
+		int res = direction == Direction.BUY ? buys.size() : sels.size();
+		return res + pendings.size();
+	}
 	
 	private BigDecimal sum(Stream<RLOrder> pendings, Direction direction){		
 		Predicate<RLOrder> pred;
 		Stream<RLOrder> orderbook;
+		Function<RLOrder, BigDecimal> fun;
 		if (direction == Direction.BUY){
 			pred			= rlOrder -> rlOrder.getPair().equals(botConfig.getPair());
 			orderbook = buys.values().stream();
+			fun	 			= rlOrder -> rlOrder.getQuantity().value();
+			return Stream.concat(pendings.filter(pred), orderbook)	
+					.map(fun)
+					.reduce(BigDecimal.ZERO, BigDecimal::add);
 		} else {
 			pred 			= rlOrder -> rlOrder.getReversePair().equals(botConfig.getPair());
 			orderbook = sels.values().stream();
+			fun 			= rlOrder -> rlOrder.getTotalPrice().value();
+			return Stream.concat(pendings.filter(pred).map(rlOrder -> rlOrder.getQuantity().value())
+					, orderbook.map(fun)
+					)
+			.reduce(BigDecimal.ZERO, BigDecimal::add);
 		}				
-		return Stream.concat(pendings.filter(pred), orderbook)	
-		.map(rlOrder -> rlOrder.getQuantity().value())
-		.reduce(BigDecimal.ZERO, BigDecimal::add);
+
 	}
 	
 	
@@ -268,9 +294,6 @@ public class Orderbook extends Base{
 		return res;
 	}
 	
-	@Override
-	public String stringify() {
-		return botConfig.getPair();
-	}
+
 
 }
