@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -26,6 +27,7 @@ import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.sequences.state.State;
 import com.mbcu.mmm.sequences.state.State.BroadcastTxcRLOrder;
 import com.mbcu.mmm.utils.MyLogger;
+import com.ripple.core.coretypes.hash.Hash256;
 import com.ripple.core.coretypes.uint.UInt32;
 
 import io.reactivex.disposables.CompositeDisposable;
@@ -34,6 +36,7 @@ import io.reactivex.schedulers.Schedulers;
 
 public class Orderbook extends Base{
 	private final String fileName = "orderbook_%s.txt";
+	private final int balancerInterval = 2; 
 	
 	private final BotConfig botConfig;
 	private final ConcurrentHashMap<Integer, RLOrder> buys = new ConcurrentHashMap<>();
@@ -41,6 +44,9 @@ public class Orderbook extends Base{
 	private final RxBus bus = RxBusProvider.getInstance();
 	private final CompositeDisposable disposables = new CompositeDisposable();
   private final Path path;
+  private final AtomicInteger lastBalanced = new AtomicInteger(0);
+  private final AtomicInteger ledgerValidated = new AtomicInteger(0);
+  private final AtomicInteger ledgerClosed = new AtomicInteger(0);
 
 	private Orderbook(BotConfig botConfig) {
 		super(MyLogger.getLogger(String.format(Txc.class.getName())), null);
@@ -54,15 +60,11 @@ public class Orderbook extends Base{
 			@Override
 			public void onNext(Object o) {
 				if (o instanceof Common.OnLedgerClosed){
+					lastBalanced.incrementAndGet();
 					Common.OnLedgerClosed event = (Common.OnLedgerClosed) o;
-					if (event.ledgerEvent.getClosed() % 2 == 0 ){					
-						List<Entry<Integer, RLOrder>> sortedSels, sortedBuys;
-						sortedSels = sortSels();
-						sortedBuys = sortBuys();
-						dump(event.ledgerEvent.getClosed(), event.ledgerEvent.getValidated(), sortedSels, sortedBuys);
-						requestPendings();
-//						dumpWithSeq(event.ledgerEvent.getClosed(), event.ledgerEvent.getValidated());
-					}
+					ledgerClosed.set(event.ledgerEvent.getClosed());
+					ledgerValidated.set(event.ledgerEvent.getValidated());
+					requestPendings();					
 				}	
 				else if (o instanceof Common.OnAccountOffers){					
 					Common.OnAccountOffers event = (Common.OnAccountOffers) o;
@@ -87,7 +89,14 @@ public class Orderbook extends Base{
 				else if (o instanceof State.BroadcastTxcRLOrder){
 					BroadcastTxcRLOrder event = (BroadcastTxcRLOrder) o;
 					if (event.pair.equals(botConfig.getPair())){
-						balancer(event.outbounds);						
+						if (event.outbounds.isEmpty() && lastBalanced.get() > balancerInterval){
+							lastBalanced.set(0);
+							List<Entry<Integer, RLOrder>> sortedSels, sortedBuys;
+							sortedSels = sortSels();
+							sortedBuys = sortBuys();
+							printOrderbook(sortedSels, sortedBuys);
+							balancer(sortedSels, sortedBuys);						
+						}
 					}					
 				}
 			}
@@ -105,28 +114,59 @@ public class Orderbook extends Base{
 		}));		
 	}
 	
+	private void printOrderbook (List<Entry<Integer, RLOrder>> sortedSels, List<Entry<Integer, RLOrder>> sortedBuys){
+		dump(ledgerClosed.get(), ledgerValidated.get(), sortedSels, sortedBuys);
+	}
+	
 	private void requestPendings(){
 		bus.send(new Balancer.OnRequestNonOrderbookRLOrder(botConfig.getPair()));
 	}
 	
 	
-	private void balancer(List<RLOrder> pendings){			
-		BigDecimal sumBuys  = sum(pendings.stream(), Direction.BUY);	
-		BigDecimal sumSels  = sum(pendings.stream(), Direction.SELL);
-		
-		int compare = sumBuys.compareTo(botConfig.getTotalBuyQty());
-		
-		if (compare < 0){
-			
-		} else if (compare > 0){
-			int levels = sumBuys.subtract(botConfig.getTotalBuyQty()).divide(botConfig.getBuyOrderQuantity(), MathContext.DECIMAL64).intValue();
-			levels = Math.abs(levels);
-			
+	private void balancer(List<Entry<Integer, RLOrder>> sortedSels, List<Entry<Integer, RLOrder>> sortedBuys){		
+		// using pendings is unrealiable. 
+		BigDecimal sumBuys  = sum(Direction.BUY);	
+		BigDecimal sumSels  = sum(Direction.SELL);
+		log(printLog(sumBuys, sumSels, count(Direction.BUY), count(Direction.SELL)));
+	
+		BigDecimal selsGap = margin(sumSels, Direction.SELL);
+		if (selsGap.compareTo(BigDecimal.ZERO) < 0){
+			List<Integer> cclSeqs = trim(sortedSels, selsGap, Direction.SELL);
+			cclSeqs.forEach(System.out::println);
 		}
 		
-		log(printLog(sumBuys, sumSels, count(pendings, Direction.BUY), count(pendings, Direction.SELL)));
 	}
 	
+	/**
+	 * 
+	 * @param sum
+	 * @param direction
+	 * @return negative if orderbook is bigger than config, positive if smaller
+	 */
+	private BigDecimal margin(BigDecimal sum, Direction direction){
+		BigDecimal configTotalQuantity = direction == Direction.BUY ? botConfig.getTotalBuyQty() : botConfig.getTotalSelQty();
+		return configTotalQuantity.subtract(sum);
+	}
+	
+	private List<Integer> trim(List<Entry<Integer, RLOrder>> sorteds, BigDecimal margin, Direction direction){
+		List<Integer> res = new ArrayList<>();
+		margin = margin.abs();
+		BigDecimal ref = BigDecimal.ZERO;	
+		if (direction == Direction.BUY){
+			Collections.reverse(sorteds);	
+		} 				
+		for (Entry<Integer, RLOrder> e : sorteds){
+			BigDecimal newRef = ref.add(direction == Direction.BUY ? e.getValue().getQuantity().value() : e.getValue().getTotalPrice().value());
+			if (newRef.compareTo(margin) > 0){
+				break;
+			} else{
+				ref = newRef;
+				res.add(e.getKey());
+			}
+		}
+		return res;	
+	}
+		
 	private String printLog(BigDecimal sumBuys, BigDecimal sumSels, int countBuys, int countSels){
 		StringBuffer res = new StringBuffer("\nOrderbook ");
 		res.append(botConfig.getPair());
@@ -144,34 +184,25 @@ public class Orderbook extends Base{
 		return res.toString();
 	}
 	
-	private int count(List<RLOrder> pendings, Direction direction){
+	private int count(Direction direction){
 		int res = direction == Direction.BUY ? buys.size() : sels.size();
-		return res + pendings.size();
+		return res;
 	}
 	
-	private BigDecimal sum(Stream<RLOrder> pendings, Direction direction){		
-		Predicate<RLOrder> pred;
+	private BigDecimal sum(Direction direction){		
 		Stream<RLOrder> orderbook;
 		Function<RLOrder, BigDecimal> fun;
 		if (direction == Direction.BUY){
-			pred			= rlOrder -> rlOrder.getPair().equals(botConfig.getPair());
 			orderbook = buys.values().stream();
 			fun	 			= rlOrder -> rlOrder.getQuantity().value();
-			return Stream.concat(pendings.filter(pred), orderbook)	
-					.map(fun)
-					.reduce(BigDecimal.ZERO, BigDecimal::add);
 		} else {
-			pred 			= rlOrder -> rlOrder.getReversePair().equals(botConfig.getPair());
 			orderbook = sels.values().stream();
 			fun 			= rlOrder -> rlOrder.getTotalPrice().value();
-			return Stream.concat(pendings.filter(pred).map(rlOrder -> rlOrder.getQuantity().value())
-					, orderbook.map(fun)
-					)
-			.reduce(BigDecimal.ZERO, BigDecimal::add);
 		}				
-
+		return orderbook
+				.map(fun)
+				.reduce(BigDecimal.ZERO, BigDecimal::add);
 	}
-	
 	
 	private void edit(BefAf ba, UInt32 newSeq){
 		Boolean pairMatched = pairMatched(ba.after);

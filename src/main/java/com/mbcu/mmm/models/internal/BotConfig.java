@@ -41,8 +41,8 @@ public class BotConfig {
 			bot.base 							= fromDotForm(pair[0]);
 			bot.quote 						= fromDotForm(pair[1]);	
 			bot.orderbookReqs 		= BookOffers.buildRequest(credentials.address, bot);
-			bot.totalBuyQty 	= buildTotalQuantity(bot.buyGridLevels, bot.buyOrderQuantity);
-			bot.totalSelQty	= buildTotalQuantity(bot.sellGridLevels, bot.sellOrderQuantity);
+			bot.totalBuyQty 			= buildTotalQuantity(bot.buyGridLevels, bot.buyOrderQuantity);
+			bot.totalSelQty				= buildTotalQuantity(bot.sellGridLevels, bot.sellOrderQuantity);
 			res.put(bot.getPair(), bot);
 		}
 		return res;
@@ -100,7 +100,6 @@ public class BotConfig {
 	public BigDecimal getGridSpace() {
 		return new BigDecimal(this.gridSpace);
 	}
-
 
 	public int getBuyGridLevels() {
 		return buyGridLevels;

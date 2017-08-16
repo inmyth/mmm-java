@@ -94,7 +94,7 @@ public class State extends Base {
 				}			
 				else if (o instanceof Common.OnLedgerClosed){
 					OnLedgerClosed event = (OnLedgerClosed) o;		
-					log(event.ledgerEvent.toString());
+					log(event.ledgerEvent.toString() +  " seq : " + sequence);
 					setLedgerIndex(event.ledgerEvent);	
 					flagWaitLedger.set(false);
 					if (!flagWaitLedger.get() && !flagWaitSeq.get()){

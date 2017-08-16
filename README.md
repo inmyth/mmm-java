@@ -51,6 +51,8 @@ If false, the bot will only counter any order that fully consumes our order.
 
 
 **Version History** 
+v.030
+- balancer waits until state is clear of pending tx. 
 
 v.029
 - Orderbook sum modified for sells. Need to check
@@ -201,6 +203,7 @@ TODOS
 - [x] ter in Txc sets isTesSuccess true because they have the same behavior.
 - [x] as ter behaves like tesSUCCESS then MaxLedger passed should refresh sequence, otherwise it will go into terPastSeq loop. 
 - [] orderbook sum doesn't return the right sum
+- [x] Common needs to pass onCreate id from our address only
 
 
 ## NOTES

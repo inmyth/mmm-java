@@ -209,16 +209,20 @@ public class Common extends Base {
 			RLOrder offerCreate = RLOrder.fromOfferCreate(txn);
 			log("OFFER CREATE Account: " + txnAccId + " Hash " + txnHash + " Sequence " + txnSequence + "\n" + offerCreate.stringify());
 			// OnOfferCreate event is only needed to increment sequence.
-			bus.send(new OnOfferCreate(txnAccId, txnHash, txnSequence));
+			if (txn.account().address.equals(this.config.getCredentials().getAddress())){
+				bus.send(new OnOfferCreate(txnAccId, txnHash, txnSequence));
+			}
 
 			if (offerCreated != null) {
 				AccountID ocAccId = offerCreated.account();		
 				if (previousTxnId == null) {
-					log("OFFER CREATED OCID " + ocAccId + " TxnID " + txnAccId + " OCPrevTxnId " + previousTxnId + " \n" + offerCreated.prettyJSON() );
-					bus.send(new OnOfferCreated(txnAccId, ocAccId, offerCreated.previousTxnID(), RLOrder.fromOfferCreated(offerCreated)));				
-				}else{
+					log("OFFER CREATED OCAccID " + ocAccId + " TxnID " + txnAccId + " OCPrevTxnId " + previousTxnId + " \n" + offerCreated.prettyJSON() );
 					if (ocAccId.address.equals(this.config.getCredentials().getAddress())){
-						log("OFFER EDITED " + previousTxnId + " to " + txn.hash());
+						bus.send(new OnOfferCreated(txnAccId, ocAccId, offerCreated.previousTxnID(), RLOrder.fromOfferCreated(offerCreated)));
+					}
+				}else{
+					log("OFFER EDITED " + previousTxnId + " to " + txn.hash());
+					if (ocAccId.address.equals(this.config.getCredentials().getAddress())){
 						BefAf ba = RLOrder.toBA(offerCreated.takerPays(), offerCreated.takerGets(), txn.get(Amount.TakerPays), txn.get(Amount.TakerGets), previousSeq);
 						bus.send(new OnOfferEdited(ocAccId, txnHash, previousTxnId, previousSeq, txn.sequence(), ba));	
 					}

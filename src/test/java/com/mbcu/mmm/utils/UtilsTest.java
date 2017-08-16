@@ -40,6 +40,16 @@ public class UtilsTest {
   
   
   @Test
+  public void testBigDecimalFloor(){
+  	BigDecimal a = new BigDecimal(4.202);
+  	BigDecimal res1 = a.divide(new BigDecimal(5.0), MathContext.DECIMAL32);
+  	assertEquals(res1.intValue(), 0);
+  	BigDecimal res2 = a.divide(new BigDecimal(2), MathContext.DECIMAL32);
+  	assertEquals(res2.intValue(), 2);
+
+  }
+  
+  @Test
   public void testBlockingObs(){
     Subject<Object> pendingOrdersObs = PublishSubject.create();  
   	System.out.println("a");
