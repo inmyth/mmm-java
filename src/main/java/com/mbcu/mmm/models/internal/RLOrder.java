@@ -48,9 +48,9 @@ public final class RLOrder extends Base{
 	private final boolean fillOrKill;
 
 	private final BigDecimal rate;
-  private final String pair;
+  private final Cpair pair;
 
-	private RLOrder(Direction direction, Amount quantity, Amount totalPrice, BigDecimal rate, String pair) {
+	private RLOrder(Direction direction, Amount quantity, Amount totalPrice, BigDecimal rate, Cpair cpair) {
 		super();
 		this.direction 	= direction.text;
 		this.quantity 	= amount(quantity);
@@ -58,7 +58,7 @@ public final class RLOrder extends Base{
 		this.passive 		= false;
 		this.fillOrKill = false;
 		this.rate 			= rate;
-		this.pair 			= pair;
+		this.pair 			= cpair;
 	}
 
 	public String getDirection() {
@@ -81,25 +81,19 @@ public final class RLOrder extends Base{
 		return fillOrKill;
 	}
 
-	public String getPair() {
+	public Cpair getPair() {
 		return pair;
 	}
 
-	public String getReversePair(){
-		String[] p = this.pair.split("[/]");
-		StringBuffer res = new StringBuffer(p[1]);
-		res.append("/");
-		res.append(p[0]);
-		return res.toString();	
-	}
+
 	
 	public RLOrder reverse(){
 		Direction newDirection = this.direction.equals(Direction.BUY.text()) ? Direction.SELL : Direction.BUY;
-		String newPair = getReversePair();
+		String newPair = pair.rv;
 		Amount newQuantity = totalPrice;
 		Amount newTotalPrice = quantity;
 		BigDecimal rate = newTotalPrice.value().divide(newQuantity.value(), MathContext.DECIMAL64);	
-		RLOrder res = new RLOrder(newDirection, newQuantity, newTotalPrice, rate, newPair);
+		RLOrder res = new RLOrder(newDirection, newQuantity, newTotalPrice, rate, Cpair.newInstance(newPair));
 		return res;
 	}
 	
@@ -139,20 +133,20 @@ public final class RLOrder extends Base{
 	 * @return
 	 */
 	public static RLOrder rateUnneeded(Direction direction, Amount quantity, Amount totalPrice){
-		String pair = direction == Direction.BUY ? buildPair(totalPrice, quantity) : buildPair(quantity, totalPrice);
-		return new RLOrder(direction, quantity, totalPrice, null, pair);
+		Cpair cpair = direction == Direction.BUY ? Cpair.newInstance(totalPrice, quantity) : Cpair.newInstance(quantity, totalPrice);
+		return new RLOrder(direction, quantity, totalPrice, null, cpair);
 	}
 	
 	public static RLOrder fromWholeConsumed(Direction direction, Amount quantity, Amount totalPrice, BigDecimal rate){
-		String pair = direction == Direction.BUY ? buildPair(totalPrice, quantity) : buildPair(quantity, totalPrice);
-		return new RLOrder(direction, quantity, totalPrice, rate, pair);
+		Cpair cpair = direction == Direction.BUY ? Cpair.newInstance(totalPrice, quantity) : Cpair.newInstance(quantity, totalPrice);
+		return new RLOrder(direction, quantity, totalPrice, rate, cpair);
 	}
 	
 	public static RLOrder fromOfferCreate(Transaction txn){
 		Amount gets = txn.get(Amount.TakerPays);
 		Amount pays = txn.get(Amount.TakerGets);
-		String pair = buildPair(gets, pays);
-		RLOrder res = new RLOrder(Direction.BUY, gets, pays, null, pair);
+		Cpair cpair = Cpair.newInstance(gets, pays);
+		RLOrder res = new RLOrder(Direction.BUY, gets, pays, null, cpair);
 		return res;
 	}
 
@@ -160,8 +154,8 @@ public final class RLOrder extends Base{
 		BigDecimal ask = askFrom(offer);		
 		Amount pays = offer.takerPays();
 		Amount gets = offer.takerGets();
-		String pair = buildPair(gets, pays);
-		RLOrder res = new RLOrder(Direction.BUY, gets, pays, ask, pair);
+		Cpair cpair = Cpair.newInstance(gets, pays);
+		RLOrder res = new RLOrder(Direction.BUY, gets, pays, ask, cpair);
 		return res;
 	}
 
@@ -173,13 +167,13 @@ public final class RLOrder extends Base{
 		Amount got = executed.get(Amount.TakerGets);	
 		Amount rlGot = isOCOwn ? amount(paid.value(), paid.currency(), paid.issuer()) : amount(got.value(), got.currency(), got.issuer());
 		Amount rlPaid = isOCOwn ? amount(got.value(), got.currency(), got.issuer()) :amount(paid.value(), paid.currency(), paid.issuer()) ;
-		String pair = buildPair(isOCOwn ? got : paid , isOCOwn ? paid: got);
-		RLOrder res = new RLOrder(Direction.BUY, rlGot, rlPaid, ask, pair);	
+		Cpair cpair = Cpair.newInstance(isOCOwn ? got : paid , isOCOwn ? paid: got);
+		RLOrder res = new RLOrder(Direction.BUY, rlGot, rlPaid, ask, cpair);	
 		return res;
 	}
 	
 	public static BefAf toBA(Amount bTakerPays, Amount bTakerGets, Amount aTakerPays, Amount aTakerGets, UInt32 seq){		
-		String bPair = buildPair(bTakerGets, bTakerPays);		
+		Cpair bPair = Cpair.newInstance(bTakerGets, bTakerPays);		
 		BigDecimal bAsk = bTakerGets.value().divide(bTakerPays.value(), MathContext.DECIMAL64);
 		RLOrder before = new RLOrder(Direction.BUY, bTakerPays, bTakerGets, bAsk, bPair);	
 		if (aTakerPays == null){
@@ -223,16 +217,16 @@ public final class RLOrder extends Base{
 			if(!isXRPGotInMajority){
 				Amount oePaidRef = oeExecutedMinor.get(Amount.TakerPays);			
 				Amount newPaid = new Amount(oePaid.value().multiply(refAsk, MathContext.DECIMAL64), oePaidRef.currency(), oePaidRef.issuer());
-				String pair = buildPair(newPaid, oeGot);
+				Cpair cpair = Cpair.newInstance(newPaid, oeGot);
 				Amount oeGotPositive = new Amount(oeGot.value(), oeGot.currency(), oeGot.issuer());
-				res.add(new RLOrder(direction, oeGotPositive, newPaid, newAsk, pair));			
+				res.add(new RLOrder(direction, oeGotPositive, newPaid, newAsk, cpair));			
 			}
 			else{
 				Amount oeGotRef = oeExecutedMinor.get(Amount.TakerGets);
 				Amount newGot = new Amount(oeGot.value().divide(refAsk,  MathContext.DECIMAL64), oeGotRef.currency(), oeGotRef.issuer());
 				Amount oePaidPositive = new Amount(oePaid.value(), oePaid.currency(), oePaid.issuer());
-				String pair = buildPair(oePaid, newGot);
-				res.add(new RLOrder(direction, newGot, oePaidPositive, newAsk, pair));			
+				Cpair cpair = Cpair.newInstance(oePaid, newGot);
+				res.add(new RLOrder(direction, newGot, oePaidPositive, newAsk, cpair));			
 			}
 		}
 		return res;
@@ -249,32 +243,7 @@ public final class RLOrder extends Base{
 		return paids.divide(gots, MathContext.DECIMAL64);	
 	}
 	
-	public static String buildPair(String base, String baseIssuer, String quote, String quoteIssuer) {
-		StringBuffer res = new StringBuffer(base);
-		if (!base.equals(Currency.XRP.toString())) {
-			res.append(".");
-			res.append(baseIssuer);
-		}
-		res.append("/");
-		res.append(quote);
-		if (!quote.equals(Currency.XRP.toString())) {
-			res.append(".");
-			res.append(quoteIssuer);
-		}
-		return res.toString();
-	}
-	
-	public static String buildPair(Offer offer){
-		STObject executed = offer.executed(offer.get(STObject.FinalFields));
-		Amount paid = executed.get(Amount.TakerPays);
-		Amount got = executed.get(Amount.TakerGets);
-		String pair = RLOrder.buildPair(paid, got);
-		return pair;
-	}
-	
-	public static String buildPair(Amount pay, Amount get){
-		return buildPair(get.currencyString(), get.issuerString(), pay.currencyString(), pay.issuerString());
-	}
+
 
 	private static BigDecimal askFrom(Offer offer) {
 		return offer.directoryAskQuality().stripTrailingZeros();

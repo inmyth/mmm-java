@@ -47,7 +47,7 @@ public class Txc extends Base {
 					OnOfferCreate event = (OnOfferCreate) o;
 					if (event.sequence.intValue() == seq) {
 						disposables.dispose();
-						bus.send(new State.RequestRemove(seq));		
+						bus.send(new State.RequestRemoveCreate(seq));		
 					}
 				} 
 				else if (o instanceof Common.OnLedgerClosed) {
@@ -55,7 +55,7 @@ public class Txc extends Base {
 					if (isTesSuccess && event.ledgerEvent.getValidated() > maxLedger){ // failed to enter ledger
 						disposables.dispose();
 						bus.send(new State.RequestSequenceSync());
-						bus.send(new State.RequestRemove(seq));
+						bus.send(new State.RequestRemoveCreate(seq));
 						bus.send(new State.OnOrderReady(outbound, hash, " MaxLedger passed"));	
 						return;
 					}
@@ -96,7 +96,7 @@ public class Txc extends Base {
 					if (er.equals(EngineResult.tefPAST_SEQ.toString())) {
 						disposables.dispose();
 						bus.send(new State.RequestSequenceSync());
-						bus.send(new State.RequestRemove(seq));
+						bus.send(new State.RequestRemoveCreate(seq));
 						bus.send(new State.OnOrderReady(outbound, hash, " retry tefPAST_SEQ"));
 						return;
 					}
@@ -106,12 +106,12 @@ public class Txc extends Base {
 						disposables.dispose();
 						bus.send(new State.RequestWaitNextLedger());
 						bus.send(new State.RequestSequenceSync());
-						bus.send(new State.RequestRemove(seq));
+						bus.send(new State.RequestRemoveCreate(seq));
 						bus.send(new State.OnOrderReady(outbound, hash, " retry insufFee"));
 						return;
 					}
 					disposables.dispose();
-					bus.send(new State.RequestRemove(seq));
+					bus.send(new State.RequestRemoveCreate(seq));
 //					bus.send(new State.OnOrderReady(outbound, hash, "retry " + er));
 				}	
 				

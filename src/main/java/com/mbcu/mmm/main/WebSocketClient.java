@@ -178,7 +178,7 @@ public class WebSocketClient {
 					}
 
 					@Override
-					public void handleCallbackError(WebSocket ws, Throwable e) throws Exception {
+					public void handleCallbackError(WebSocket ws, Throwable e) {
 						LOGGER.severe(e.getMessage());
 
 					}

@@ -125,7 +125,7 @@ public class Yuki extends Base implements Counter {
 		BotConfigDirection(Config config, RLOrder offer){
 			botConfig = config.getBotConfigMap().get(offer.getPair());
 			if (botConfig == null) {
-				botConfig = config.getBotConfigMap().get(offer.getReversePair());
+				botConfig = config.getBotConfigMap().get(offer.getPair().rv);
 				isDirectionMatch = false;
 			}
 		}	

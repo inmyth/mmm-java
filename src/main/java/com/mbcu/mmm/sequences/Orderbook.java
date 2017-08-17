@@ -15,7 +15,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import com.mbcu.mmm.models.internal.BefAf;
@@ -25,9 +24,8 @@ import com.mbcu.mmm.models.internal.RLOrder.Direction;
 import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.sequences.state.State;
-import com.mbcu.mmm.sequences.state.State.BroadcastTxcRLOrder;
+import com.mbcu.mmm.sequences.state.State.BroadcastPendings;
 import com.mbcu.mmm.utils.MyLogger;
-import com.ripple.core.coretypes.hash.Hash256;
 import com.ripple.core.coretypes.uint.UInt32;
 
 import io.reactivex.disposables.CompositeDisposable;
@@ -84,12 +82,12 @@ public class Orderbook extends Base{
 				}
 				else if (o instanceof Common.OnOfferCanceled){
 					Common.OnOfferCanceled event = (Common.OnOfferCanceled) o;
-					remove(event.newSeq.intValue());
+					remove(event.prevSeq.intValue());
 				}
-				else if (o instanceof State.BroadcastTxcRLOrder){
-					BroadcastTxcRLOrder event = (BroadcastTxcRLOrder) o;
+				else if (o instanceof State.BroadcastPendings){
+					BroadcastPendings event = (BroadcastPendings) o;
 					if (event.pair.equals(botConfig.getPair())){
-						if (event.outbounds.isEmpty() && lastBalanced.get() > balancerInterval){
+						if (event.creates.isEmpty() && event.creates.isEmpty() && lastBalanced.get() > balancerInterval){
 							lastBalanced.set(0);
 							List<Entry<Integer, RLOrder>> sortedSels, sortedBuys;
 							sortedSels = sortSels();
@@ -125,16 +123,21 @@ public class Orderbook extends Base{
 	
 	private void balancer(List<Entry<Integer, RLOrder>> sortedSels, List<Entry<Integer, RLOrder>> sortedBuys){		
 		// using pendings is unrealiable. 
-		BigDecimal sumBuys  = sum(Direction.BUY);	
-		BigDecimal sumSels  = sum(Direction.SELL);
+		BigDecimal sumBuys  	= sum(Direction.BUY);	
+		BigDecimal sumSels  	= sum(Direction.SELL);
 		log(printLog(sumBuys, sumSels, count(Direction.BUY), count(Direction.SELL)));
+		List<Integer> cans 		= new ArrayList<>();
+		List<RLOrder> gens 		= new ArrayList<>(); 
 	
 		BigDecimal selsGap = margin(sumSels, Direction.SELL);
 		if (selsGap.compareTo(BigDecimal.ZERO) < 0){
-			List<Integer> cclSeqs = trim(sortedSels, selsGap, Direction.SELL);
-			cclSeqs.forEach(System.out::println);
+			cans.addAll(trim(sortedSels, selsGap, Direction.SELL));
+		} 			
+		BigDecimal buysGap = margin(sumBuys, Direction.BUY);
+		if (buysGap.compareTo(BigDecimal.ZERO) < 0){
+			cans.addAll(trim(sortedSels, selsGap, Direction.BUY));
 		}
-		
+		cans.forEach(canSeq -> bus.send(new State.OnCancelReady(botConfig.getPair(), canSeq)));
 	}
 	
 	/**
@@ -273,13 +276,12 @@ public class Orderbook extends Base{
 		if (in.getPair().equals(this.botConfig.getPair())){
 			return true;
 		}
-		else if (in.getReversePair().equals(this.botConfig.getPair())){
+		else if (in.getPair().rv.equals(this.botConfig.getPair())){
 			return false;
 		}
 		return null;
 	}
 	
-
 	private void dump(int ledgerClosed, int ledgerValidated, List<Entry<Integer, RLOrder>> sortedSels, List<Entry<Integer, RLOrder>> sortedBuys){
 		StringBuffer sb = new StringBuffer("Ledger closed : ");
 		sb.append(ledgerClosed);

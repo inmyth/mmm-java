@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 
 import com.mbcu.mmm.main.WebSocketClient;
 import com.mbcu.mmm.models.internal.Config;
+import com.mbcu.mmm.models.internal.Cpair;
 import com.mbcu.mmm.models.internal.LedgerEvent;
 import com.mbcu.mmm.models.internal.RLOrder;
 import com.mbcu.mmm.models.request.AccountInfo;
@@ -19,6 +20,7 @@ import com.mbcu.mmm.models.request.Submit;
 import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.sequences.Balancer;
+import com.mbcu.mmm.sequences.Balancer.OnRequestNonOrderbookRLOrder;
 import com.mbcu.mmm.sequences.Base;
 import com.mbcu.mmm.sequences.Common;
 import com.mbcu.mmm.sequences.Common.OnAccountInfoSequence;
@@ -27,11 +29,15 @@ import com.mbcu.mmm.sequences.Common.OnOfferCanceled;
 import com.mbcu.mmm.sequences.Common.OnOfferCreate;
 import com.mbcu.mmm.sequences.Common.OnOfferEdited;
 import com.mbcu.mmm.sequences.Txc;
-import com.mbcu.mmm.sequences.Balancer.OnRequestNonOrderbookRLOrder;
+import com.mbcu.mmm.sequences.Txd;
+import com.mbcu.mmm.sequences.Txd.TxdMini;
 import com.mbcu.mmm.utils.MyLogger;
+import com.ripple.core.coretypes.AccountID;
+import com.ripple.core.coretypes.Amount;
 import com.ripple.core.coretypes.hash.Hash256;
 import com.ripple.core.coretypes.uint.UInt32;
 import com.ripple.core.types.known.tx.signed.SignedTransaction;
+import com.ripple.core.types.known.tx.txns.OfferCancel;
 
 import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
@@ -47,8 +53,9 @@ public class State extends Base {
 	private final AtomicInteger ledgerValidated = new AtomicInteger(0);
 	private final AtomicInteger sequence = new AtomicInteger(0);
 	private final ConcurrentHashMap<Integer, Txc> pending = new ConcurrentHashMap<>();
-	private final ConcurrentLinkedQueue<RLOrder> qWait = new ConcurrentLinkedQueue<>();
-	private final ConcurrentLinkedQueue<Integer> cancels = new ConcurrentLinkedQueue<>();
+	private final ConcurrentLinkedQueue<RLOrder> qPens = new ConcurrentLinkedQueue<>();
+	private final ConcurrentHashMap<Integer, Txd> cancels = new ConcurrentHashMap<>();
+	private final ConcurrentLinkedQueue<TxdMini> qCans = new ConcurrentLinkedQueue<>();
 	private final AtomicBoolean flagWaitSeq = new AtomicBoolean(false);
 	private final AtomicBoolean flagWaitLedger = new AtomicBoolean(false);
 	private RxBus bus = RxBusProvider.getInstance();
@@ -79,6 +86,7 @@ public class State extends Base {
 				}
 				else if (o instanceof Common.OnOfferCanceled){
 					OnOfferCanceled event = (OnOfferCanceled) o;
+					cancels.remove(event.prevSeq.intValue());
 					setSequence(event.newSeq);
 				}			
 				else if (o instanceof OnOrderReady){
@@ -87,11 +95,19 @@ public class State extends Base {
 						log("retry from " + event.from + " " + event.memo);
 					}
 					if (flagWaitSeq.get() || flagWaitLedger.get()){
-						qWait.add(event.outbound);												
-					}else {
-						process(event.outbound);						
+						qPens.add(event.outbound);												
+					} else {
+						ocreate(event.outbound);						
 					}	
 				}			
+				else if (o instanceof OnCancelReady){
+					OnCancelReady event = (OnCancelReady) o;
+					if (flagWaitSeq.get() || flagWaitLedger.get()){
+						qCans.add(new TxdMini(Cpair.newInstance(event.pair), event.seq));												
+					} else {
+						ocancel(Cpair.newInstance(event.pair), event.seq);					
+					}	
+				}				
 				else if (o instanceof Common.OnLedgerClosed){
 					OnLedgerClosed event = (OnLedgerClosed) o;		
 					log(event.ledgerEvent.toString() +  " seq : " + sequence);
@@ -110,9 +126,13 @@ public class State extends Base {
 						drain();
 					}									
 				}
-				else if (o instanceof RequestRemove){
-					RequestRemove event = (RequestRemove) o;
+				else if (o instanceof RequestRemoveCreate){
+					RequestRemoveCreate event = (RequestRemoveCreate) o;
 					pending.remove(event.seq);
+				}
+				else if (o instanceof RequestRemoveCancel){
+					RequestRemoveCancel event = (RequestRemoveCancel) o;
+					cancels.remove(event.seq);
 				}
 				else if (o instanceof RequestSequenceSync){
 					sequenceRefreshObs.onNext(flagWaitSeq.compareAndSet(false, true));					
@@ -122,11 +142,23 @@ public class State extends Base {
 				}
 				else if (o instanceof Balancer.OnRequestNonOrderbookRLOrder){
 					OnRequestNonOrderbookRLOrder event = (OnRequestNonOrderbookRLOrder) o;
-					List<RLOrder> outbounds = Stream
-						.concat(pending.values().stream().map(txc -> {return txc.getOutbound();}), qWait.stream())
-						.filter(rlo -> event.pair.equals(rlo.getPair()) || event.pair.equals(rlo.getReversePair()))
+					List<RLOrder> crts = Stream
+						.concat(pending.values().stream().map(txc -> {return txc.getOutbound();}), qPens.stream())
+						.filter(rlo -> event.pair.equals(rlo.getPair().fw) || event.pair.equals(rlo.getPair().rv))
 						.collect(Collectors.toList());
-					bus.send(new BroadcastTxcRLOrder(outbounds, event.pair));
+
+					List<Integer> cans = Stream.concat(
+							cancels.values().stream()
+							.filter(txd -> event.pair.equals(txd.getPair().fw) || event.pair.equals(txd.getPair().rv))
+							.map(txd -> {return txd.getCanSeq();})
+							, 
+							qCans.stream()
+							.filter(mini -> event.pair.equals(mini.cpair.fw) || event.pair.equals(mini.cpair.rv))
+							.map(mini -> {return mini.canSeq;})							
+							)
+							.collect(Collectors.toList());
+
+					bus.send(new BroadcastPendings(event.pair, crts, cans));
 				}
 			}
 
@@ -169,25 +201,50 @@ public class State extends Base {
 	}
 	
 	private void drain() {
-		while (!qWait.isEmpty()) {
-			process(qWait.poll());
+		while (!qPens.isEmpty()) {
+			ocreate(qPens.poll());
+		}
+		while (!qCans.isEmpty()) {
+			TxdMini load = qCans.poll();
+			ocancel(load.cpair, load.canSeq);
 		}
 	}
 	
-	private void process(RLOrder outbound){
+	private void ocreate(RLOrder outbound){
 		int seq = getIncrementSequence();
 		int maxLedger = ledgerValidated.get() + DEFAULT_MAX_LEDGER_GAP;	
-		SignedTransaction signed = sign(outbound, seq, maxLedger, DEFAULT_FEES_DROPS);
+		SignedTransaction signed = signCreate(outbound, seq, maxLedger, DEFAULT_FEES_DROPS);
 		Txc txc = Txc.newInstance(outbound, signed.hash, seq, maxLedger);		
 		pending.put(txc.getSeq(), txc);
-		log("submitting : " + signed.hash + " " + seq);
+		log("submitting offerCreate: " + signed.hash + " " + seq);
 		submit(signed.tx_blob);
 	}
-	
+ 
+	private void ocancel(Cpair cpair, int canSeq){
+		int newSeq = getIncrementSequence();
+		int maxLedger = ledgerValidated.get() + DEFAULT_MAX_LEDGER_GAP;	
+		SignedTransaction signed = signCancel(newSeq, canSeq, maxLedger);
+		Txd txd = Txd.newInstance(cpair, canSeq, newSeq, maxLedger);
+		cancels.put(canSeq, txd);
+		log("submitting offerCancel: " + signed.hash + " " + canSeq);
+		submit(signed.tx_blob);
+	}
 
-	private SignedTransaction sign(RLOrder order, int seq, int maxLedger, BigDecimal fees){
+	private SignedTransaction signCreate(RLOrder order, int seq, int maxLedger, BigDecimal fees){
 		SignedTransaction signed = order.signOfferCreate(config, seq, maxLedger, fees);
 		return signed;
+	}
+	
+	private SignedTransaction signCancel(int seq, int canSeq, int maxLedger){
+		OfferCancel offerCancel = new OfferCancel();
+		offerCancel.put(UInt32.OfferSequence, new UInt32(String.valueOf(canSeq)));
+		offerCancel.fee(new Amount(DEFAULT_FEES_DROPS));
+		offerCancel.sequence(new UInt32(String.valueOf(seq)));
+		offerCancel.lastLedgerSequence(new UInt32(String.valueOf(maxLedger)));
+		offerCancel.account(AccountID.fromAddress(config.getCredentials().getAddress()));
+		SignedTransaction signed = offerCancel.sign(config.getCredentials().getSecret());
+		return signed;	
+
 	}
 	
 	private void submit(String txBlob){
@@ -219,28 +276,51 @@ public class State extends Base {
 			this.memo = memo;
 		}
 	}
+	
+	public static class OnCancelReady {
+		public final int seq;
+		public final String pair;
 
-	public static class RequestRemove {
+		public OnCancelReady(String pair, int seq) {
+			super();
+			this.pair = pair;
+			this.seq = seq;
+		}
+		
+	}
+
+	public static class RequestRemoveCreate {
 		public int seq;
 
-		public RequestRemove(int seq) {
+		public RequestRemoveCreate(int seq) {
 			super();
 			this.seq = seq;
 		}
+	}
+	
+	public static class RequestRemoveCancel {
+		public int seq;
+
+		public RequestRemoveCancel(int seq) {
+			super();
+			this.seq = seq;
+		}
+		
 	}
 	
 	public static class RequestSequenceSync{}
 	
 	public static class RequestWaitNextLedger{}
 	
-	public static class BroadcastTxcRLOrder{
+	public static class BroadcastPendings{
 		public final String pair;
-		public final List<RLOrder> outbounds;
+		public final List<RLOrder> creates;
+		public final List<Integer> cancels;
 
-		public BroadcastTxcRLOrder(List<RLOrder> outbounds, String pair) {
-			super();
-			this.outbounds = outbounds;
+		public BroadcastPendings(String pair, List<RLOrder> creates, List<Integer> cancels) {
 			this.pair = pair;
+			this.creates = creates;
+			this.cancels = cancels;
 		}
 	}
 	

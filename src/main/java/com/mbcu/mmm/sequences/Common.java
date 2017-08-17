@@ -14,6 +14,7 @@ import com.mbcu.mmm.main.WebSocketClient;
 import com.mbcu.mmm.main.WebSocketClient.WSGotText;
 import com.mbcu.mmm.models.internal.BefAf;
 import com.mbcu.mmm.models.internal.Config;
+import com.mbcu.mmm.models.internal.Cpair;
 import com.mbcu.mmm.models.internal.LedgerEvent;
 import com.mbcu.mmm.models.internal.RLOrder;
 import com.mbcu.mmm.utils.MyLogger;
@@ -200,8 +201,12 @@ public class Common extends Base {
 		String txType = txn.get(Field.TransactionType).toString();
 		if (txType.equals("OfferCancel")) {
 			if (txn.account().address.equals(this.config.getCredentials().getAddress())){
-				log("CANCELED Account: Seq: " + previousSeq + "  prevTxnId: " + previousTxnId);
-				bus.send(new OnOfferCanceled(txn.account(), previousSeq, txn.sequence(), previousTxnId));
+				if (previousTxnId == null){
+					log("CANCELED already canceled: " + txn.sequence());
+				} else {
+					log("CANCELED Account: Seq: " + previousSeq + "  prevTxnId: " + previousTxnId);
+					bus.send(new OnOfferCanceled(txn.account(), previousSeq, txn.sequence(), previousTxnId));
+				}
 			}
 			return;
 		}
@@ -293,11 +298,11 @@ public class Common extends Base {
 		HashMap<String, ArrayList<Offer>> map = new HashMap<>();
 
 		void push(Offer offer) {
-			String pair = RLOrder.buildPair(offer);
-			if (map.get(pair) == null) {
-				map.put(pair, new ArrayList<>());
+			Cpair cpair = Cpair.newInstance(offer);
+			if (map.get(cpair.fw) == null) {
+				map.put(cpair.fw, new ArrayList<>());
 			}
-			map.get(pair).add(offer);
+			map.get(cpair.fw).add(offer);
 			cache.add(offer);
 		}
 
