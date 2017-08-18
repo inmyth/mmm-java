@@ -150,10 +150,6 @@ public class BotConfig {
 		return totalSelQty;
 	}
 	
-	public Queue<Integer> getLevels(int max){
-		Queue<Integer> res = new LinkedList<>();
-		IntStream.range(1, max + 1).forEach(a -> {res.add(a);});
-		return res;
-	}
+
 
 }

@@ -6,7 +6,6 @@ import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.sequences.Common.OnLedgerClosed;
 import com.mbcu.mmm.sequences.Common.OnOfferCanceled;
-import com.mbcu.mmm.sequences.Common.OnOfferCreate;
 import com.mbcu.mmm.sequences.Common.OnRPCTesFail;
 import com.mbcu.mmm.sequences.Common.OnRPCTesSuccess;
 import com.mbcu.mmm.sequences.state.State;
@@ -56,7 +55,7 @@ public class Txd extends Base {
 							disposables.dispose();
 							bus.send(new State.RequestSequenceSync());
 							bus.send(new State.RequestRemoveCreate(canSeq));
-							bus.send(new State.OnCancelReady(cpair.fw, canSeq));	
+							bus.send(new State.OnCancelReady(cpair.toString(), canSeq));	
 							return;
 						}
 					} 
@@ -87,7 +86,7 @@ public class Txd extends Base {
 							disposables.dispose();
 							bus.send(new State.RequestSequenceSync());
 							bus.send(new State.RequestRemoveCancel(canSeq));
-							bus.send(new State.OnCancelReady(cpair.fw, canSeq));
+							bus.send(new State.OnCancelReady(cpair.toString(), canSeq));
 							return;
 						}				
 						if (er.equals(EngineResult.telINSUF_FEE_P.toString())){
@@ -95,7 +94,7 @@ public class Txd extends Base {
 							bus.send(new State.RequestWaitNextLedger());
 							bus.send(new State.RequestSequenceSync());
 							bus.send(new State.RequestRemoveCancel(canSeq));
-							bus.send(new State.OnCancelReady(cpair.fw, canSeq));
+							bus.send(new State.OnCancelReady(cpair.toString(), canSeq));
 							return;
 						}
 						disposables.dispose();

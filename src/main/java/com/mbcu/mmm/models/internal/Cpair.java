@@ -7,8 +7,8 @@ import com.ripple.core.types.known.sle.entries.Offer;
 
 public class Cpair {
 
-	public final String fw;
-	public final String rv;
+	private final String fw;
+	private final String rv;
 
 	private Cpair(String pair) {
 		super();
@@ -23,6 +23,29 @@ public class Cpair {
 		res.append(p[0]);
 		return res.toString();	
 	}
+	
+	public Boolean isMatch(String test){
+		if (test.equals(fw)){
+			return true;
+		} else if (test.equals(rv)){
+			return false;
+		}
+		return null;
+	}
+	
+	public String getFw() {
+		return fw;
+	}
+	
+	public String getRv() {
+		return rv;
+	}
+	
+	@Override
+	public String toString() {
+		return fw;
+	}
+	
 		
 	public static Cpair newInstance(String pair){
 		return new Cpair(pair);

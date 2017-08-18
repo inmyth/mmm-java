@@ -144,16 +144,16 @@ public class State extends Base {
 					OnRequestNonOrderbookRLOrder event = (OnRequestNonOrderbookRLOrder) o;
 					List<RLOrder> crts = Stream
 						.concat(pending.values().stream().map(txc -> {return txc.getOutbound();}), qPens.stream())
-						.filter(rlo -> event.pair.equals(rlo.getPair().fw) || event.pair.equals(rlo.getPair().rv))
+						.filter(rlo -> rlo.getCpair().isMatch(event.pair) != null)
 						.collect(Collectors.toList());
 
 					List<Integer> cans = Stream.concat(
 							cancels.values().stream()
-							.filter(txd -> event.pair.equals(txd.getPair().fw) || event.pair.equals(txd.getPair().rv))
+							.filter(txd -> txd.getPair().isMatch(event.pair) != null)
 							.map(txd -> {return txd.getCanSeq();})
 							, 
 							qCans.stream()
-							.filter(mini -> event.pair.equals(mini.cpair.fw) || event.pair.equals(mini.cpair.rv))
+							.filter(mini -> mini.cpair.isMatch(event.pair) != null)
 							.map(mini -> {return mini.canSeq;})							
 							)
 							.collect(Collectors.toList());

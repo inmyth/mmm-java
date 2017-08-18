@@ -299,10 +299,10 @@ public class Common extends Base {
 
 		void push(Offer offer) {
 			Cpair cpair = Cpair.newInstance(offer);
-			if (map.get(cpair.fw) == null) {
-				map.put(cpair.fw, new ArrayList<>());
+			if (map.get(cpair.toString()) == null) {
+				map.put(cpair.toString(), new ArrayList<>());
 			}
-			map.get(cpair.fw).add(offer);
+			map.get(cpair.toString()).add(offer);
 			cache.add(offer);
 		}
 

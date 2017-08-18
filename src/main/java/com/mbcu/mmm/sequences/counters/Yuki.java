@@ -123,9 +123,9 @@ public class Yuki extends Base implements Counter {
 		BotConfig botConfig;
 		
 		BotConfigDirection(Config config, RLOrder offer){
-			botConfig = config.getBotConfigMap().get(offer.getPair());
+			botConfig = config.getBotConfigMap().get(offer.getCpair().getFw());
 			if (botConfig == null) {
-				botConfig = config.getBotConfigMap().get(offer.getPair().rv);
+				botConfig = config.getBotConfigMap().get(offer.getCpair().getRv());
 				isDirectionMatch = false;
 			}
 		}	
@@ -157,7 +157,7 @@ public class Yuki extends Base implements Counter {
 			Amount newQuantity = origin.getTotalPrice().multiply(new BigDecimal("-1"));
 			BigDecimal newRate = BigDecimal.ONE.divide(origin.getRate(), MathContext.DECIMAL128).subtract(botConfig.getGridSpace());
 			if (newRate.compareTo(BigDecimal.ZERO) <= 0) {
-				log("counter rate below zero " + newRate + " " + origin.getPair(), Level.SEVERE);
+				log("counter rate below zero " + newRate + " " + origin.getCpair(), Level.SEVERE);
 				return null;
 			}
 			Amount newTotalPrice = RLOrder.amount(newQuantity.value().multiply(newRate), oldQuantity.currency(), oldQuantity.issuer());

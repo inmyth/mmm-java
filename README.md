@@ -51,6 +51,10 @@ If false, the bot will only counter any order that fully consumes our order.
 
 
 **Version History** 
+v.032
+- balancer generate completed
+
+
 v.031
 - balancer trim completed
 - changed String pair to Cpair class
@@ -208,8 +212,10 @@ TODOS
 - [x] as ter behaves like tesSUCCESS then MaxLedger passed should refresh sequence, otherwise it will go into terPastSeq loop. 
 - [] orderbook sum doesn't return the right sum
 - [x] Common needs to pass onCreate id from our address only
-- [] Check anything affected by String pair
-- [] (bug) Orderbook buys is empty. 
+- [x] Check anything affected by String pair
+- [x] (bug) Orderbook buys is empty. 
+- [] check balancer generate for sells and both
+- [] turn off seed on balancer
 
 ## NOTES
 RESPONSE

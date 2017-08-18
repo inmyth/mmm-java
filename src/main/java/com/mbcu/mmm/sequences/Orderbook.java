@@ -132,12 +132,40 @@ public class Orderbook extends Base{
 		BigDecimal selsGap = margin(sumSels, Direction.SELL);
 		if (selsGap.compareTo(BigDecimal.ZERO) < 0){
 			cans.addAll(trim(sortedSels, selsGap, Direction.SELL));
-		} 			
+		} else {
+			gens.addAll(generate(sortedSels, selsGap, Direction.SELL));
+		}
 		BigDecimal buysGap = margin(sumBuys, Direction.BUY);
 		if (buysGap.compareTo(BigDecimal.ZERO) < 0){
-			cans.addAll(trim(sortedSels, selsGap, Direction.BUY));
+			cans.addAll(trim(sortedBuys, buysGap, Direction.BUY));
+		} else {
+			gens.addAll(generate(sortedBuys, buysGap, Direction.BUY));
 		}
 		cans.forEach(canSeq -> bus.send(new State.OnCancelReady(botConfig.getPair(), canSeq)));
+		gens.forEach(rlo -> bus.send(new State.OnOrderReady(rlo)));
+	}
+	
+	private List<RLOrder> generate(List<Entry<Integer, RLOrder>> sorteds, BigDecimal margin, Direction direction) {
+		List<RLOrder> res;	
+		if (sorteds.isEmpty()){
+			if (direction == Direction.BUY){
+				res = RLOrder.buildBuysSeed(new BigDecimal(botConfig.getStartMiddlePrice()), botConfig.getBuyGridLevels(), botConfig);
+			} else {
+				res = RLOrder.buildSelsSeed(new BigDecimal(botConfig.getStartMiddlePrice()), botConfig.getSellGridLevels(), botConfig);
+			}
+			return res;
+		}	
+		if (direction == Direction.BUY){
+			Collections.reverse(sorteds);	
+		} 		
+		BigDecimal lastRate = sorteds.get(0).getValue().getRate();
+		margin = margin.abs();
+		int levels = margin
+			.divide(direction == Direction.BUY ? botConfig.getBuyOrderQuantity() : botConfig.getSellOrderQuantity(), MathContext.DECIMAL32)
+			.intValue();		
+		res = direction == Direction.BUY ? 
+				RLOrder.buildBuysSeed(lastRate, levels, botConfig) : RLOrder.buildSelsSeed(lastRate, levels, botConfig);
+		return res;	
 	}
 	
 	/**
@@ -273,13 +301,7 @@ public class Orderbook extends Base{
 	 * @return null if not matched, true if aligned, false if reversed
 	 */
 	private Boolean pairMatched (RLOrder in){
-		if (in.getPair().equals(this.botConfig.getPair())){
-			return true;
-		}
-		else if (in.getPair().rv.equals(this.botConfig.getPair())){
-			return false;
-		}
-		return null;
+		return in.getCpair().isMatch(this.botConfig.getPair());
 	}
 	
 	private void dump(int ledgerClosed, int ledgerValidated, List<Entry<Integer, RLOrder>> sortedSels, List<Entry<Integer, RLOrder>> sortedBuys){

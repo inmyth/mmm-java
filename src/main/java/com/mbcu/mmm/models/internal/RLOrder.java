@@ -5,9 +5,11 @@ import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.IntStream;
 import java.util.Queue;
 
 import com.mbcu.mmm.models.Base;
@@ -48,7 +50,7 @@ public final class RLOrder extends Base{
 	private final boolean fillOrKill;
 
 	private final BigDecimal rate;
-  private final Cpair pair;
+  private final Cpair cpair;
 
 	private RLOrder(Direction direction, Amount quantity, Amount totalPrice, BigDecimal rate, Cpair cpair) {
 		super();
@@ -58,7 +60,7 @@ public final class RLOrder extends Base{
 		this.passive 		= false;
 		this.fillOrKill = false;
 		this.rate 			= rate;
-		this.pair 			= cpair;
+		this.cpair 			= cpair;
 	}
 
 	public String getDirection() {
@@ -81,15 +83,13 @@ public final class RLOrder extends Base{
 		return fillOrKill;
 	}
 
-	public Cpair getPair() {
-		return pair;
+	public Cpair getCpair() {
+		return cpair;
 	}
-
-
 	
 	public RLOrder reverse(){
 		Direction newDirection = this.direction.equals(Direction.BUY.text()) ? Direction.SELL : Direction.BUY;
-		String newPair = pair.rv;
+		String newPair = cpair.toString();
 		Amount newQuantity = totalPrice;
 		Amount newTotalPrice = quantity;
 		BigDecimal rate = newTotalPrice.value().divide(newQuantity.value(), MathContext.DECIMAL64);	
@@ -289,19 +289,30 @@ public final class RLOrder extends Base{
 
 	public static ArrayList<RLOrder> buildSeed(BotConfig bot){
 		ArrayList<RLOrder> res = new ArrayList<>();
-		BigDecimal middlePrice = new BigDecimal(bot.startMiddlePrice);
+		res.addAll(buildBuysSeed(new BigDecimal(bot.startMiddlePrice), bot.getBuyGridLevels(), bot));
+		res.addAll(buildSelsSeed(new BigDecimal(bot.startMiddlePrice), bot.getSellGridLevels(), bot));
+		return res;
+	}
+	
+	private static Queue<Integer> getLevels(int max){
+		Queue<Integer> res = new LinkedList<>();
+		IntStream.range(1, max + 1).forEach(a -> {res.add(a);});
+		return res;
+	}
+	
+	
+	public static List<RLOrder> buildBuysSeed(BigDecimal startRate, int levels, BotConfig bot){
+		ArrayList<RLOrder> res = new ArrayList<>();
 		BigDecimal margin = new BigDecimal(bot.gridSpace);
-		Queue<Integer> buyLevels = bot.getLevels(bot.buyGridLevels);
-		Queue<Integer> sellLevels = bot.getLevels(bot.sellGridLevels);
+		Queue<Integer> buyLevels = getLevels(levels);
 		
 		while (true){
-			if (buyLevels.isEmpty() && sellLevels.isEmpty()){
+			if (buyLevels.isEmpty()){
 				break;
 			}
 			if (!buyLevels.isEmpty()){
-				Amount quantity =	bot.base.add(bot.getBuyOrderQuantity());	
-				
-				BigDecimal rate = middlePrice.subtract(margin.multiply(new BigDecimal(buyLevels.remove()), MathContext.DECIMAL64));
+				Amount quantity =	bot.base.add(bot.getBuyOrderQuantity());					
+				BigDecimal rate = startRate.subtract(margin.multiply(new BigDecimal(buyLevels.remove()), MathContext.DECIMAL64));
 				if (rate.compareTo(BigDecimal.ZERO) <= 0){
 					buyLevels.clear();				
 				}else{
@@ -310,10 +321,23 @@ public final class RLOrder extends Base{
 					RLOrder buy = RLOrder.rateUnneeded(Direction.BUY, quantity, totalPrice);
 					res.add(buy);
 				}
+			}		
+		}	
+		return res;
+	}
+	
+	public static List<RLOrder> buildSelsSeed(BigDecimal startRate, int levels, BotConfig bot){
+		ArrayList<RLOrder> res = new ArrayList<>();
+		BigDecimal margin = new BigDecimal(bot.gridSpace);
+		Queue<Integer> sellLevels = getLevels(levels);
+		
+		while (true){
+			if (sellLevels.isEmpty()){
+				break;
 			}
 			if (!sellLevels.isEmpty()){
 				Amount quantity = bot.base.add(bot.getSellOrderQuantity());
-				BigDecimal rate = middlePrice.add(margin.multiply(new BigDecimal(sellLevels.remove()), MathContext.DECIMAL64));
+				BigDecimal rate = startRate.add(margin.multiply(new BigDecimal(sellLevels.remove()), MathContext.DECIMAL64));
 				BigDecimal totalPriceValue = quantity.value().multiply(rate, MathContext.DECIMAL64);
 				Amount totalPrice = RLOrder.amount(totalPriceValue, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
 				RLOrder sell = RLOrder.rateUnneeded(Direction.SELL, quantity, totalPrice);
@@ -323,9 +347,6 @@ public final class RLOrder extends Base{
 		return res;
 	}
 	
-
-
-
 	@Override
 	public String stringify() {	
 		StringBuffer sb = new StringBuffer(direction);
@@ -341,7 +362,7 @@ public final class RLOrder extends Base{
 		sb.append(rate != null ? rate.toPlainString() : "rate na");
 		sb.append("\n");
 		sb.append("pair:");
-		sb.append(getPair());
+		sb.append(getCpair());
 		sb.append("\n");
 		return sb.toString();		
 	}
