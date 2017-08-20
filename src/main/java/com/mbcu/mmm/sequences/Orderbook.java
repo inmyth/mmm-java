@@ -155,10 +155,13 @@ public class Orderbook extends Base{
 			}
 			return res;
 		}	
+		BigDecimal lastRate;
 		if (direction == Direction.BUY){
 			Collections.reverse(sorteds);	
-		} 		
-		BigDecimal lastRate = sorteds.get(0).getValue().getRate();
+			lastRate =  sorteds.get(0).getValue().getRate();
+		} else {
+			lastRate =  BigDecimal.ONE.divide(sorteds.get(0).getValue().getRate(), MathContext.DECIMAL64);
+		}
 		margin = margin.abs();
 		int levels = margin
 			.divide(direction == Direction.BUY ? botConfig.getBuyOrderQuantity() : botConfig.getSellOrderQuantity(), MathContext.DECIMAL32)

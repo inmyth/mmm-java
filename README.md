@@ -50,10 +50,15 @@ If true, the bot will counter any order that fully or partially consumes our ord
 If false, the bot will only counter any order that fully consumes our order. 
 
 
-**Version History** 
+**Version History**
+v.034
+- balancer sell fixed
+
+v.033
+- balancer tested
+ 
 v.032
 - balancer generate completed
-
 
 v.031
 - balancer trim completed
@@ -199,23 +204,23 @@ TODOS
 - [x] Orderbook test onDelete
 - [x] Orderbook test onEdit
 - [x] Orderbook test onRemainder
-- [] get RLORder from State#pending and State#qWait for Orderbook balancer, synchronously
-- [] balancer can sum all orders, compare with settings
-- [] remove if sum is more than config
-- [] create if sum is less than config
-- [] cancel order mechanism
-- [] edit updates sequence
-- [] cancel updates sequence
-- [] compare orderbook sum with setting's sum
+- [x] get RLORder from State#pending and State#qWait for Orderbook balancer, synchronously
+- [x] balancer can sum all orders, compare with settings
+- [x] remove if sum is more than config
+- [x] create if sum is less than config
+- [x] cancel order mechanism
+- [x] edit updates sequence
+- [x] cancel updates sequence
+- [x] compare orderbook sum with setting's sum
 - [x] (bug) no TaketGets in PreviousFields  . Create null checker to ignore such offer.
 - [x] ter in Txc sets isTesSuccess true because they have the same behavior.
 - [x] as ter behaves like tesSUCCESS then MaxLedger passed should refresh sequence, otherwise it will go into terPastSeq loop. 
-- [] orderbook sum doesn't return the right sum
+- [x] orderbook sum doesn't return the right sum
 - [x] Common needs to pass onCreate id from our address only
 - [x] Check anything affected by String pair
 - [x] (bug) Orderbook buys is empty. 
-- [] check balancer generate for sells and both
-- [] turn off seed on balancer
+- [x] check balancer generate for sells and both
+- [x] turn off seed on balancer
 
 ## NOTES
 RESPONSE

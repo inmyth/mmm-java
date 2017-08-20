@@ -29,7 +29,7 @@ public class Balancer extends Base{
 			@Override
 			public void onNext(Object o) {
 				if (o instanceof Starter.OnInitiated){
-					seed();
+//					seed();
 				}				
 			}
 
