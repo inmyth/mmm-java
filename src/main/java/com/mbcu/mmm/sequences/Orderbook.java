@@ -1,4 +1,4 @@
-package com.mbcu.mmm.sequences;
+ package com.mbcu.mmm.sequences;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -34,7 +34,7 @@ import io.reactivex.schedulers.Schedulers;
 
 public class Orderbook extends Base{
 	private final String fileName = "orderbook_%s.txt";
-	private final int balancerInterval = 2; 
+	private final int balancerInterval = 4; 
 	
 	private final BotConfig botConfig;
 	private final ConcurrentHashMap<Integer, RLOrder> buys = new ConcurrentHashMap<>();
@@ -87,7 +87,7 @@ public class Orderbook extends Base{
 				else if (o instanceof State.BroadcastPendings){
 					BroadcastPendings event = (BroadcastPendings) o;
 					if (event.pair.equals(botConfig.getPair())){
-						if (event.creates.isEmpty() && event.creates.isEmpty() && lastBalanced.get() > balancerInterval){
+						if (event.creates.isEmpty() && event.creates.isEmpty() && lastBalanced.get() >= balancerInterval){
 							lastBalanced.set(0);
 							List<Entry<Integer, RLOrder>> sortedSels, sortedBuys;
 							sortedSels = sortSels();

@@ -51,6 +51,9 @@ If false, the bot will only counter any order that fully consumes our order.
 
 
 **Version History**
+v.035
+- balancer interval changed to 4
+
 v.034
 - balancer sell fixed
 
@@ -221,6 +224,8 @@ TODOS
 - [x] (bug) Orderbook buys is empty. 
 - [x] check balancer generate for sells and both
 - [x] turn off seed on balancer
+- [] save worst rates for every orderbook
+- [] any reseed should start from these prices
 
 ## NOTES
 RESPONSE
