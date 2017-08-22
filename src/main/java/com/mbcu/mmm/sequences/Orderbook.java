@@ -171,10 +171,8 @@ public class Orderbook extends Base {
 			sorted = sortSels();
 			if (sorted.isEmpty()) {
 				worstSel = worstSel.add(botConfig.getGridSpace());
-				System.out.println("WORST SELL FROM EMPTY " + worstSel.toPlainString());
 			} else {
 				worstSel = BigDecimal.ONE.divide(sorted.get(0).getValue().getRate(), MathContext.DECIMAL64);
-				System.out.println("WORST SELL NOT FROM EMPTY " + worstSel.toPlainString());
 			}
 		}
 	}

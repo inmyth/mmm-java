@@ -51,6 +51,8 @@ If false, the bot will only counter any order that fully consumes our order.
 
 
 **Version History**
+v.036
+- fixed orderbook worst rates
 
 v.035
 - balancer interval changed to 4
@@ -227,7 +229,7 @@ TODOS
 - [x] turn off seed on balancer
 - [x] save worst rates for every orderbook
 - [x] any reseed should start from these prices
-- [] (bug) canceled txs are resubmitted in infinity. I think this happens when sell order crosses buy order so no cancel form was returned. 
+- [] (bug) canceled txs are resubmitted in infinity.
 - [x] (bug) worst rate calculation must be done separately for buys and sells otherwise the rate will clock up when one of them is empty.
 
 ## NOTES
