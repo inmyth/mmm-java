@@ -228,6 +228,7 @@ TODOS
 - [x] save worst rates for every orderbook
 - [x] any reseed should start from these prices
 - [] (bug) canceled txs are resubmitted in infinity. I think this happens when sell order crosses buy order so no cancel form was returned. 
+- [x] (bug) worst rate calculation must be done separately for buys and sells otherwise the rate will clock up when one of them is empty.
 
 ## NOTES
 RESPONSE
