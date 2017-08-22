@@ -21,7 +21,7 @@ import com.ripple.core.coretypes.Currency;
 public class BotConfig {
 
 	String pair;
-	float startMiddlePrice;
+	String startMiddlePrice;
 	String gridSpace;
 	int buyGridLevels;
 	int sellGridLevels;
@@ -89,11 +89,11 @@ public class BotConfig {
 		this.pair = pair;
 	}
 
-	public float getStartMiddlePrice() {
-		return startMiddlePrice;
+	public BigDecimal getStartMiddlePrice() {
+		return new BigDecimal(startMiddlePrice);
 	}
 
-	public void setStartMiddlePrice(float startMiddlePrice) {
+	public void setStartMiddlePrice(String startMiddlePrice) {
 		this.startMiddlePrice = startMiddlePrice;
 	}
 

@@ -45,10 +45,13 @@ public class Orderbook extends Base{
   private final AtomicInteger lastBalanced = new AtomicInteger(0);
   private final AtomicInteger ledgerValidated = new AtomicInteger(0);
   private final AtomicInteger ledgerClosed = new AtomicInteger(0);
+  private BigDecimal worstSel, worstBuy;
 
 	private Orderbook(BotConfig botConfig) {
 		super(MyLogger.getLogger(String.format(Txc.class.getName())), null);
 		this.botConfig = botConfig;
+		this.worstBuy = botConfig.getStartMiddlePrice();
+		this.worstSel = botConfig.getStartMiddlePrice();
 		path = Paths.get(String.format(fileName, botConfig.getPair().replaceAll("[/]", "_") ));
 		disposables.add(
 		bus.toObservable()
@@ -69,25 +72,29 @@ public class Orderbook extends Base{
 					event.accOffs.forEach(accOff -> {
 						shelve(accOff.getOrder(), accOff.getSeq());
 					});
+					worstRates(); 
 				}				
 				else if (o instanceof Common.OnDifference){
 					Common.OnDifference event = (Common.OnDifference) o;			
 					event.bas.forEach(ba ->{
 						shelve(ba.after, ba.befSeq);
 					});
+					worstRates(); 
 				}
 				else if (o instanceof Common.OnOfferEdited){
 					Common.OnOfferEdited event = (Common.OnOfferEdited) o;
 					edit(event.ba, event.newSeq);
+					worstRates(); 
 				}
 				else if (o instanceof Common.OnOfferCanceled){
 					Common.OnOfferCanceled event = (Common.OnOfferCanceled) o;
 					remove(event.prevSeq.intValue());
+					worstRates();  
 				}
 				else if (o instanceof State.BroadcastPendings){
 					BroadcastPendings event = (BroadcastPendings) o;
 					if (event.pair.equals(botConfig.getPair())){
-						if (event.creates.isEmpty() && event.creates.isEmpty() && lastBalanced.get() >= balancerInterval){
+						if (event.creates.isEmpty() && event.cancels.isEmpty() && lastBalanced.get() >= balancerInterval){
 							lastBalanced.set(0);
 							List<Entry<Integer, RLOrder>> sortedSels, sortedBuys;
 							sortedSels = sortSels();
@@ -120,6 +127,21 @@ public class Orderbook extends Base{
 		bus.send(new Balancer.OnRequestNonOrderbookRLOrder(botConfig.getPair()));
 	}
 	
+	private void worstRates(){
+		// is remove : set if value is lower than current, if empty then last value dif gridspace
+		// edit : set with last value after sort
+		// add : set with last value after sort 	
+		List<Entry<Integer, RLOrder>> sorted = sortBuys();
+		if (!sorted.isEmpty()){
+			Collections.reverse(sorted);				
+			worstBuy =  sorted.get(0).getValue().getRate();
+		}	
+		sorted.clear();
+		sorted.addAll(sortSels());
+		if (!sorted.isEmpty()){
+			worstSel =  BigDecimal.ONE.divide(sorted.get(0).getValue().getRate(), MathContext.DECIMAL64);
+		}	
+	}
 	
 	private void balancer(List<Entry<Integer, RLOrder>> sortedSels, List<Entry<Integer, RLOrder>> sortedBuys){		
 		// using pendings is unrealiable. 
@@ -133,41 +155,26 @@ public class Orderbook extends Base{
 		if (selsGap.compareTo(BigDecimal.ZERO) < 0){
 			cans.addAll(trim(sortedSels, selsGap, Direction.SELL));
 		} else {
-			gens.addAll(generate(sortedSels, selsGap, Direction.SELL));
+			gens.addAll(generate(selsGap, Direction.SELL));
 		}
 		BigDecimal buysGap = margin(sumBuys, Direction.BUY);
 		if (buysGap.compareTo(BigDecimal.ZERO) < 0){
 			cans.addAll(trim(sortedBuys, buysGap, Direction.BUY));
 		} else {
-			gens.addAll(generate(sortedBuys, buysGap, Direction.BUY));
+			gens.addAll(generate(buysGap, Direction.BUY));
 		}
 		cans.forEach(canSeq -> bus.send(new State.OnCancelReady(botConfig.getPair(), canSeq)));
 		gens.forEach(rlo -> bus.send(new State.OnOrderReady(rlo)));
 	}
 	
-	private List<RLOrder> generate(List<Entry<Integer, RLOrder>> sorteds, BigDecimal margin, Direction direction) {
-		List<RLOrder> res;	
-		if (sorteds.isEmpty()){
-			if (direction == Direction.BUY){
-				res = RLOrder.buildBuysSeed(new BigDecimal(botConfig.getStartMiddlePrice()), botConfig.getBuyGridLevels(), botConfig);
-			} else {
-				res = RLOrder.buildSelsSeed(new BigDecimal(botConfig.getStartMiddlePrice()), botConfig.getSellGridLevels(), botConfig);
-			}
-			return res;
-		}	
-		BigDecimal lastRate;
-		if (direction == Direction.BUY){
-			Collections.reverse(sorteds);	
-			lastRate =  sorteds.get(0).getValue().getRate();
-		} else {
-			lastRate =  BigDecimal.ONE.divide(sorteds.get(0).getValue().getRate(), MathContext.DECIMAL64);
-		}
+	private List<RLOrder> generate(BigDecimal margin, Direction direction) {
+		List<RLOrder> res;		
 		margin = margin.abs();
 		int levels = margin
 			.divide(direction == Direction.BUY ? botConfig.getBuyOrderQuantity() : botConfig.getSellOrderQuantity(), MathContext.DECIMAL32)
 			.intValue();		
 		res = direction == Direction.BUY ? 
-				RLOrder.buildBuysSeed(lastRate, levels, botConfig) : RLOrder.buildSelsSeed(lastRate, levels, botConfig);
+				RLOrder.buildBuysSeed(worstBuy, levels, botConfig) : RLOrder.buildSelsSeed(worstSel, levels, botConfig);
 		return res;	
 	}
 	

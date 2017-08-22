@@ -51,6 +51,7 @@ If false, the bot will only counter any order that fully consumes our order.
 
 
 **Version History**
+
 v.035
 - balancer interval changed to 4
 
@@ -224,8 +225,9 @@ TODOS
 - [x] (bug) Orderbook buys is empty. 
 - [x] check balancer generate for sells and both
 - [x] turn off seed on balancer
-- [] save worst rates for every orderbook
-- [] any reseed should start from these prices
+- [x] save worst rates for every orderbook
+- [x] any reseed should start from these prices
+- [] (bug) canceled txs are resubmitted in infinity. I think this happens when sell order crosses buy order so no cancel form was returned. 
 
 ## NOTES
 RESPONSE

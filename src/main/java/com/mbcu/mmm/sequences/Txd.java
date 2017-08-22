@@ -46,7 +46,7 @@ public class Txd extends Base {
 						OnOfferCanceled event = (OnOfferCanceled) o;
 						if (event.prevSeq.intValue() == canSeq) {
 							disposables.dispose();
-							bus.send(new State.RequestRemoveCreate(canSeq));		
+							bus.send(new State.RequestRemoveCancel(canSeq));		
 						}
 					} 
 					else if (o instanceof Common.OnLedgerClosed) {
@@ -54,7 +54,7 @@ public class Txd extends Base {
 						if (isTesSuccess && event.ledgerEvent.getValidated() > maxLedger){ // failed to enter ledger
 							disposables.dispose();
 							bus.send(new State.RequestSequenceSync());
-							bus.send(new State.RequestRemoveCreate(canSeq));
+							bus.send(new State.RequestRemoveCancel(canSeq));
 							bus.send(new State.OnCancelReady(cpair.toString(), canSeq));	
 							return;
 						}
