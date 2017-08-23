@@ -51,6 +51,9 @@ If false, the bot will only counter any order that fully consumes our order.
 
 
 **Version History**
+v.038
+- fixed 03701
+
 v.037
 - commented out balancer trim
 - commented out orderbook edit (bug)
@@ -235,6 +238,8 @@ TODOS
 - [x] any reseed should start from these prices
 - [] (bug) some canceled txs are resubmitted in infinity.
 - [x] (bug) worst rate calculation must be done separately for buys and sells otherwise the rate will clock up when one of them is empty.
+- [x] (bug) see 03701 sequence wasn't set in Common@271
+- [] find a way to unwrap exception
 
 ## NOTES
 RESPONSE

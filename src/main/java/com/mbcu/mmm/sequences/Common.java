@@ -35,7 +35,8 @@ import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
-public class Common extends Base {	
+public class Common extends Base {		
+	
 	private Common(Config config) {
 		super(MyLogger.getLogger(Common.class.getName()), config);
 		this.config = config;
@@ -52,9 +53,9 @@ public class Common extends Base {
 				public void onNext(Object o) {
 					if (o instanceof WebSocketClient.WSGotText) {						
 						WebSocketClient.WSGotText event = (WSGotText) o;
-//						log(event.raw, Level.FINER);													
+						log(event.raw, Level.FINER);													
 						reroute(event.raw);
-					}						
+					}
 				}
 
 				@Override
@@ -257,7 +258,7 @@ public class Common extends Base {
 						ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), finalFields.get(Amount.TakerPays), finalFields.get(Amount.TakerGets), affectedSeq));						
 					}
 					if (finalFields == null && offer.account().address.equals(this.config.getCredentials().getAddress())){
-						ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), null, null, null));
+						ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), null, null, offer.sequence()));
 					}
 				}
 			}

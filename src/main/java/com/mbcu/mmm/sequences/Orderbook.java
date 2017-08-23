@@ -108,11 +108,11 @@ public class Orderbook extends Base {
 					}
 				} else if (o instanceof Common.OnOfferEdited) {
 					Common.OnOfferEdited event = (Common.OnOfferEdited) o;
-//					Boolean pairMatched = pairMatched(event.ba.after);
-//					if (pairMatched != null) {
-//						edit(event.ba, event.newSeq, pairMatched);
-//						worstRates(pairMatched ? Direction.BUY : Direction.SELL);
-//					}
+					Boolean pairMatched = pairMatched(event.ba.after);
+					if (pairMatched != null) {
+						edit(event.ba, event.newSeq, pairMatched);
+						worstRates(pairMatched ? Direction.BUY : Direction.SELL);
+					}
 				} else if (o instanceof Common.OnOfferCanceled) {
 					Common.OnOfferCanceled event = (Common.OnOfferCanceled) o;
 					Boolean pairMatched = remove(event.prevSeq.intValue());
@@ -136,7 +136,7 @@ public class Orderbook extends Base {
 
 			@Override
 			public void onError(Throwable e) {
-				// TODO Auto-generated method stub
+				e.printStackTrace();
 			}
 
 			@Override
