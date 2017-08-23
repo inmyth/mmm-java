@@ -243,8 +243,6 @@ public final class RLOrder extends Base{
 		return paids.divide(gots, MathContext.DECIMAL64);	
 	}
 	
-
-
 	private static BigDecimal askFrom(Offer offer) {
 		return offer.directoryAskQuality().stripTrailingZeros();
 	}
@@ -299,8 +297,7 @@ public final class RLOrder extends Base{
 		IntStream.range(1, max + 1).forEach(a -> {res.add(a);});
 		return res;
 	}
-	
-	
+		
 	public static List<RLOrder> buildBuysSeed(BigDecimal startRate, int levels, BotConfig bot){
 		ArrayList<RLOrder> res = new ArrayList<>();
 		BigDecimal margin = new BigDecimal(bot.gridSpace);

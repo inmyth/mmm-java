@@ -132,7 +132,9 @@ public class State extends Base {
 				}
 				else if (o instanceof RequestRemoveCancel){
 					RequestRemoveCancel event = (RequestRemoveCancel) o;
+					System.out.println("Removing from cancels " + event.seq);
 					cancels.remove(event.seq);
+					
 				}
 				else if (o instanceof RequestSequenceSync){
 					sequenceRefreshObs.onNext(flagWaitSeq.compareAndSet(false, true));					
@@ -226,7 +228,7 @@ public class State extends Base {
 		SignedTransaction signed = signCancel(newSeq, canSeq, maxLedger);
 		Txd txd = Txd.newInstance(cpair, canSeq, newSeq, maxLedger);
 		cancels.put(canSeq, txd);
-		log("submitting offerCancel: " + signed.hash + " " + canSeq);
+		log("submitting offerCancel: " + signed.hash + " " + canSeq + " " + newSeq);
 		submit(signed.tx_blob);
 	}
 

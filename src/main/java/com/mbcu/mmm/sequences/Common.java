@@ -202,9 +202,9 @@ public class Common extends Base {
 		if (txType.equals("OfferCancel")) {
 			if (txn.account().address.equals(this.config.getCredentials().getAddress())){
 				if (previousTxnId == null){
-					log("CANCELED already canceled: " + txn.sequence());
+					log("CANCELED already canceled: " + txn.sequence() + " " + txnHash);
 				} else {
-					log("CANCELED Account: Seq: " + previousSeq + "  prevTxnId: " + previousTxnId);
+					log("CANCELED Seq: " + previousSeq + "  prevTxnId: " + previousTxnId);
 					bus.send(new OnOfferCanceled(txn.account(), previousSeq, txn.sequence(), previousTxnId));
 				}
 			}

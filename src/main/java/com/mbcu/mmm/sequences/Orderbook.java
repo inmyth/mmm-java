@@ -108,13 +108,11 @@ public class Orderbook extends Base {
 					}
 				} else if (o instanceof Common.OnOfferEdited) {
 					Common.OnOfferEdited event = (Common.OnOfferEdited) o;
-					Boolean pairMatched = pairMatched(event.ba.after);
-					if (pairMatched != null) {
-						edit(event.ba, event.newSeq, pairMatched);
-					}
-					if (pairMatched != null) {
-						worstRates(pairMatched ? Direction.BUY : Direction.SELL);
-					}
+//					Boolean pairMatched = pairMatched(event.ba.after);
+//					if (pairMatched != null) {
+//						edit(event.ba, event.newSeq, pairMatched);
+//						worstRates(pairMatched ? Direction.BUY : Direction.SELL);
+//					}
 				} else if (o instanceof Common.OnOfferCanceled) {
 					Common.OnOfferCanceled event = (Common.OnOfferCanceled) o;
 					Boolean pairMatched = remove(event.prevSeq.intValue());
@@ -182,22 +180,24 @@ public class Orderbook extends Base {
 		BigDecimal sumBuys = sum(Direction.BUY);
 		BigDecimal sumSels = sum(Direction.SELL);
 		log(printLog(sumBuys, sumSels, count(Direction.BUY), count(Direction.SELL)));
-		List<Integer> cans = new ArrayList<>();
+//		List<Integer> cans = new ArrayList<>();
 		List<RLOrder> gens = new ArrayList<>();
 
 		BigDecimal selsGap = margin(sumSels, Direction.SELL);
-		if (selsGap.compareTo(BigDecimal.ZERO) < 0) {
-			cans.addAll(trim(sortedSels, selsGap, Direction.SELL));
-		} else {
+		if (selsGap.compareTo(BigDecimal.ZERO) >= 0) {
 			gens.addAll(generate(selsGap, Direction.SELL));
-		}
+		} 		
+//		else {
+//			cans.addAll(trim(sortedSels, selsGap, Direction.SELL));
+//		}	
 		BigDecimal buysGap = margin(sumBuys, Direction.BUY);
-		if (buysGap.compareTo(BigDecimal.ZERO) < 0) {
-			cans.addAll(trim(sortedBuys, buysGap, Direction.BUY));
-		} else {
+		if (buysGap.compareTo(BigDecimal.ZERO) >= 0) {
 			gens.addAll(generate(buysGap, Direction.BUY));
-		}
-		cans.forEach(canSeq -> bus.send(new State.OnCancelReady(botConfig.getPair(), canSeq)));
+		} 
+//		else {
+//			cans.addAll(trim(sortedBuys, buysGap, Direction.BUY));
+//		}
+//		cans.forEach(canSeq -> bus.send(new State.OnCancelReady(botConfig.getPair(), canSeq)));
 		gens.forEach(rlo -> bus.send(new State.OnOrderReady(rlo)));
 	}
 

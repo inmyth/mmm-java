@@ -51,6 +51,10 @@ If false, the bot will only counter any order that fully consumes our order.
 
 
 **Version History**
+v.037
+- commented out balancer trim
+- commented out orderbook edit (bug)
+
 v.036
 - fixed orderbook worst rates
 
@@ -229,7 +233,7 @@ TODOS
 - [x] turn off seed on balancer
 - [x] save worst rates for every orderbook
 - [x] any reseed should start from these prices
-- [] (bug) canceled txs are resubmitted in infinity.
+- [] (bug) some canceled txs are resubmitted in infinity.
 - [x] (bug) worst rate calculation must be done separately for buys and sells otherwise the rate will clock up when one of them is empty.
 
 ## NOTES
@@ -293,3 +297,7 @@ Summary
 Version Log
 
 01701 : sending XRP tx with form <val>/XRP/rrrrrrrrrrrrrrrrrrrrrhoLvTp will not work. It has to be done natively by the lib. 
+03701 : 
+OFFER EDITED 14FDEE8C8EA4408B39FEE0C3A43354B570ABF263939183EA7B67BA3F365AF71D to FDFEB58D863867A841741C02BE2986F66E026A9EEB2D0E5C279214BA13EE0D4B
+Aug 23, 2017 3:35:26 PM com.mbcu.mmm.main.WebSocketClient$1 handleCallbackError
+SEVERE: null
