@@ -210,7 +210,7 @@ public class Orderbook extends Base {
 			Collections.reverse(sorteds);
 		}
 				
-		for (int i = -1; i < sorteds.size() - 1; i++){
+		for (int i = 0; i < sorteds.size() - 1; i++){
 			BigDecimal p, delta, q;
 			int locLevels = 0;
 			
