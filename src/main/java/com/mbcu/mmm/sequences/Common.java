@@ -53,7 +53,7 @@ public class Common extends Base {
 				public void onNext(Object o) {
 					if (o instanceof WebSocketClient.WSGotText) {						
 						WebSocketClient.WSGotText event = (WSGotText) o;
-						log(event.raw, Level.FINER);													
+//						log(event.raw, Level.FINER);													
 						reroute(event.raw);
 					}
 				}

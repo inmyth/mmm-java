@@ -51,6 +51,10 @@ If false, the bot will only counter any order that fully consumes our order.
 
 
 **Version History**
+v.039
+- balancer generate now seeds from startmiddle and between orders. 
+- probably need to remove generate seed from middleprice (may end up with lots of counter orders attacking the other side).
+
 v.038
 - fixed 03701
 
@@ -240,6 +244,7 @@ TODOS
 - [x] (bug) worst rate calculation must be done separately for buys and sells otherwise the rate will clock up when one of them is empty.
 - [x] (bug) see 03701 sequence wasn't set in Common@271
 - [] find a way to unwrap exception
+- [] may need to cancel generate seed from middleprice
 
 ## NOTES
 RESPONSE

@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import com.mbcu.mmm.helpers.TAccountOffer;
@@ -35,7 +36,7 @@ import io.reactivex.schedulers.Schedulers;
 
 public class Orderbook extends Base {
 	private final String fileName = "orderbook_%s.txt";
-	private final int balancerInterval = 4;
+	private final int balancerInterval = 1;
 
 	private final BotConfig botConfig;
 	private final ConcurrentHashMap<Integer, RLOrder> buys = new ConcurrentHashMap<>();
@@ -185,14 +186,14 @@ public class Orderbook extends Base {
 
 		BigDecimal selsGap = margin(sumSels, Direction.SELL);
 		if (selsGap.compareTo(BigDecimal.ZERO) >= 0) {
-			gens.addAll(generate(selsGap, Direction.SELL));
+			gens.addAll(generate(sortedSels, selsGap, Direction.SELL));
 		} 		
 //		else {
 //			cans.addAll(trim(sortedSels, selsGap, Direction.SELL));
 //		}	
 		BigDecimal buysGap = margin(sumBuys, Direction.BUY);
 		if (buysGap.compareTo(BigDecimal.ZERO) >= 0) {
-			gens.addAll(generate(buysGap, Direction.BUY));
+			gens.addAll(generate(sortedBuys, buysGap, Direction.BUY));
 		} 
 //		else {
 //			cans.addAll(trim(sortedBuys, buysGap, Direction.BUY));
@@ -201,11 +202,40 @@ public class Orderbook extends Base {
 		gens.forEach(rlo -> bus.send(new State.OnOrderReady(rlo)));
 	}
 
-	private List<RLOrder> generate(BigDecimal margin, Direction direction) {
-		List<RLOrder> res;
-		margin = margin.abs();
+	private List<RLOrder> generate(List<Entry<Integer, RLOrder>> sorteds, BigDecimal margin, Direction direction) {
+		List<RLOrder> res = new ArrayList<>();
+		margin = margin.abs();	
 		int levels = margin.divide(direction == Direction.BUY ? botConfig.getBuyOrderQuantity() : botConfig.getSellOrderQuantity(), MathContext.DECIMAL32).intValue();
-		res = direction == Direction.BUY ? RLOrder.buildBuysSeed(worstBuy, levels, botConfig) : RLOrder.buildSelsSeed(worstSel, levels, botConfig);
+		if (direction == Direction.SELL){
+			Collections.reverse(sorteds);
+		}
+				
+		for (int i = -1; i < sorteds.size() - 1; i++){
+			BigDecimal p, delta, q;
+			int locLevels = 0;
+			
+			if (direction == Direction.BUY){
+				p = i == -1 ? botConfig.getStartMiddlePrice() : sorteds.get(i).getValue().getRate();
+				q = sorteds.get(i + 1).getValue().getRate();
+				delta = p.subtract(q);
+			} else {
+				p = i == -1 ? botConfig.getStartMiddlePrice() : BigDecimal.ONE.divide(sorteds.get(i).getValue().getRate(), MathContext.DECIMAL64);
+				q = BigDecimal.ONE.divide(sorteds.get(i + 1).getValue().getRate(), MathContext.DECIMAL64);
+  			delta = q.subtract(p);
+			}		
+			locLevels = delta.divide(botConfig.getGridSpace(), MathContext.DECIMAL64).intValue() - 1;				
+			if (locLevels > 0 && levels > 0){
+				levels =- locLevels;
+				res.addAll(direction == Direction.BUY ? RLOrder.buildBuysSeed(p, locLevels, botConfig) : RLOrder.buildSelsSeed(p, locLevels, botConfig));
+			}		
+			if (levels <= 0){
+				break;
+			}
+		}		
+		
+		if (levels > 0){
+			res.addAll(direction == Direction.BUY ? RLOrder.buildBuysSeed(worstBuy, levels, botConfig) : RLOrder.buildSelsSeed(worstSel, levels, botConfig));
+		}
 		return res;
 	}
 

@@ -96,12 +96,12 @@ public class Yuki extends Base implements Counter {
 		BigDecimal rate = ba.before.getRate();	
 		RLOrder origin;
 		if (bcd.isDirectionMatch){
-			BigDecimal botQuantity 	= bcd.botConfig.getBuyOrderQuantity();		
+			BigDecimal botQuantity 	= bcd.botConfig.getSellOrderQuantity();		
 			Amount quantity 				= ba.after.getQuantity().subtract(botQuantity);
 			origin = RLOrder.fromWholeConsumed(Direction.BUY, quantity, ba.after.getTotalPrice(), rate);
 		}
 		else {
-			BigDecimal botQuantity 	= bcd.botConfig.getSellOrderQuantity();
+			BigDecimal botQuantity 	= bcd.botConfig.getBuyOrderQuantity();
 			Amount totalPrice 			= ba.after.getTotalPrice().subtract(botQuantity);			
 			origin = RLOrder.fromWholeConsumed(Direction.BUY, ba.after.getQuantity(), totalPrice, rate);
 		}		
