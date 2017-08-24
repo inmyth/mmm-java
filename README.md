@@ -51,6 +51,10 @@ If false, the bot will only counter any order that fully consumes our order.
 
 
 **Version History**
+v.040
+- removed generate seed from midprice
+- error severe -1
+
 v.039
 - balancer generate now seeds from startmiddle and between orders. 
 - probably need to remove generate seed from middleprice (may end up with lots of counter orders attacking the other side).

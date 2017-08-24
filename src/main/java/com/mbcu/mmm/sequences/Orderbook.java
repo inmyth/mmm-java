@@ -215,11 +215,11 @@ public class Orderbook extends Base {
 			int locLevels = 0;
 			
 			if (direction == Direction.BUY){
-				p = i == -1 ? botConfig.getStartMiddlePrice() : sorteds.get(i).getValue().getRate();
+				p = sorteds.get(i).getValue().getRate();
 				q = sorteds.get(i + 1).getValue().getRate();
 				delta = p.subtract(q);
 			} else {
-				p = i == -1 ? botConfig.getStartMiddlePrice() : BigDecimal.ONE.divide(sorteds.get(i).getValue().getRate(), MathContext.DECIMAL64);
+				p = BigDecimal.ONE.divide(sorteds.get(i).getValue().getRate(), MathContext.DECIMAL64);
 				q = BigDecimal.ONE.divide(sorteds.get(i + 1).getValue().getRate(), MathContext.DECIMAL64);
   			delta = q.subtract(p);
 			}		
