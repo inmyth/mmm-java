@@ -51,9 +51,13 @@ If false, the bot will only counter any order that fully consumes our order.
 
 
 **Version History**
+v.041
+- fixed 04101
+- unwrap exceptions in all Observables
+
 v.040
 - removed generate seed from midprice
-- error severe -1
+- error severe -1 (forgot to start balancer generate from 0 as I no longer seed from spread)
 
 v.039
 - balancer generate now seeds from startmiddle and between orders. 
@@ -247,8 +251,9 @@ TODOS
 - [] (bug) some canceled txs are resubmitted in infinity.
 - [x] (bug) worst rate calculation must be done separately for buys and sells otherwise the rate will clock up when one of them is empty.
 - [x] (bug) see 03701 sequence wasn't set in Common@271
-- [] find a way to unwrap exception
-- [] may need to cancel generate seed from middleprice
+- [x] find a way to unwrap exception
+- [x] may need to cancel generate seed from middleprice
+
 
 ## NOTES
 RESPONSE

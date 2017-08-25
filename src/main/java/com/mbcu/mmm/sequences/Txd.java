@@ -2,6 +2,7 @@ package com.mbcu.mmm.sequences;
 
 import com.mbcu.mmm.main.WebSocketClient;
 import com.mbcu.mmm.models.internal.Cpair;
+import com.mbcu.mmm.rx.BusBase;
 import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.sequences.Common.OnLedgerClosed;
@@ -27,7 +28,6 @@ public class Txd extends Base {
 
 	private final CompositeDisposable disposables = new CompositeDisposable();
 
-
 	private Txd(Cpair cpair, int canSeq, int newSeq, int maxLedger) {
 		super(MyLogger.getLogger(String.format(Txd.class.getName())), null);
 		this.cpair 			= cpair;
@@ -42,72 +42,75 @@ public class Txd extends Base {
 
 				@Override
 				public void onNext(Object o) {
-					if (o instanceof Common.OnOfferCanceled) {
-						OnOfferCanceled event = (OnOfferCanceled) o;
-						if (event.prevSeq.intValue() == canSeq) {
-							disposables.dispose();
-							bus.send(new State.RequestRemoveCancel(canSeq));		
+					BusBase base = (BusBase) o;
+					try {				
+						if (base instanceof Common.OnOfferCanceled) {
+							OnOfferCanceled event = (OnOfferCanceled) o;
+							if (event.prevSeq.intValue() == canSeq) {
+								disposables.dispose();
+								bus.send(new State.RequestRemoveCancel(canSeq));		
+							}
+						} 
+						else if (base instanceof Common.OnLedgerClosed) {
+							OnLedgerClosed event = (OnLedgerClosed) o;
+							if (isTesSuccess && event.ledgerEvent.getValidated() > maxLedger){ // failed to enter ledger
+								disposables.dispose();
+								bus.send(new State.RequestSequenceSync());
+								bus.send(new State.RequestRemoveCancel(canSeq));
+								bus.send(new State.OnCancelReady(cpair.toString(), canSeq));	
+								return;
+							}
+						} 
+						else if (base instanceof Common.OnRPCTesSuccess){
+							OnRPCTesSuccess event = (OnRPCTesSuccess) o;
+							if (event.sequence.intValue() == newSeq){
+								isTesSuccess = true;
+							}
 						}
-					} 
-					else if (o instanceof Common.OnLedgerClosed) {
-						OnLedgerClosed event = (OnLedgerClosed) o;
-						if (isTesSuccess && event.ledgerEvent.getValidated() > maxLedger){ // failed to enter ledger
+						else if (base instanceof Common.OnRPCTesFail) {
+							OnRPCTesFail event = (OnRPCTesFail) o;
+							if (event.sequence.intValue() != newSeq){
+								return;
+							}
+							String er = event.engineResult;
+							
+							if (er.equals(EngineResult.terINSUF_FEE_B.toString())) {
+								// no fund
+								bus.send(new WebSocketClient.WSRequestDisconnect());
+								return;
+							}
+							
+							if (er.startsWith("ter")) {
+								isTesSuccess = true;							
+								return;
+							}					
+							if (er.equals(EngineResult.tefPAST_SEQ.toString())) {
+								disposables.dispose();
+								bus.send(new State.RequestSequenceSync());
+								bus.send(new State.RequestRemoveCancel(canSeq));
+								bus.send(new State.OnCancelReady(cpair.toString(), canSeq));
+								return;
+							}				
+							if (er.equals(EngineResult.telINSUF_FEE_P.toString())){
+								disposables.dispose();
+								bus.send(new State.RequestWaitNextLedger());
+								bus.send(new State.RequestSequenceSync());
+								bus.send(new State.RequestRemoveCancel(canSeq));
+								bus.send(new State.OnCancelReady(cpair.toString(), canSeq));
+								return;
+							}
 							disposables.dispose();
-							bus.send(new State.RequestSequenceSync());
 							bus.send(new State.RequestRemoveCancel(canSeq));
-							bus.send(new State.OnCancelReady(cpair.toString(), canSeq));	
-							return;
-						}
-					} 
-					else if (o instanceof Common.OnRPCTesSuccess){
-						OnRPCTesSuccess event = (OnRPCTesSuccess) o;
-						if (event.sequence.intValue() == newSeq){
-							isTesSuccess = true;
-						}
+	//						bus.send(new State.OnOrderReady(outbound, hash, "retry " + er));
+						}	
+					} catch (Exception e) {
+						MyLogger.exception(LOGGER, base.toString(), e);		
+						throw e;
 					}
-					else if (o instanceof Common.OnRPCTesFail) {
-						OnRPCTesFail event = (OnRPCTesFail) o;
-						if (event.sequence.intValue() != newSeq){
-							return;
-						}
-						String er = event.engineResult;
-						
-						if (er.equals(EngineResult.terINSUF_FEE_B.toString())) {
-							// no fund
-							bus.send(new WebSocketClient.WSRequestDisconnect());
-							return;
-						}
-						
-						if (er.startsWith("ter")) {
-							isTesSuccess = true;							
-							return;
-						}					
-						if (er.equals(EngineResult.tefPAST_SEQ.toString())) {
-							disposables.dispose();
-							bus.send(new State.RequestSequenceSync());
-							bus.send(new State.RequestRemoveCancel(canSeq));
-							bus.send(new State.OnCancelReady(cpair.toString(), canSeq));
-							return;
-						}				
-						if (er.equals(EngineResult.telINSUF_FEE_P.toString())){
-							disposables.dispose();
-							bus.send(new State.RequestWaitNextLedger());
-							bus.send(new State.RequestSequenceSync());
-							bus.send(new State.RequestRemoveCancel(canSeq));
-							bus.send(new State.OnCancelReady(cpair.toString(), canSeq));
-							return;
-						}
-						disposables.dispose();
-						bus.send(new State.RequestRemoveCancel(canSeq));
-//						bus.send(new State.OnOrderReady(outbound, hash, "retry " + er));
-					}	
 				}
 
 				@Override
-				public void onError(Throwable e) {
-					// TODO Auto-generated method stub
-					
-				}
+				public void onError(Throwable e) {}
 
 				@Override
 				public void onComplete() {

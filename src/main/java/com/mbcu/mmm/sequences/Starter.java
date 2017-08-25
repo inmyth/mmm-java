@@ -10,9 +10,10 @@ import com.mbcu.mmm.main.WebSocketClient;
 import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.models.request.AccountInfo;
 import com.mbcu.mmm.models.request.AccountOffers;
-import com.mbcu.mmm.models.request.Subscribe;
 import com.mbcu.mmm.models.request.Request.Command;
+import com.mbcu.mmm.models.request.Subscribe;
 import com.mbcu.mmm.models.request.Subscribe.Stream;
+import com.mbcu.mmm.rx.BusBase;
 import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.sequences.counters.Yuki;
@@ -39,10 +40,15 @@ public class Starter extends Base{
 
 			@Override
 			public void onNext(Object o) {
-				if (o instanceof Common.OnAccountInfoSequence){
-					latch.countDown();
-					disSubscribeLedger.dispose();
-				}					
+				BusBase base = (BusBase) o;
+				try {
+					if (base instanceof Common.OnAccountInfoSequence){
+						latch.countDown();
+						disSubscribeLedger.dispose();
+					}				
+				} catch (Exception e) {
+					MyLogger.exception(LOGGER, base.toString(), e);		
+					throw e;				}
 			}
 
 			@Override
@@ -61,10 +67,16 @@ public class Starter extends Base{
 
 				@Override
 				public void onNext(Object o) {
-					if (o instanceof Common.OnAccountInfoSequence){
-						latch.countDown();
-						disAccInfo.dispose();
-					}					
+					BusBase base = (BusBase) o;
+					try {
+						if (o instanceof Common.OnAccountInfoSequence){
+							latch.countDown();
+							disAccInfo.dispose();
+						}	
+					} catch (Exception e) {
+						MyLogger.exception(LOGGER, base.toString(), e);		
+						throw e;
+					}
 				}
 
 				@Override
@@ -75,7 +87,6 @@ public class Starter extends Base{
 				
 			}));
 		dispos.add(disAccInfo);
-
 		
 		CompositeDisposable disLedgerClosed = new CompositeDisposable();
 		disLedgerClosed
@@ -84,10 +95,16 @@ public class Starter extends Base{
 
 			@Override
 			public void onNext(Object o) {
-				if (o instanceof Common.OnLedgerClosed){
-					latch.countDown();
-					disLedgerClosed.dispose();
-				}					
+				BusBase base = (BusBase) o;
+				try {
+					if (base instanceof Common.OnLedgerClosed){
+						latch.countDown();
+						disLedgerClosed.dispose();
+					}					
+				} catch (Exception e) {
+					MyLogger.exception(LOGGER, base.toString(), e);		
+					throw e;
+				}
 			}
 
 			@Override
@@ -106,12 +123,18 @@ public class Starter extends Base{
 
 			@Override
 			public void onNext(Object o) {
-				if (o instanceof WebSocketClient.WSConnected){
-					log("connected", Level.FINER);
-					latch.countDown();
-					sendInitRequests();
-					disOnWSConnected.dispose();
-				}				
+				BusBase base = (BusBase) o;
+				try {
+					if (base instanceof WebSocketClient.WSConnected){
+						log("connected", Level.FINER);
+						latch.countDown();
+						sendInitRequests();
+						disOnWSConnected.dispose();
+					}			
+				} catch (Exception e) {
+					MyLogger.exception(LOGGER, base.toString(), e);		
+					throw e;
+				}
 			}
 
 			@Override
@@ -129,7 +152,7 @@ public class Starter extends Base{
 		.subscribeWith(new DisposableObserver<Object>() {
 
 			@Override
-			public void onNext(Object o) {
+			public void onNext(Object o) {			
 				if (o instanceof Common.OnAccountOffers){
 					latch.countDown();
 				}				
@@ -184,6 +207,6 @@ public class Starter extends Base{
 		bus.send(new OnInitiated());	
 	}
 	
-	public static class OnInitiated{}
+	public static class OnInitiated extends BusBase {}
 	
 }

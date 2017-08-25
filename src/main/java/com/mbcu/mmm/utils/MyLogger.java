@@ -40,4 +40,14 @@ public class MyLogger {
 	public static Logger getLogger(String name) {
 		return Logger.getLogger(name);
 	}
+
+	public static void exception(Logger log, String cause, Exception e){
+		StringBuffer res = new StringBuffer("EXCEPTION\n");
+		res.append("object-info start\n");
+		res.append(cause);		
+		res.append("\nobject-info end\ntrace start\n");
+		res.append(MyUtils.stackTrace(e));
+		res.append("\ntrace end");
+		log.log(Level.SEVERE, res.toString());	
+	}
 }

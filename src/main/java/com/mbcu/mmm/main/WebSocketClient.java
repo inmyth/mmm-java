@@ -6,8 +6,10 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 import com.mbcu.mmm.models.internal.Config;
+import com.mbcu.mmm.rx.BusBase;
 import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
+import com.mbcu.mmm.utils.MyLogger;
 import com.neovisionaries.ws.client.ThreadType;
 import com.neovisionaries.ws.client.WebSocket;
 import com.neovisionaries.ws.client.WebSocketException;
@@ -189,11 +191,16 @@ public class WebSocketClient {
 
 	private void initBus() {
 		bus.toObservable().subscribe(o -> {
-			if (o instanceof WSRequestSendText) {
-				WSRequestSendText event = (WSRequestSendText) o;
-				ws.sendText(event.request);
-			} else if (o instanceof WSRequestDisconnect) {
-				ws.disconnect();
+			BusBase base = (BusBase) o;
+			try {
+				if (base instanceof WSRequestSendText) {
+					WSRequestSendText event = (WSRequestSendText) o;
+					ws.sendText(event.request);
+				} else if (base instanceof WSRequestDisconnect) {
+					ws.disconnect();
+				}
+			} catch (Exception e) {
+				MyLogger.exception(LOGGER, base.toString(), e);		
 			}
 
 		});
@@ -203,10 +210,10 @@ public class WebSocketClient {
 		ws.connect();
 	}
 
-	public static class WSConnected {
+	public static class WSConnected extends BusBase {
 	}
 
-	public static class WSDisconnected {
+	public static class WSDisconnected extends BusBase {
 	}
 
 	public static class WSError {
@@ -219,7 +226,7 @@ public class WebSocketClient {
 
 	}
 
-	public static class WSGotText {
+	public static class WSGotText extends BusBase {
 		public String raw;
 
 		public WSGotText(String raw) {
@@ -229,7 +236,7 @@ public class WebSocketClient {
 
 	}
 
-	public static class WSRequestSendText {
+	public static class WSRequestSendText extends BusBase {
 		public String request;
 
 		public WSRequestSendText(String request) {
@@ -239,7 +246,7 @@ public class WebSocketClient {
 
 	}
 
-	public static class WSRequestDisconnect {
+	public static class WSRequestDisconnect extends BusBase {
 	}
 
 }

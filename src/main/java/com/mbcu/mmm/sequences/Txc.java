@@ -4,6 +4,7 @@ import java.util.logging.Level;
 
 import com.mbcu.mmm.main.WebSocketClient;
 import com.mbcu.mmm.models.internal.RLOrder;
+import com.mbcu.mmm.rx.BusBase;
 import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.sequences.Common.OnLedgerClosed;
@@ -43,89 +44,90 @@ public class Txc extends Base {
 
 			@Override
 			public void onNext(Object o) {
-				if (o instanceof Common.OnOfferCreate) {
-					OnOfferCreate event = (OnOfferCreate) o;
-					if (event.sequence.intValue() == seq) {
-						disposables.dispose();
-						bus.send(new State.RequestRemoveCreate(seq));		
+				BusBase base = (BusBase) o;
+				try {			
+					if (base instanceof Common.OnOfferCreate) {
+						OnOfferCreate event = (OnOfferCreate) o;
+						if (event.sequence.intValue() == seq) {
+							disposables.dispose();
+							bus.send(new State.RequestRemoveCreate(seq));		
+						}
+					} 
+					else if (base instanceof Common.OnLedgerClosed) {
+						OnLedgerClosed event = (OnLedgerClosed) o;
+						if (isTesSuccess && event.ledgerEvent.getValidated() > maxLedger){ // failed to enter ledger
+							disposables.dispose();
+							bus.send(new State.RequestSequenceSync());
+							bus.send(new State.RequestRemoveCreate(seq));
+							bus.send(new State.OnOrderReady(outbound, hash, " MaxLedger passed"));	
+							return;
+						}
+					} 
+					else if (base instanceof Common.OnRPCTesSuccess){
+						OnRPCTesSuccess event = (OnRPCTesSuccess) o;
+						if (event.hash.compareTo(hash) == 0){
+							isTesSuccess = true;
+						}
 					}
-				} 
-				else if (o instanceof Common.OnLedgerClosed) {
-					OnLedgerClosed event = (OnLedgerClosed) o;
-					if (isTesSuccess && event.ledgerEvent.getValidated() > maxLedger){ // failed to enter ledger
-						disposables.dispose();
-						bus.send(new State.RequestSequenceSync());
-						bus.send(new State.RequestRemoveCreate(seq));
-						bus.send(new State.OnOrderReady(outbound, hash, " MaxLedger passed"));	
-						return;
-					}
-				} 
-				else if (o instanceof Common.OnRPCTesSuccess){
-					OnRPCTesSuccess event = (OnRPCTesSuccess) o;
-					if (event.hash.compareTo(hash) == 0){
-						isTesSuccess = true;
-					}
-				}
-				else if (o instanceof Common.OnRPCTesFail) {
-					OnRPCTesFail event = (OnRPCTesFail) o;
-					if (event.sequence.intValue() != seq || event.hash.compareTo(hash) != 0){
-						return;
-					}
-					String er = event.engineResult;
+					else if (base instanceof Common.OnRPCTesFail) {
+						OnRPCTesFail event = (OnRPCTesFail) o;
+						if (event.sequence.intValue() != seq || event.hash.compareTo(hash) != 0){
+							return;
+						}
+						String er = event.engineResult;
+						
+						if (er.equals(EngineResult.terINSUF_FEE_B.toString())) {
+							// no fund
+							bus.send(new WebSocketClient.WSRequestDisconnect());
+							return;
+						}
+						
+						if (er.startsWith("ter")) {
+	//					this includes terQUEUED and terPRE_SEQ and behave like tesSUCCESS
+	//					https://www.xrpchat.com/topic/2654-transaction-failed-with-terpre_seq-but-still-executed/?page=2
+	//					disposables.dispose();
+	//					bus.send(new RequestRemove(seq));
+							isTesSuccess = true;							
+							return;
+						}					
+	//					if (er.equals(EngineResult.tefALREADY.toString())){
+	//						// This means a tx with the same sequence number is already queued.
+	//						disposables.dispose();
+	//						bus.send(new RequestRemove(seq));
+	//						return;
+	//					}
+						if (er.equals(EngineResult.tefPAST_SEQ.toString())) {
+							disposables.dispose();
+							bus.send(new State.RequestSequenceSync());
+							bus.send(new State.RequestRemoveCreate(seq));
+							bus.send(new State.OnOrderReady(outbound, hash, " retry tefPAST_SEQ"));
+							return;
+						}
 					
-					if (er.equals(EngineResult.terINSUF_FEE_B.toString())) {
-						// no fund
-						bus.send(new WebSocketClient.WSRequestDisconnect());
-						return;
-					}
-					
-					if (er.startsWith("ter")) {
-//					this includes terQUEUED and terPRE_SEQ and behave like tesSUCCESS
-//					https://www.xrpchat.com/topic/2654-transaction-failed-with-terpre_seq-but-still-executed/?page=2
-//					disposables.dispose();
-//					bus.send(new RequestRemove(seq));
-						isTesSuccess = true;							
-						return;
-					}					
-//					if (er.equals(EngineResult.tefALREADY.toString())){
-//						// This means a tx with the same sequence number is already queued.
-//						disposables.dispose();
-//						bus.send(new RequestRemove(seq));
-//						return;
-//					}
-					if (er.equals(EngineResult.tefPAST_SEQ.toString())) {
+						if (er.equals(EngineResult.telINSUF_FEE_P.toString())){
+							// retry next ledger
+							disposables.dispose();
+							bus.send(new State.RequestWaitNextLedger());
+							bus.send(new State.RequestSequenceSync());
+							bus.send(new State.RequestRemoveCreate(seq));
+							bus.send(new State.OnOrderReady(outbound, hash, " retry insufFee"));
+							return;
+						}
 						disposables.dispose();
-						bus.send(new State.RequestSequenceSync());
 						bus.send(new State.RequestRemoveCreate(seq));
-						bus.send(new State.OnOrderReady(outbound, hash, " retry tefPAST_SEQ"));
-						return;
-					}
-				
-					if (er.equals(EngineResult.telINSUF_FEE_P.toString())){
-						// retry next ledger
-						disposables.dispose();
-						bus.send(new State.RequestWaitNextLedger());
-						bus.send(new State.RequestSequenceSync());
-						bus.send(new State.RequestRemoveCreate(seq));
-						bus.send(new State.OnOrderReady(outbound, hash, " retry insufFee"));
-						return;
-					}
-					disposables.dispose();
-					bus.send(new State.RequestRemoveCreate(seq));
-//					bus.send(new State.OnOrderReady(outbound, hash, "retry " + er));
-				}	
-				
+	//					bus.send(new State.OnOrderReady(outbound, hash, "retry " + er));
+					}	
+				} catch (Exception e) {
+					MyLogger.exception(LOGGER, base.toString(), e);		
+					throw e;
+				}			
 			}
 
 			@Override
-			public void onError(Throwable e) {
-				log(e.getMessage(), Level.SEVERE);				
-			}
+			public void onError(Throwable e) {}
 
 			@Override
-			public void onComplete() {
-				// TODO Auto-generated method stub				
-			}
+			public void onComplete() {}
 		}));
 
 	}

@@ -17,6 +17,7 @@ import com.mbcu.mmm.models.internal.LedgerEvent;
 import com.mbcu.mmm.models.internal.RLOrder;
 import com.mbcu.mmm.models.request.AccountInfo;
 import com.mbcu.mmm.models.request.Submit;
+import com.mbcu.mmm.rx.BusBase;
 import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.sequences.Balancer;
@@ -75,92 +76,98 @@ public class State extends Base {
 
 			@Override
 			public void onNext(Object o) {
-				if (o instanceof Common.OnOfferCreate){
-					OnOfferCreate event = (OnOfferCreate) o;
-					setSequence(event.sequence);
-					pending.remove(event.sequence.intValue());					
-				}
-				else if (o instanceof Common.OnOfferEdited){
-					OnOfferEdited event = (OnOfferEdited) o;
-					setSequence(event.newSeq);
-				}
-				else if (o instanceof Common.OnOfferCanceled){
-					OnOfferCanceled event = (OnOfferCanceled) o;
-					cancels.remove(event.prevSeq.intValue());
-					setSequence(event.newSeq);
-				}			
-				else if (o instanceof OnOrderReady){
-					OnOrderReady event = (OnOrderReady) o;
-					if (event.from != null){
-						log("retry from " + event.from + " " + event.memo);
+				BusBase base = (BusBase) o;
+				try {
+					if (base instanceof Common.OnOfferCreate){
+						OnOfferCreate event = (OnOfferCreate) o;
+						setSequence(event.sequence);
+						pending.remove(event.sequence.intValue());					
 					}
-					if (flagWaitSeq.get() || flagWaitLedger.get()){
-						qPens.add(event.outbound);												
-					} else {
-						ocreate(event.outbound);						
-					}	
-				}			
-				else if (o instanceof OnCancelReady){
-					OnCancelReady event = (OnCancelReady) o;
-					if (flagWaitSeq.get() || flagWaitLedger.get()){
-						qCans.add(new TxdMini(Cpair.newInstance(event.pair), event.seq));												
-					} else {
-						ocancel(Cpair.newInstance(event.pair), event.seq);					
-					}	
-				}				
-				else if (o instanceof Common.OnLedgerClosed){
-					OnLedgerClosed event = (OnLedgerClosed) o;		
-					log(event.ledgerEvent.toString() +  " seq : " + sequence);
-					setLedgerIndex(event.ledgerEvent);	
-					flagWaitLedger.set(false);
-					if (!flagWaitLedger.get() && !flagWaitSeq.get()){
-						drain();
-					}										
-				}
-				else if (o instanceof Common.OnAccountInfoSequence){
-					OnAccountInfoSequence event = (OnAccountInfoSequence) o;
-					log(String.format("New Sequence %d", event.sequence.intValue()));
-					setSequence(event.sequence);
-					flagWaitSeq.set(false);
-					if (!flagWaitLedger.get() && !flagWaitSeq.get()){
-						drain();
-					}									
-				}
-				else if (o instanceof RequestRemoveCreate){
-					RequestRemoveCreate event = (RequestRemoveCreate) o;
-					pending.remove(event.seq);
-				}
-				else if (o instanceof RequestRemoveCancel){
-					RequestRemoveCancel event = (RequestRemoveCancel) o;
-					System.out.println("Removing from cancels " + event.seq);
-					cancels.remove(event.seq);
-					
-				}
-				else if (o instanceof RequestSequenceSync){
-					sequenceRefreshObs.onNext(flagWaitSeq.compareAndSet(false, true));					
-				}
-				else if (o instanceof RequestWaitNextLedger){
-					flagWaitLedger.set(true);					
-				}
-				else if (o instanceof Balancer.OnRequestNonOrderbookRLOrder){
-					OnRequestNonOrderbookRLOrder event = (OnRequestNonOrderbookRLOrder) o;
-					List<RLOrder> crts = Stream
-						.concat(pending.values().stream().map(txc -> {return txc.getOutbound();}), qPens.stream())
-						.filter(rlo -> rlo.getCpair().isMatch(event.pair) != null)
-						.collect(Collectors.toList());
-
-					List<Integer> cans = Stream.concat(
-							cancels.values().stream()
-							.filter(txd -> txd.getPair().isMatch(event.pair) != null)
-							.map(txd -> {return txd.getCanSeq();})
-							, 
-							qCans.stream()
-							.filter(mini -> mini.cpair.isMatch(event.pair) != null)
-							.map(mini -> {return mini.canSeq;})							
-							)
+					else if (base instanceof Common.OnOfferEdited){
+						OnOfferEdited event = (OnOfferEdited) o;
+						setSequence(event.newSeq);
+					}
+					else if (base instanceof Common.OnOfferCanceled){
+						OnOfferCanceled event = (OnOfferCanceled) o;
+						cancels.remove(event.prevSeq.intValue());
+						setSequence(event.newSeq);
+					}			
+					else if (base instanceof OnOrderReady){
+						OnOrderReady event = (OnOrderReady) o;
+						if (event.from != null){
+							log("retry from " + event.from + " " + event.memo);
+						}
+						if (flagWaitSeq.get() || flagWaitLedger.get()){
+							qPens.add(event.outbound);												
+						} else {
+							ocreate(event.outbound);						
+						}	
+					}			
+					else if (base instanceof OnCancelReady){
+						OnCancelReady event = (OnCancelReady) o;
+						if (flagWaitSeq.get() || flagWaitLedger.get()){
+							qCans.add(new TxdMini(Cpair.newInstance(event.pair), event.seq));												
+						} else {
+							ocancel(Cpair.newInstance(event.pair), event.seq);					
+						}	
+					}				
+					else if (base instanceof Common.OnLedgerClosed){
+						OnLedgerClosed event = (OnLedgerClosed) o;		
+						log(event.ledgerEvent.toString() +  " seq : " + sequence);
+						setLedgerIndex(event.ledgerEvent);	
+						flagWaitLedger.set(false);
+						if (!flagWaitLedger.get() && !flagWaitSeq.get()){
+							drain();
+						}										
+					}
+					else if (base instanceof Common.OnAccountInfoSequence){
+						OnAccountInfoSequence event = (OnAccountInfoSequence) o;
+						log(String.format("New Sequence %d", event.sequence.intValue()));
+						setSequence(event.sequence);
+						flagWaitSeq.set(false);
+						if (!flagWaitLedger.get() && !flagWaitSeq.get()){
+							drain();
+						}									
+					}
+					else if (base instanceof RequestRemoveCreate){
+						RequestRemoveCreate event = (RequestRemoveCreate) o;
+						pending.remove(event.seq);
+					}
+					else if (base instanceof RequestRemoveCancel){
+						RequestRemoveCancel event = (RequestRemoveCancel) o;
+						System.out.println("Removing from cancels " + event.seq);
+						cancels.remove(event.seq);
+						
+					}
+					else if (base instanceof RequestSequenceSync){
+						sequenceRefreshObs.onNext(flagWaitSeq.compareAndSet(false, true));					
+					}
+					else if (base instanceof RequestWaitNextLedger){
+						flagWaitLedger.set(true);					
+					}
+					else if (base instanceof Balancer.OnRequestNonOrderbookRLOrder){
+						OnRequestNonOrderbookRLOrder event = (OnRequestNonOrderbookRLOrder) o;
+						List<RLOrder> crts = Stream
+							.concat(pending.values().stream().map(txc -> {return txc.getOutbound();}), qPens.stream())
+							.filter(rlo -> rlo.getCpair().isMatch(event.pair) != null)
 							.collect(Collectors.toList());
-
-					bus.send(new BroadcastPendings(event.pair, crts, cans));
+	
+						List<Integer> cans = Stream.concat(
+								cancels.values().stream()
+								.filter(txd -> txd.getPair().isMatch(event.pair) != null)
+								.map(txd -> {return txd.getCanSeq();})
+								, 
+								qCans.stream()
+								.filter(mini -> mini.cpair.isMatch(event.pair) != null)
+								.map(mini -> {return mini.canSeq;})							
+								)
+								.collect(Collectors.toList());
+	
+						bus.send(new BroadcastPendings(event.pair, crts, cans));
+					}
+				} catch (Exception e) {
+					MyLogger.exception(LOGGER, base.toString(), e);		
+					throw e;				
 				}
 			}
 
@@ -253,7 +260,7 @@ public class State extends Base {
 		bus.send(new WebSocketClient.WSRequestSendText(Submit.build(txBlob).stringify()));
 	}
 		
-	public static class OnOrderValidated{
+	public static class OnOrderValidated extends BusBase {
 		public int seq;
 
 		public OnOrderValidated(int seq) {
@@ -262,7 +269,7 @@ public class State extends Base {
 		}			
 	}
 	
-	public static class OnOrderReady {
+	public static class OnOrderReady extends BusBase {
 		public RLOrder outbound;
 		public Hash256 from;
 		public String memo;
@@ -279,7 +286,7 @@ public class State extends Base {
 		}
 	}
 	
-	public static class OnCancelReady {
+	public static class OnCancelReady extends BusBase {
 		public final int seq;
 		public final String pair;
 
@@ -291,7 +298,7 @@ public class State extends Base {
 		
 	}
 
-	public static class RequestRemoveCreate {
+	public static class RequestRemoveCreate extends BusBase {
 		public int seq;
 
 		public RequestRemoveCreate(int seq) {
@@ -300,7 +307,7 @@ public class State extends Base {
 		}
 	}
 	
-	public static class RequestRemoveCancel {
+	public static class RequestRemoveCancel extends BusBase {
 		public int seq;
 
 		public RequestRemoveCancel(int seq) {
@@ -310,11 +317,11 @@ public class State extends Base {
 		
 	}
 	
-	public static class RequestSequenceSync{}
+	public static class RequestSequenceSync extends BusBase {}
 	
-	public static class RequestWaitNextLedger{}
+	public static class RequestWaitNextLedger extends BusBase {}
 	
-	public static class BroadcastPendings{
+	public static class BroadcastPendings extends BusBase {
 		public final String pair;
 		public final List<RLOrder> creates;
 		public final List<Integer> cancels;
@@ -326,7 +333,7 @@ public class State extends Base {
 		}
 	}
 	
-	public static class RequestOrderCancel {
+	public static class RequestOrderCancel extends BusBase {
 		public final int seq;
 
 		public RequestOrderCancel(int seq) {

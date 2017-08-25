@@ -17,6 +17,7 @@ import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.models.internal.Cpair;
 import com.mbcu.mmm.models.internal.LedgerEvent;
 import com.mbcu.mmm.models.internal.RLOrder;
+import com.mbcu.mmm.rx.BusBase;
 import com.mbcu.mmm.utils.MyLogger;
 import com.ripple.core.coretypes.AccountID;
 import com.ripple.core.coretypes.Amount;
@@ -50,11 +51,16 @@ public class Common extends Base {
 				}
 
 				@Override
-				public void onNext(Object o) {
-					if (o instanceof WebSocketClient.WSGotText) {						
-						WebSocketClient.WSGotText event = (WSGotText) o;
-//						log(event.raw, Level.FINER);													
-						reroute(event.raw);
+				public void onNext(Object o) {	
+					BusBase base = (BusBase) o;				
+					try {
+						if (base instanceof WebSocketClient.WSGotText) {						
+							WebSocketClient.WSGotText event = (WSGotText) o;
+							reroute(event.raw);
+						}
+					} catch (Exception e){
+						MyLogger.exception(LOGGER, base.toString(), e);		
+						throw e;
 					}
 				}
 
@@ -447,7 +453,7 @@ public class Common extends Base {
 		return testTakerGets != null && testTakerPays != null;		
 	}
 	
-	public static class OnOfferCanceled {
+	public static class OnOfferCanceled extends BusBase {
 		public final AccountID account;
 		public final Hash256 previousTxnId;
 		public final UInt32 prevSeq;
@@ -460,9 +466,10 @@ public class Common extends Base {
 			this.prevSeq = prevSeq;
 			this.newSeq = newSeq;
 		}
+	
 	}
 
-	public static class OnOfferCreate {
+	public static class OnOfferCreate extends BusBase {
 		public AccountID account;
 		public Hash256 hash;
 		public UInt32 sequence;
@@ -475,7 +482,7 @@ public class Common extends Base {
 		}
 	}
 	
-	public static class OnOfferCreated {
+	public static class OnOfferCreated extends BusBase {
 		public final  AccountID txnAccount, ocAccount;
 		public final  Hash256 prevTxnId;
 		public final  RLOrder order;
@@ -489,7 +496,7 @@ public class Common extends Base {
 		}
 	}
 	
-	public static class OnOfferEdited {
+	public static class OnOfferEdited extends BusBase {
 		public final AccountID ocAccount;
 		public final Hash256 newHash;
 		public final Hash256 previousTxnId;
@@ -508,7 +515,7 @@ public class Common extends Base {
 		}		
 	}
 	
-	public static class OnOfferExecuted{
+	public static class OnOfferExecuted extends BusBase {
 		public List<RLOrder> oes;
 
 		public OnOfferExecuted(List<RLOrder> oes) {
@@ -517,7 +524,7 @@ public class Common extends Base {
 		}
 	}
 	
-	public static class OnDifference {
+	public static class OnDifference extends BusBase {
 		public List<BefAf> bas;
 
 		public OnDifference(List<BefAf> bas) {
@@ -526,7 +533,7 @@ public class Common extends Base {
 		}	
 	}
 	
-	public static class OnRPCTesSuccess{
+	public static class OnRPCTesSuccess extends BusBase {
 		public AccountID accountID;
 		public Hash256 hash;
 		public UInt32 sequence;
@@ -539,11 +546,12 @@ public class Common extends Base {
 		}
 	}
 	
-	public static class OnRPCTesFail{
+	public static class OnRPCTesFail extends BusBase {
 		public String engineResult;
 		public AccountID accountID;
 		public Hash256 hash;
 		public UInt32 sequence;
+		
 		public OnRPCTesFail(String engineResult, AccountID accountID, Hash256 hash, UInt32 sequence) {
 			super();
 			this.engineResult = engineResult;
@@ -553,7 +561,7 @@ public class Common extends Base {
 		}		
 	}
 	
-	public static class OnLedgerClosed{
+	public static class OnLedgerClosed extends BusBase {
 		public final LedgerEvent ledgerEvent;
 		
 		public OnLedgerClosed(JSONObject root) {
@@ -562,7 +570,7 @@ public class Common extends Base {
 		}
 	}
 	
-	public static class OnAccountInfoSequence {
+	public static class OnAccountInfoSequence extends BusBase {
 		public final UInt32 sequence;
 
 		public OnAccountInfoSequence(UInt32 sequence) {
@@ -571,7 +579,7 @@ public class Common extends Base {
 		} 			
 	}
 		
-	public static class OnAccountOffers {
+	public static class OnAccountOffers extends BusBase {
 		public final List<TAccountOffer> accOffs;
 
 		public OnAccountOffers(List<TAccountOffer> accOffs) {

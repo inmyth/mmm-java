@@ -46,12 +46,39 @@ public class Mock {
 //		Observable d = Observable.range(1, 5);
 //		Observable e = Observable.range(90, 110);
 		
-		Observable.range(1, 5)
-		 .mergeWith(Observable.range(90, 110))
-		 .subscribe(System.out::println);
+//		Observable.range(1, 5)
+//		 .mergeWith(Observable.range(90, 110))
+//		 .subscribe(System.out::println);
+//		
+//		BigDecimal aaa = new BigDecimal("-2");
+//		System.out.println(aaa.compareTo(BigDecimal.ZERO) <= 0);
 		
-		BigDecimal aaa = new BigDecimal("-2");
-		System.out.println(aaa.compareTo(BigDecimal.ZERO) <= 0);
+//		Bla bla = new Bla();
+//		System.out.println(bla.getClass().getName());
+		
+		Foo foo = new Foo();
+		System.out.println(foo);
+
+	}
+	
+	static class Bla {
+		String a = "aaa";
+		
+		@Override
+		public String toString() {
+			// TODO Auto-generated method stub
+			return this.getClass().getName() + GsonUtils.toJson(this);
+		}
+		
+	}
+	
+	static class Foo extends Bla{
+		String c = "ccc";
+		
+		public Foo() {
+			super.a = "bbb";
+		}
+		 
 	}
 
 }

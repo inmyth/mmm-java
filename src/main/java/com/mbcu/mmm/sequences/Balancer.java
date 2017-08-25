@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.models.internal.RLOrder;
+import com.mbcu.mmm.rx.BusBase;
 import com.mbcu.mmm.sequences.state.State;
 import com.mbcu.mmm.utils.MyLogger;
 
@@ -27,10 +28,7 @@ public class Balancer extends Base{
 			}
 
 			@Override
-			public void onNext(Object o) {
-				if (o instanceof Starter.OnInitiated){
-//					seed();
-				}				
+			public void onNext(Object o) {			
 			}
 
 			@Override
@@ -69,7 +67,7 @@ public class Balancer extends Base{
 		return new Balancer(config);
 	}
 	
-	public static class OnRequestNonOrderbookRLOrder{		
+	public static class OnRequestNonOrderbookRLOrder extends BusBase{		
 		public String pair;
 
 		public OnRequestNonOrderbookRLOrder(String pair) {

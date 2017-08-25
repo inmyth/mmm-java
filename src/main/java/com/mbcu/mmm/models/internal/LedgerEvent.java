@@ -21,6 +21,9 @@ public class LedgerEvent {
 	}
 
 	public static LedgerEvent fromJSON(JSONObject root) {
+		if (!root.has("validated_ledgers")){
+			return new LedgerEvent(-1, -1);
+		}
 		String[] rangeValids = root.getString("validated_ledgers").split("-");
 		int validated = Integer.parseInt(rangeValids[rangeValids.length - 1]);
 		int closed = root.getInt("ledger_index");

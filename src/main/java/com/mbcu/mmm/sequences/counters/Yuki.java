@@ -11,6 +11,7 @@ import com.mbcu.mmm.models.internal.BotConfig;
 import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.models.internal.RLOrder;
 import com.mbcu.mmm.models.internal.RLOrder.Direction;
+import com.mbcu.mmm.rx.BusBase;
 import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.sequences.Base;
@@ -41,26 +42,30 @@ public class Yuki extends Base implements Counter {
 			}
 
 			@Override
-			public void onNext(Object o){				
-				if (o instanceof Common.OnOfferExecuted) {
-					OnOfferExecuted event = (OnOfferExecuted) o;
-					counterOE(event.oes);
-				}				
-				else if (o instanceof Common.OnDifference){
-					Common.OnDifference event = (Common.OnDifference) o;
-					List<BefAf> fullyConsumeds = event.bas.stream()
-							.filter(ba -> {
-								return ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0 && ba.after.getTotalPrice().value().compareTo(BigDecimal.ZERO) == 0;
-							})
-							.collect(Collectors.toList());
-					counterOR(fullyConsumeds);
+			public void onNext(Object o){	
+				BusBase base = (BusBase) o;
+				try {
+					if (o instanceof Common.OnOfferExecuted) {
+						OnOfferExecuted event = (OnOfferExecuted) o;
+						counterOE(event.oes);
+					}				
+					else if (o instanceof Common.OnDifference){
+						Common.OnDifference event = (Common.OnDifference) o;
+						List<BefAf> fullyConsumeds = event.bas.stream()
+								.filter(ba -> {
+									return ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0 && ba.after.getTotalPrice().value().compareTo(BigDecimal.ZERO) == 0;
+								})
+								.collect(Collectors.toList());
+						counterOR(fullyConsumeds);
+					}
+				} catch (Exception e) {
+					MyLogger.exception(LOGGER, base.toString(), e);		
+					throw e;
 				}
 			}
 
 			@Override
-			public void onError(Throwable e) {
-				log(e.getMessage(), Level.SEVERE);
-			}
+			public void onError(Throwable e) {}
 
 			@Override
 			public void onComplete() {
