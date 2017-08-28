@@ -253,6 +253,8 @@ TODOS
 - [x] (bug) see 03701 sequence wasn't set in Common@271
 - [x] find a way to unwrap exception
 - [x] may need to cancel generate seed from middleprice
+- [] bot creates buy orders down to 0 price
+- [] unknown edit (B078019B57E783C3467419BB4C6ED93770A60CB766ACF6A00A2AABF88D3BE98E)
 
 
 ## NOTES
