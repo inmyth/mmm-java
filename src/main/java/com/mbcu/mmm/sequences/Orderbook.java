@@ -1,9 +1,7 @@
 package com.mbcu.mmm.sequences;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.MathContext;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -16,7 +14,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.logging.Level;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import com.mbcu.mmm.helpers.TAccountOffer;
@@ -30,7 +27,6 @@ import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.sequences.state.State;
 import com.mbcu.mmm.sequences.state.State.BroadcastPendings;
 import com.mbcu.mmm.utils.MyLogger;
-import com.mbcu.mmm.utils.MyUtils;
 import com.ripple.core.coretypes.uint.UInt32;
 
 import io.reactivex.disposables.CompositeDisposable;
@@ -40,6 +36,8 @@ import io.reactivex.schedulers.Schedulers;
 public class Orderbook extends Base {
 	private final String fileName = "orderbook_%s.txt";
 	private final int balancerInterval = 4;
+	private final int seedMidThreshold = 8;
+	private final int hardOutThreshold = 5;
 
 	private final BotConfig botConfig;
 	private final ConcurrentHashMap<Integer, RLOrder> buys = new ConcurrentHashMap<>();
@@ -157,9 +155,11 @@ public class Orderbook extends Base {
 	}
 
 	private void printOrderbook(List<Entry<Integer, RLOrder>> sortedSels, List<Entry<Integer, RLOrder>> sortedBuys) {
-		dump(ledgerClosed.get(), ledgerValidated.get(), sortedSels, sortedBuys);
+		String ob = dump(ledgerClosed.get(), ledgerValidated.get(), sortedSels, sortedBuys);
+//		MyUtils.toFile(ob, path);
+		log(ob,  Level.FINER);
 	}
-
+	
 	private void requestPendings() {
 		bus.send(new Balancer.OnRequestNonOrderbookRLOrder(botConfig.getPair()));
 	}
@@ -176,7 +176,7 @@ public class Orderbook extends Base {
 			}
 		} else{
 			sorted = sortSels();
-			if (sorted.isEmpty()) {
+			if (sorted.isEmpty()) {	
 				worstSel = worstSel.add(botConfig.getGridSpace());
 			} else {
 				worstSel = BigDecimal.ONE.divide(sorted.get(0).getValue().getRate(), MathContext.DECIMAL64);
@@ -189,24 +189,18 @@ public class Orderbook extends Base {
 		BigDecimal sumBuys = sum(Direction.BUY);
 		BigDecimal sumSels = sum(Direction.SELL);
 		log(printLog(sumBuys, sumSels, count(Direction.BUY), count(Direction.SELL)));
-//		List<Integer> cans = new ArrayList<>();
 		List<RLOrder> gens = new ArrayList<>();
 
 		BigDecimal selsGap = margin(sumSels, Direction.SELL);
 		if (selsGap.compareTo(BigDecimal.ZERO) >= 0) {
 			gens.addAll(generate(sortedSels, selsGap, Direction.SELL));
 		} 		
-//		else {
-//			cans.addAll(trim(sortedSels, selsGap, Direction.SELL));
-//		}	
+
 		BigDecimal buysGap = margin(sumBuys, Direction.BUY);
 		if (buysGap.compareTo(BigDecimal.ZERO) >= 0) {
 			gens.addAll(generate(sortedBuys, buysGap, Direction.BUY));
 		} 
-//		else {
-//			cans.addAll(trim(sortedBuys, buysGap, Direction.BUY));
-//		}
-//		cans.forEach(canSeq -> bus.send(new State.OnCancelReady(botConfig.getPair(), canSeq)));
+
 		gens.forEach(rlo -> bus.send(new State.OnOrderReady(rlo)));
 	}
 
@@ -214,10 +208,12 @@ public class Orderbook extends Base {
 		List<RLOrder> res = new ArrayList<>();
 		margin = margin.abs();	
 		int levels = margin.divide(direction == Direction.BUY ? botConfig.getBuyOrderQuantity() : botConfig.getSellOrderQuantity(), MathContext.DECIMAL32).intValue();
+		int configLevels = direction == Direction.BUY ? botConfig.getBuyGridLevels() : botConfig.getSellGridLevels();
 		if (direction == Direction.SELL){
 			Collections.reverse(sorteds);
 		}
-				
+		
+		int inserted = 0;		
 		for (int i = 0; i < sorteds.size() - 1; i++){
 			BigDecimal p, delta, q;
 			int locLevels = 0;
@@ -232,16 +228,16 @@ public class Orderbook extends Base {
   			delta = q.subtract(p);
 			}		
 			locLevels = delta.divide(botConfig.getGridSpace(), MathContext.DECIMAL64).intValue() - 1;				
-			if (locLevels > 0 && levels > 0){
-				levels =- locLevels;
+			if (locLevels > 0 && levels > 0 && inserted < seedMidThreshold){
+				levels 		= levels - locLevels;
+				inserted  = inserted + locLevels;
 				res.addAll(direction == Direction.BUY ? RLOrder.buildBuysSeed(p, locLevels, botConfig) : RLOrder.buildSelsSeed(p, locLevels, botConfig));
 			}		
-			if (levels <= 0){
+			if (levels <= 0 || inserted > seedMidThreshold){
 				break;
 			}
-		}		
-		
-		if (levels > 0){
+		}				
+		if (levels > 0){		
 			res.addAll(direction == Direction.BUY ? RLOrder.buildBuysSeed(worstBuy, levels, botConfig) : RLOrder.buildSelsSeed(worstSel, levels, botConfig));
 		}
 		return res;
@@ -382,8 +378,11 @@ public class Orderbook extends Base {
 		return in.getCpair().isMatch(this.botConfig.getPair());
 	}
 
-	private void dump(int ledgerClosed, int ledgerValidated, List<Entry<Integer, RLOrder>> sortedSels, List<Entry<Integer, RLOrder>> sortedBuys) {
-		StringBuffer sb = new StringBuffer("Ledger closed : ");
+	private String dump(int ledgerClosed, int ledgerValidated, List<Entry<Integer, RLOrder>> sortedSels, List<Entry<Integer, RLOrder>> sortedBuys) {
+		StringBuffer sb = new StringBuffer("Orderbook");
+		sb.append(botConfig.getPair());
+		sb.append("\n");
+		sb.append("Ledger closed : ");
 		sb.append(ledgerClosed);
 		sb.append(" ");
 		sb.append("Ledger validated : ");
@@ -414,12 +413,8 @@ public class Orderbook extends Base {
 			sb.append(entry.getKey());
 			sb.append("\n");
 		});
-		byte[] strToBytes = sb.toString().getBytes();
-		try {
-			Files.write(path, strToBytes);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		
+		return sb.toString();
 	}
 
 	public static Orderbook newInstance(BotConfig botConfig) {

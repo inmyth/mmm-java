@@ -5,6 +5,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class MyUtils {
@@ -28,6 +29,15 @@ public class MyUtils {
 			e1.printStackTrace();
 		}
 		return sStackTrace;
+	}
+	
+	public static void toFile(String string, Path path){
+		byte[] strToBytes = string.getBytes();
+		try {
+			Files.write(path, strToBytes);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}	
 	}
 	
 }
