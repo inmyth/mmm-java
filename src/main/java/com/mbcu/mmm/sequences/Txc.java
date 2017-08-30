@@ -1,7 +1,5 @@
 package com.mbcu.mmm.sequences;
 
-import java.util.logging.Level;
-
 import com.mbcu.mmm.main.WebSocketClient;
 import com.mbcu.mmm.models.internal.RLOrder;
 import com.mbcu.mmm.rx.BusBase;
@@ -93,7 +91,7 @@ public class Txc extends Base {
 	//					if (er.equals(EngineResult.tefALREADY.toString())){
 	//						// This means a tx with the same sequence number is already queued.
 	//						disposables.dispose();
-	//						bus.send(new RequestRemove(seq));
+	//						bus.send(new RequestRemove(seq ));
 	//						return;
 	//					}
 						if (er.equals(EngineResult.tefPAST_SEQ.toString())) {

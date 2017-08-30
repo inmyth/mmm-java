@@ -81,6 +81,7 @@ public class Yuki extends Base implements Counter {
 	
 	public void counterOR(List<BefAf> bas){
 		bas.forEach(ba -> {
+			log("Full Counter");
 			RLOrder counter = buildWholeCounter(ba);
 			if (counter != null) {
 				onCounterReady(counter);

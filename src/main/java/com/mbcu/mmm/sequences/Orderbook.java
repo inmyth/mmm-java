@@ -191,15 +191,15 @@ public class Orderbook extends Base {
 		log(printLog(sumBuys, sumSels, count(Direction.BUY), count(Direction.SELL)));
 		List<RLOrder> gens = new ArrayList<>();
 
-		BigDecimal selsGap = margin(sumSels, Direction.SELL);
-		if (selsGap.compareTo(BigDecimal.ZERO) >= 0) {
-			gens.addAll(generate(sortedSels, selsGap, Direction.SELL));
-		} 		
-
 		BigDecimal buysGap = margin(sumBuys, Direction.BUY);
 		if (buysGap.compareTo(BigDecimal.ZERO) >= 0) {
 			gens.addAll(generate(sortedBuys, buysGap, Direction.BUY));
 		} 
+		
+		BigDecimal selsGap = margin(sumSels, Direction.SELL);
+		if (selsGap.compareTo(BigDecimal.ZERO) >= 0) {
+			gens.addAll(generate(sortedSels, selsGap, Direction.SELL));
+		} 		
 
 		gens.forEach(rlo -> bus.send(new State.OnOrderReady(rlo)));
 	}
@@ -208,7 +208,6 @@ public class Orderbook extends Base {
 		List<RLOrder> res = new ArrayList<>();
 		margin = margin.abs();	
 		int levels = margin.divide(direction == Direction.BUY ? botConfig.getBuyOrderQuantity() : botConfig.getSellOrderQuantity(), MathContext.DECIMAL32).intValue();
-		int configLevels = direction == Direction.BUY ? botConfig.getBuyGridLevels() : botConfig.getSellGridLevels();
 		if (direction == Direction.SELL){
 			Collections.reverse(sorteds);
 		}

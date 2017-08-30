@@ -301,7 +301,12 @@ Autobridge
 - OEs' PreviousTxnID are not the same as OC's hash
 - Ignore OC's with other's account. It might consume our order. 
 - If order is not fully matched then autobridge tx will produce extra tx to sell or buy bridge currency (XRP). 
-- Rate = sum of all principal quantities / sum of all principal's counter quantities. 
+- Rate = sum of all principal quantities / sum of all principal's counter quantities.
+
+tecUNFUNDED_OFFER
+- happens on non-XRP currency 
+- happens when the balance is 0
+ 
 
 Summary
 - Sequence increases when we have OrderCreate, not necessarily OrderCreated
