@@ -37,7 +37,6 @@ public class Orderbook extends Base {
 	private final String fileName = "orderbook_%s.txt";
 	private final int balancerInterval = 4;
 	private final int seedMidThreshold = 8;
-	private final int hardOutThreshold = 5;
 
 	private final BotConfig botConfig;
 	private final ConcurrentHashMap<Integer, RLOrder> buys = new ConcurrentHashMap<>();

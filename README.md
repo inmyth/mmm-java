@@ -51,6 +51,12 @@ If false, the bot will only counter any order that fully consumes our order.
 
 
 **Version History**
+v.044
+- Fixed 04201. Possibly blank entry in wallet page. To avoid this, Common now checks if final node contains Account or not. False edit doesn't have account and has HighLimit, LowLimit although it has prevTxnId
+
+v.043
+v.042
+
 v.041
 - fixed 04101
 - unwrap exceptions in all Observables
@@ -307,12 +313,14 @@ tecUNFUNDED_OFFER
 - happens on non-XRP currency 
 - happens when the balance is 0
  
+Edit
+- transaction needs to have OfferSequence
 
 Summary
 - Sequence increases when we have OrderCreate, not necessarily OrderCreated
 - Any FinalFields with prices zero means order fully consumed.
 - Payment doesn't have our autobridge. But it has other people's autobridge with our order in it. 
-- OC belogning to other don't have our autobridge either. See payment. 
+- OC belonging to other don't have our autobridge either. See payment. 
 - hash also appears in executedoffer so we can trace it back to orderbook
 - if our consuming orders leaves a remainder and is consumed then it is treated like our order is consumed
 - total consumed doesn't raise sequence
@@ -331,3 +339,10 @@ SEVERE: null
 tefMAX_LEDGER raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf 82DC1F52F51E697A32DF3E6D84FA78B4D5A48E65EA33C267A29CE6A857C5D0DE 30142
 8 25, 2017 1:04:51 午前 com.mbcu.mmm.main.WebSocketClient$1 handleCallbackError
 SEVERE: JSONObject["validated_ledgers"] not found.
+04201 : Response showing edit although there was no edit, blank entry in history tab.
+False edits:
+61D3DC620E3BF2B36B936B8509BB68AB703041B1A80454E9AE39F0AE5F453CFE
+E94C67ECAB3483015D545C96FD84DFDED6B2D789A1E6CEBD0B330D0855B3C315
+Real edit:
+7DF67EB046C88C49D8D2DFFF4B11339640D0ABFDF26182539E7712DD83530C84
+

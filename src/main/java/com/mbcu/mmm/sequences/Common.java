@@ -150,6 +150,7 @@ public class Common extends Base {
 	}
 	
 	public void filterStream2(String raw) {
+		System.out.println(raw);
 		if (!raw.contains("tesSUCCESS") && 
 				!(raw.contains("OfferCreate") || raw.contains("Payment") || raw.contains("OfferCancel"))){
 			log("Stream parse condition failed : " + raw, Level.WARNING);
@@ -198,10 +199,17 @@ public class Common extends Base {
 		UInt32 previousSeq = null;
 		for (AffectedNode deletedNode : deletedNodes) {
 			LedgerEntry le = (LedgerEntry) deletedNode.nodeAsFinal();
-			previousTxnId = le.get(Hash256.PreviousTxnID);
-			previousSeq = le.get(UInt32.Sequence);
-			if (previousTxnId != null) {
-				break;
+			AccountID nodeAccount = le.get(AccountID.Account);
+			UInt32 testPreviousSeq = le.get(UInt32.Sequence);
+			Hash256 testPreviousTxnId = le.get(Hash256.PreviousTxnID);
+			if (nodeAccount != null && nodeAccount.address.equals(this.config.getCredentials().getAddress())){
+				previousTxnId = testPreviousTxnId;
+				previousSeq = testPreviousSeq;
+				if (previousTxnId != null) {
+					break;
+				}
+			} else if (nodeAccount == null && testPreviousSeq == null && testPreviousTxnId != null){
+				log("Possible EXCEPTION : FALSE EDIT (04001), txnId : " + txn.hash());
 			}
 		}
 
