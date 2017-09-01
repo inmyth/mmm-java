@@ -11,5 +11,5 @@ public class BusBase {
 		sb.append(GsonUtils.toJson(this));
 		return sb.toString();
 	}
-
+	
 }
