@@ -7,8 +7,17 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MyUtils {
+	
+	
+	private static final String EMAIL_PATTERN =
+			"^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
+			+ "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
+	private static Pattern pattern = Pattern.compile(EMAIL_PATTERN);
+
 
 	public static String readFile(String path) throws IOException {
 		byte[] encoded = Files.readAllBytes(Paths.get(path));
@@ -38,6 +47,11 @@ public class MyUtils {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}	
+	}
+	
+	public static boolean isEmail(String test){
+		Matcher matcher = pattern.matcher(test);
+		return matcher.matches();
 	}
 	
 }

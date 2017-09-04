@@ -4,6 +4,10 @@
 		"address": "WALLET ADDRESS",
 		"secret": "SECRET KEY"
 	},
+	"emails" : [
+		"error_report_sent_here@gmail.com",
+		"error_report_sent_here@test.com"
+	],
 	"bots": [
 	   	{
 			"pair": "XRP/JPY.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",

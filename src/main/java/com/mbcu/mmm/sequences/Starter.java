@@ -195,6 +195,7 @@ public class Starter extends Base{
 		log("Initiating ...");
 		Common.newInstance(config);
 		Balancer.newInstance(config);
+		Notifier.newInstance(config);
 		WebSocketClient webSocketClient = new WebSocketClient(super.config);
 		webSocketClient.start();	
 		latch.await();

@@ -108,11 +108,14 @@ public class Txc extends Base {
 							bus.send(new State.RequestWaitNextLedger());
 							bus.send(new State.RequestSequenceSync());
 							bus.send(new State.RequestRemoveCreate(seq));
-							bus.send(new State.OnOrderReady(outbound, hash, " retry insufFee"));
+							bus.send(new State.OnOrderReady(outbound, hash, " retry telINSUF_FEE_P"));
 							return;
 						}
+						
+						
 						disposables.dispose();
 						bus.send(new State.RequestRemoveCreate(seq));
+						bus.send(new Notifier.RequestEmailNotice(er, outbound.getCpair().getFw(), System.currentTimeMillis()));
 	//					bus.send(new State.OnOrderReady(outbound, hash, "retry " + er));
 					}	
 				} catch (Exception e) {

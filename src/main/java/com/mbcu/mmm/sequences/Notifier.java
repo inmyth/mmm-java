@@ -13,40 +13,55 @@ import io.reactivex.schedulers.Schedulers;
 
 public class Notifier extends Base {
 	private final CompositeDisposable disposables = new CompositeDisposable();
-	private final ConcurrentHashMap<RequestEmailNotice, Long> pending = new ConcurrentHashMap<>();
-	private long lastSend;
-	
+	private final ConcurrentHashMap<RequestEmailNotice, Long> notices = new ConcurrentHashMap<>();
+	private final long GAP_MS = 1000 * 60 * 30; // 30 mins
+ 
 
 	public Notifier(Config config) {
 		super(MyLogger.getLogger(Notifier.class.getName()), config);
 		
-		bus.toObservable()
-		.subscribeOn(Schedulers.newThread())
-		.subscribeWith(new DisposableObserver<Object>() {
+		disposables.add(
+			bus.toObservable()
+			.subscribeOn(Schedulers.newThread())
+			.subscribeWith(new DisposableObserver<Object>() {
+	
+				@Override
+				public void onNext(Object o) {
+					BusBase base = (BusBase) o;
 
-			@Override
-			public void onNext(Object t) {
+					if (base instanceof RequestEmailNotice) {						
+						check((RequestEmailNotice) base);
+					}			
+				}
+	
+				@Override
+				public void onError(Throwable e) {
+					// TODO Auto-generated method stub
+					
+				}
+	
+				@Override
+				public void onComplete() {
+					// TODO Auto-generated method stub
+					
+				}
 				
-				
-			}
-
-			@Override
-			public void onError(Throwable e) {
-				// TODO Auto-generated method stub
-				
-			}
-
-			@Override
-			public void onComplete() {
-				// TODO Auto-generated method stub
-				
-			}
-			
-		});
+			})
+		);
 		
 	}
 	
-	
+	private void check (RequestEmailNotice r){
+		long now = System.currentTimeMillis();
+		Long lastInserted = notices.get(r);
+		if (lastInserted != null){
+			if (lastInserted + GAP_MS < now){
+				return;
+			}
+		}		
+		notices.put(r, now);
+		SenderSES.send(config, LOGGER, r);
+	}
 	
 	
 	public static Notifier newInstance(Config config){
@@ -69,14 +84,18 @@ public class Notifier extends Base {
 		
 		@Override
 		public int hashCode() {
-			return pair.hashCode() + error.hashCode();
+			return (pair.hashCode() + error.hashCode()) / 17;
 		}
 		
 		@Override
 		public boolean equals(Object o) {
-	    if(o == null)                return false;
+	    if(o == null) return false;
 	    if(!(o instanceof RequestEmailNotice)) return false;
-
+	    RequestEmailNotice t = (RequestEmailNotice) o;
+	    if (t.pair.equals(pair) && t.error.equals(error)){
+	    	return true;
+	    }
+	    return false;
 		}
 	}
 }
