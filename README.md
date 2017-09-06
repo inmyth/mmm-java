@@ -22,7 +22,9 @@ java -jar mmm.jar <path_to_config_file>
 ```
 
 **Config**
+`emails` : contact emails the bot will send error report to.  
 
+*bot*
 `pair` : String 
 
 Currency or IOU with base.baseIssuer/quote.quoteIssuer format.
@@ -51,6 +53,9 @@ If false, the bot will only counter any order that fully consumes our order.
 
 
 **Version History**
+v.045
+- Email notification. Change in `config.txt`
+
 v.044
 - Fixed 04201. Possibly blank entry in wallet page. To avoid this, Common now checks if final node contains Account or not. False edit doesn't have account and has HighLimit, LowLimit although it has prevTxnId
 

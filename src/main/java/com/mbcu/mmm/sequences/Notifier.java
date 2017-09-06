@@ -15,10 +15,11 @@ public class Notifier extends Base {
 	private final CompositeDisposable disposables = new CompositeDisposable();
 	private final ConcurrentHashMap<RequestEmailNotice, Long> notices = new ConcurrentHashMap<>();
 	private final long GAP_MS = 1000 * 60 * 30; // 30 mins
- 
+	private SenderSES sender;
 
 	public Notifier(Config config) {
 		super(MyLogger.getLogger(Notifier.class.getName()), config);
+		sender = new SenderSES(config, LOGGER);
 		
 		disposables.add(
 			bus.toObservable()
@@ -47,20 +48,17 @@ public class Notifier extends Base {
 				}
 				
 			})
-		);
-		
+		);		
 	}
 	
 	private void check (RequestEmailNotice r){
 		long now = System.currentTimeMillis();
 		Long lastInserted = notices.get(r);
-		if (lastInserted != null){
-			if (lastInserted + GAP_MS < now){
-				return;
-			}
+		if (lastInserted != null && lastInserted + GAP_MS > now){
+				return;		
 		}		
 		notices.put(r, now);
-		SenderSES.send(config, LOGGER, r);
+		sender.sendBotError(r);
 	}
 	
 	

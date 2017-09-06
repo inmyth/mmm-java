@@ -1,6 +1,6 @@
 package com.mbcu.mmm.notice;
 
-import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -18,11 +18,19 @@ import com.mbcu.mmm.sequences.Notifier;
 
 public class SenderSES {
 	
-  private static final String FROM = "mbcutama@vauldex.com";
+  private static final String FROM = "mmm-notice@yandex.com";
   private static Regions region = Regions.US_EAST_1;
+  private Config config;
+  private Logger logger;
+  
+  
+  public SenderSES (Config config, Logger logger) {
+  	this.config = config;
+  	this.logger = logger;	
+  }
 
 
-  public static final void send (Config config, Logger logger, Notifier.RequestEmailNotice e) {
+  public void sendBotError (Notifier.RequestEmailNotice e) {
   	String body 	= bodyBotError(e);
   	String title 	= titleBotError(config);
   	config.getEmails().forEach(to -> {send(logger, title, body, to);});
@@ -51,7 +59,7 @@ public class SenderSES {
     }
   }
   
-  public static final String bodyBotError(Notifier.RequestEmailNotice e){
+  private static String bodyBotError(Notifier.RequestEmailNotice e){
   	StringBuilder sb = new StringBuilder("Currency Pair : ");
   	sb.append(e.pair);
   	sb.append("\n");
@@ -60,7 +68,7 @@ public class SenderSES {
   	return sb.toString();
   }
   
-  public static final String titleBotError(Config config){
+  private static String titleBotError(Config config){
   	StringBuilder sb = new StringBuilder("Bot Error, Account ");
   	sb.append(config.getCredentials().getAddress());
   	return sb.toString();
