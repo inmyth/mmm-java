@@ -57,6 +57,7 @@ If false, the bot will only counter any order that fully consumes our order.
 
 
 **Version History**
+
 v.045
 - Email notification. Change in `config.txt`
 
