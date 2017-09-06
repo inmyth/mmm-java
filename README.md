@@ -22,9 +22,13 @@ java -jar mmm.jar <path_to_config_file>
 ```
 
 **Config**
+
+*General configuration*
+
 `emails` : contact emails the bot will send error report to.  
 
-*bot*
+*Bot configuration*
+
 `pair` : String 
 
 Currency or IOU with base.baseIssuer/quote.quoteIssuer format.
