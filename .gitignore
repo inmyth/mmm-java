@@ -51,3 +51,4 @@ local.properties
 config.txt
 log*.*
 orderbook*.txt
+/target/

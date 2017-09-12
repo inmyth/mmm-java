@@ -6,6 +6,8 @@ import static org.junit.Assert.assertTrue;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -38,6 +40,23 @@ public class UtilsTest {
 
   private Subject<Boolean> seqSyncObs = PublishSubject.create();  
   
+  
+  @Test
+  public void amountEqual(){
+
+  	
+  	Amount c = new Amount(Currency.fromString("ABC"), AccountID.fromAddress("rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"));
+  	Amount d = new Amount(Currency.fromString("ABC"), AccountID.fromAddress("rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"));
+  	assertEquals(c, d);
+  	
+  	Amount e = new Amount(Currency.fromString("ABD"), AccountID.fromAddress("rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"));
+  	assertNotEquals(c, e);
+
+  	
+
+  }
+  
+
   
   @Test
   public void testBigDecimalFloor(){

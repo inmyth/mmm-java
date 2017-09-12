@@ -11,6 +11,7 @@ import com.mbcu.mmm.utils.MyUtils;
 public class Config {
 	
 	private String net;
+	private String datanet;
 	private Credentials credentials;
 	private ArrayList<String> emails;
 	private transient HashMap<String, BotConfig> botConfigMap;
@@ -32,6 +33,14 @@ public class Config {
 		this.credentials = credentials;
 	}
 
+	public void setDatanet(String datanet) {
+		this.datanet = datanet;
+	}
+	
+	public String getDatanet() {
+		return datanet;
+	}
+	
 	public String getNet() {
 		return net;
 	}
@@ -39,6 +48,7 @@ public class Config {
 	public void setNet(String net) {
 		this.net = net;
 	}
+	
 	
 	public ArrayList<BotConfig> getBots() {
 		return bots;

@@ -57,6 +57,18 @@
 			<version>1.11.185</version>
 		</dependency>
 
+		<dependency>
+			<groupId>com.squareup.retrofit2</groupId>
+			<artifactId>retrofit</artifactId>
+			<version>2.3.0</version>
+		</dependency>
+
+
+		<dependency>
+			<groupId>com.squareup.retrofit2</groupId>
+			<artifactId>converter-gson</artifactId>
+			<version>2.0.0-beta3</version>
+		</dependency>
 
 		<dependency>
 			<groupId>junit</groupId>

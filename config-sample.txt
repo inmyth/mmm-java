@@ -1,5 +1,6 @@
 {
 	"net": "wss://s1.ripple.com",
+	"datanet" : "https://data.ripple.com/",	
 	"credentials": {
 		"address": "WALLET ADDRESS",
 		"secret": "SECRET KEY"

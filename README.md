@@ -272,6 +272,8 @@ TODOS
 - [] bot creates buy orders down to 0 price
 - [x] unknown edit (B078019B57E783C3467419BB4C6ED93770A60CB766ACF6A00A2AABF88D3BE98E). This is rolled into new OfferExecuted logic. 
 - [x] add warning email system in case of any unhandled errors
+- [] automated balance check
+- [] get reference market price 
 
 ## NOTES
 RESPONSE

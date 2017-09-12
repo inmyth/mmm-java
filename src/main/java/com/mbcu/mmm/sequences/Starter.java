@@ -14,8 +14,6 @@ import com.mbcu.mmm.models.request.Request.Command;
 import com.mbcu.mmm.models.request.Subscribe;
 import com.mbcu.mmm.models.request.Subscribe.Stream;
 import com.mbcu.mmm.rx.BusBase;
-import com.mbcu.mmm.rx.RxBus;
-import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.sequences.counters.Yuki;
 import com.mbcu.mmm.sequences.state.StateProvider;
 import com.mbcu.mmm.utils.MyLogger;
@@ -27,7 +25,6 @@ import io.reactivex.schedulers.Schedulers;
 
 public class Starter extends Base{
   private  CountDownLatch latch;
-  private final RxBus bus = RxBusProvider.getInstance();
   
 	private Starter(Config config) {
 		super(MyLogger.getLogger(Starter.class.getName()), config);
@@ -194,8 +191,9 @@ public class Starter extends Base{
 	public void start() throws IOException, WebSocketException, InterruptedException{
 		log("Initiating ...");
 		Common.newInstance(config);
-		Balancer.newInstance(config);
-		Notifier.newInstance(config);
+//		Balancer.newInstance(config);
+//		Notifier.newInstance(config);
+		Dataapi.newInstance(config);
 		WebSocketClient webSocketClient = new WebSocketClient(super.config);
 		webSocketClient.start();	
 		latch.await();
