@@ -9,7 +9,9 @@ import java.math.RoundingMode;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -22,6 +24,7 @@ import org.json.JSONObject;
 import org.junit.Test;
 
 import com.mbcu.mmm.main.WebSocketClient;
+import com.mbcu.mmm.models.internal.NameIssuer;
 import com.mbcu.mmm.models.request.AccountInfo;
 import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
@@ -39,6 +42,29 @@ public class UtilsTest {
 	private final AtomicBoolean flagWaitSeq2 = new AtomicBoolean(false);
 
   private Subject<Boolean> seqSyncObs = PublishSubject.create();  
+
+
+  @Test
+  public void nameIssuerMap(){
+  	Map<NameIssuer, String> map = new HashMap<>();
+  	
+   	
+  	Amount a1 = new Amount(Currency.fromString("ABC"), AccountID.fromAddress("rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"));
+  	NameIssuer a = NameIssuer.from(a1);
+  	Amount b1 = new Amount(Currency.fromString("ABC"), AccountID.fromAddress("rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"));
+  	NameIssuer b = NameIssuer.from(b1); 	
+  	map.put(a, "a");
+  	map.put(b, "b"); 	
+  	assertEquals(map.size(), 1);	
+  	Amount c1 = new Amount(Currency.fromString("ABD"), AccountID.fromAddress("rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"));
+  	NameIssuer c = NameIssuer.from(c1);	
+  	map.put(c, "c");
+  	assertEquals(map.size(), 2); 	
+  	Amount d1 = new Amount(Currency.fromString("ABC"), AccountID.fromAddress("raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf"));
+  	NameIssuer d = NameIssuer.from(d1);
+  	map.put(d, "c");
+  	assertEquals(map.size(), 3);
+  }
   
   
   @Test

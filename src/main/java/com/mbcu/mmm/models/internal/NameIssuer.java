@@ -1,5 +1,6 @@
 package com.mbcu.mmm.models.internal;
 
+import com.mbcu.mmm.models.Asset.Currency;
 import com.ripple.core.coretypes.Amount;
 
 public class NameIssuer {
@@ -26,8 +27,13 @@ public class NameIssuer {
     	return false;
     }
     NameIssuer test = (NameIssuer) o;
-    if (test.currency.equals(this.currency) && test.issuer.equals(this.issuer)){
-    	return true;
+    if (test.currency.equals(this.currency)){
+    	if (test.issuer == null && this.issuer == null){
+      	return true;
+    	}
+    	if (test.issuer != null && this.issuer != null && test.issuer.equals(this.issuer)) {
+    		return true;
+    	}
     }
     return false;
 	}
@@ -36,8 +42,17 @@ public class NameIssuer {
 	public int hashCode() {
     int result = 17;
     result = 31 * result + currency.hashCode();
-    result = 31 * result + issuer.hashCode();
+    result = issuer != null ? 31 * result + issuer.hashCode() : result;
     return result;
 	}
 	
+	@Override
+	public String toString() {
+		StringBuilder res = new StringBuilder(currency);
+		if (!currency.equals(Currency.XRP.toString())){
+			res.append(".");
+			res.append(issuer);
+		}
+		return res.toString();
+	}
 }

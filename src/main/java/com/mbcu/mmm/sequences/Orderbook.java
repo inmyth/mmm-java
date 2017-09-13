@@ -19,6 +19,7 @@ import java.util.stream.Stream;
 import com.mbcu.mmm.helpers.TAccountOffer;
 import com.mbcu.mmm.models.internal.BefAf;
 import com.mbcu.mmm.models.internal.BotConfig;
+import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.models.internal.RLOrder;
 import com.mbcu.mmm.models.internal.RLOrder.Direction;
 import com.mbcu.mmm.rx.BusBase;
@@ -35,7 +36,6 @@ import io.reactivex.schedulers.Schedulers;
 
 public class Orderbook extends Base {
 	private final String fileName = "orderbook_%s.txt";
-	private final int balancerInterval = 4;
 	private final int seedMidThreshold = 8;
 
 	private final BotConfig botConfig;
@@ -49,8 +49,8 @@ public class Orderbook extends Base {
 	private final AtomicInteger ledgerClosed = new AtomicInteger(0);
 	private BigDecimal worstSel, worstBuy;
 
-	private Orderbook(BotConfig botConfig) {
-		super(MyLogger.getLogger(String.format(Txc.class.getName())), null);
+	private Orderbook(Config config, BotConfig botConfig) {
+		super(MyLogger.getLogger(String.format(Txc.class.getName())), config);
 		this.botConfig = botConfig;
 		this.worstBuy = botConfig.getStartMiddlePrice();
 		this.worstSel = botConfig.getStartMiddlePrice();
@@ -61,83 +61,84 @@ public class Orderbook extends Base {
 			public void onNext(Object o) {
 				BusBase base = (BusBase) o;
 				try{
-				if (base instanceof Common.OnLedgerClosed) {
-					lastBalanced.incrementAndGet();
-					Common.OnLedgerClosed event = (Common.OnLedgerClosed) o;
-					ledgerClosed.set(event.ledgerEvent.getClosed());
-					ledgerValidated.set(event.ledgerEvent.getValidated());
-					requestPendings();
-				} else if (base instanceof Common.OnAccountOffers) {
-					Common.OnAccountOffers event = (Common.OnAccountOffers) o;
-					boolean buyMatched = false; 
-					boolean selMatched = false;
-					for (TAccountOffer t : event.accOffs) {
-						Boolean pairMatched = pairMatched(t.getOrder());
-						if (pairMatched != null) {
-							if (pairMatched){
-								buyMatched = true;
-							} else {
-								selMatched = true;
+					if (base instanceof Common.OnLedgerClosed) {
+						lastBalanced.incrementAndGet();
+						Common.OnLedgerClosed event = (Common.OnLedgerClosed) o;
+						ledgerClosed.set(event.ledgerEvent.getClosed());
+						ledgerValidated.set(event.ledgerEvent.getValidated());
+						requestPendings();
+					} else if (base instanceof Common.OnAccountOffers) {
+						Common.OnAccountOffers event = (Common.OnAccountOffers) o;
+						boolean buyMatched = false; 
+						boolean selMatched = false;
+						for (TAccountOffer t : event.accOffs) {
+							Boolean pairMatched = pairMatched(t.getOrder());
+							if (pairMatched != null) {
+								if (pairMatched){
+									buyMatched = true;
+								} else {
+									selMatched = true;
+								}
+								shelve(t.getOrder(), t.getSeq(), pairMatched);
 							}
-							shelve(t.getOrder(), t.getSeq(), pairMatched);
 						}
-					}
-					if (buyMatched) {
-						worstRates(Direction.BUY);
-					} 
-					if (selMatched){
-						worstRates(Direction.SELL);
-					}
-				} else if (base instanceof Common.OnDifference) {
-					Common.OnDifference event = (Common.OnDifference) o;
-					boolean buyMatched = false; 
-					boolean selMatched = false;
-					for (BefAf ba : event.bas) {
-						Boolean pairMatched = pairMatched(ba.after);
-						if (pairMatched != null) {
-							if (pairMatched){
-								buyMatched = true;
-							} else {
-								selMatched = true;
+						if (buyMatched) {
+							worstRates(Direction.BUY);
+						} 
+						if (selMatched){
+							worstRates(Direction.SELL);
+						}
+					} else if (base instanceof Common.OnDifference) {
+						Common.OnDifference event = (Common.OnDifference) o;
+						boolean buyMatched = false; 
+						boolean selMatched = false;
+						for (BefAf ba : event.bas) {
+							Boolean pairMatched = pairMatched(ba.after);
+							if (pairMatched != null) {
+								if (pairMatched){
+									buyMatched = true;
+								} else {
+									selMatched = true;
+								}
+								shelve(ba.after, ba.befSeq, pairMatched);
 							}
-							shelve(ba.after, ba.befSeq, pairMatched);
+						}
+						if (buyMatched) {
+							worstRates(Direction.BUY);
+						} 
+						if (selMatched){
+							worstRates(Direction.SELL);
+						}
+					} else if (base instanceof Common.OnOfferEdited) {
+						Common.OnOfferEdited event = (Common.OnOfferEdited) o;
+						Boolean pairMatched = pairMatched(event.ba.after);
+						if (pairMatched != null) {
+							edit(event.ba, event.newSeq, pairMatched);
+							worstRates(pairMatched ? Direction.BUY : Direction.SELL);
+						}
+					} else if (base instanceof Common.OnOfferCanceled) {
+						Common.OnOfferCanceled event = (Common.OnOfferCanceled) o;
+						Boolean pairMatched = remove(event.prevSeq.intValue());
+						if (pairMatched != null) {
+							worstRates(pairMatched ? Direction.BUY : Direction.SELL);
+						}
+					} else if (base instanceof State.BroadcastPendings) {
+						BroadcastPendings event = (BroadcastPendings) o;
+						if (event.pair.equals(botConfig.getPair())) {
+							if (event.creates.isEmpty() && event.cancels.isEmpty() && lastBalanced.get() >= config.getIntervals().getBalancer()) {
+								lastBalanced.set(0);
+								List<Entry<Integer, RLOrder>> sortedSels, sortedBuys;
+								sortedSels = sortSels();
+								sortedBuys = sortBuys();
+								printOrderbook(sortedSels, sortedBuys);
+								balancer(sortedSels, sortedBuys);
+							}
 						}
 					}
-					if (buyMatched) {
-						worstRates(Direction.BUY);
-					} 
-					if (selMatched){
-						worstRates(Direction.SELL);
-					}
-				} else if (base instanceof Common.OnOfferEdited) {
-					Common.OnOfferEdited event = (Common.OnOfferEdited) o;
-					Boolean pairMatched = pairMatched(event.ba.after);
-					if (pairMatched != null) {
-						edit(event.ba, event.newSeq, pairMatched);
-						worstRates(pairMatched ? Direction.BUY : Direction.SELL);
-					}
-				} else if (base instanceof Common.OnOfferCanceled) {
-					Common.OnOfferCanceled event = (Common.OnOfferCanceled) o;
-					Boolean pairMatched = remove(event.prevSeq.intValue());
-					if (pairMatched != null) {
-						worstRates(pairMatched ? Direction.BUY : Direction.SELL);
-					}
-				} else if (base instanceof State.BroadcastPendings) {
-					BroadcastPendings event = (BroadcastPendings) o;
-					if (event.pair.equals(botConfig.getPair())) {
-						if (event.creates.isEmpty() && event.cancels.isEmpty() && lastBalanced.get() >= balancerInterval) {
-							lastBalanced.set(0);
-							List<Entry<Integer, RLOrder>> sortedSels, sortedBuys;
-							sortedSels = sortSels();
-							sortedBuys = sortBuys();
-							printOrderbook(sortedSels, sortedBuys);
-							balancer(sortedSels, sortedBuys);
-						}
-					}
-				}
 				} catch (Exception e) {
 					MyLogger.exception(LOGGER, base.toString(), e);		
-					throw e;				}
+					throw e;			
+				}
 			}
 
 			@Override
@@ -415,8 +416,8 @@ public class Orderbook extends Base {
 		return sb.toString();
 	}
 
-	public static Orderbook newInstance(BotConfig botConfig) {
-		Orderbook res = new Orderbook(botConfig);
+	public static Orderbook newInstance(BotConfig botConfig, Config config) {
+		Orderbook res = new Orderbook(config, botConfig);
 		return res;
 	}
 

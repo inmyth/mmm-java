@@ -25,7 +25,21 @@ java -jar mmm.jar <path_to_config_file>
 
 *General configuration*
 
-`emails` : contact emails the bot will send error report to.  
+`datanet` : DataAPI url. 
+
+`emails` : contact emails the bot will send error report to. 
+*ATTENTION*
+Emails are sent from AWS SES. To use this feature you need to :
+- Register the emails in SES Sandbox Mode. These emails will be used as both recipient and sender.
+- Set up the SES credentials in your environment. You can put the credentials in ~/.aws/credentials or export them.
+
+*Intervals configuration (optional)*
+
+Intervals are the numbers of elapsed ledger validated events which will trigger following actions.
+
+`balancer` : balancer checks our orders and seeds missing orders according to bot configuration (default = 4)
+
+`accountBalance` : checks how much IOU the account has (default = 10)
 
 *Bot configuration*
 
@@ -57,6 +71,10 @@ If false, the bot will only counter any order that fully consumes our order.
 
 
 **Version History**
+
+v.046
+- Account balance check. 
+- Change in `config.txt` (intervals, datanet)
 
 v.045
 - Email notification. Change in `config.txt`
@@ -272,7 +290,7 @@ TODOS
 - [] bot creates buy orders down to 0 price
 - [x] unknown edit (B078019B57E783C3467419BB4C6ED93770A60CB766ACF6A00A2AABF88D3BE98E). This is rolled into new OfferExecuted logic. 
 - [x] add warning email system in case of any unhandled errors
-- [] automated balance check
+- [x] automated balance check
 - [] get reference market price 
 
 ## NOTES

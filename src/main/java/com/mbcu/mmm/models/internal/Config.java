@@ -9,11 +9,14 @@ import com.mbcu.mmm.utils.GsonUtils;
 import com.mbcu.mmm.utils.MyUtils;
 
 public class Config {
+	private static final int DEFAULT_INTERVAL_BALANCER = 4;
+	private static final int DEFAULT_INTERVAL_ACCOUNT_BALANCE = 2;
 	
 	private String net;
 	private String datanet;
 	private Credentials credentials;
 	private ArrayList<String> emails;
+	private Intervals intervals;
 	private transient HashMap<String, BotConfig> botConfigMap;
 	private ArrayList<BotConfig> bots;
 
@@ -49,6 +52,15 @@ public class Config {
 		this.net = net;
 	}
 	
+	public Intervals getIntervals() {
+		return intervals;
+	}
+	
+	public void setIntervals(Intervals intervals) {
+		this.intervals = intervals;
+	}
+	
+	
 	
 	public ArrayList<BotConfig> getBots() {
 		return bots;
@@ -72,6 +84,20 @@ public class Config {
 		
 		if (res.bots.isEmpty()){
 			throw new IOException("Bots are empty");
+		}
+		
+		if (res.intervals == null){
+			Intervals intervals = new Intervals();
+			intervals.accountBalance = DEFAULT_INTERVAL_ACCOUNT_BALANCE;
+			intervals.balancer 			 = DEFAULT_INTERVAL_BALANCER;
+			res.setIntervals(intervals);
+		} else {
+			if (res.intervals.accountBalance < DEFAULT_INTERVAL_ACCOUNT_BALANCE){
+				res.intervals.accountBalance = DEFAULT_INTERVAL_ACCOUNT_BALANCE;
+			}
+			if (res.intervals.balancer < DEFAULT_INTERVAL_BALANCER){
+				res.intervals.balancer = DEFAULT_INTERVAL_BALANCER;
+			}			
 		}
 		
 		int s = res.emails.stream()

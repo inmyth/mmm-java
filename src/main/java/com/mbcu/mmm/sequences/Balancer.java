@@ -46,7 +46,7 @@ public class Balancer extends Base{
 	private void buildOrderbooks(){
 		super.config.getBotConfigMap().values().stream()
 		.forEach(botConfig -> {
-			perm.add(Orderbook.newInstance(botConfig));
+			perm.add(Orderbook.newInstance(botConfig, config));
 		});		
 	}
 	

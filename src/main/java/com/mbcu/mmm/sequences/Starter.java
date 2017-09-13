@@ -191,8 +191,8 @@ public class Starter extends Base{
 	public void start() throws IOException, WebSocketException, InterruptedException{
 		log("Initiating ...");
 		Common.newInstance(config);
-//		Balancer.newInstance(config);
-//		Notifier.newInstance(config);
+		Balancer.newInstance(config);
+		Notifier.newInstance(config);
 		Dataapi.newInstance(config);
 		WebSocketClient webSocketClient = new WebSocketClient(super.config);
 		webSocketClient.start();	

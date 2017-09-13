@@ -45,8 +45,9 @@ public class Balance {
 		Amount a; 
 		if (currency.equals(Currency.XRP.toString())){
 			a =  Amount.ONE_XRP;
-		} 
-		a = new Amount(com.ripple.core.coretypes.Currency.fromString(currency) , AccountID.fromAddress(counterparty));
+		} else {
+			a = new Amount(com.ripple.core.coretypes.Currency.fromString(currency) , AccountID.fromAddress(counterparty));
+		}
 		return NameIssuer.from(a);
 	}
 	

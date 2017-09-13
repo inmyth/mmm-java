@@ -1,7 +1,5 @@
 package com.mbcu.mmm.notice;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,7 +16,6 @@ import com.mbcu.mmm.sequences.Notifier;
 
 public class SenderSES {
 	
-  private static final String FROM = "mmm-notice@yandex.com";
   private static Regions region = Regions.US_EAST_1;
   private Config config;
   private Logger logger;
@@ -49,7 +46,7 @@ public class SenderSES {
                       .withCharset("UTF-8").withData(body)))
               .withSubject(new Content()
                   .withCharset("UTF-8").withData(title)))
-          .withSource(FROM);
+          .withSource(to);
       client.sendEmail(request);
       if (logger != null){
         logger.log(Level.FINER, "Email sent!");

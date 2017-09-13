@@ -11,7 +11,6 @@ public class AccountBalance {
 	int ledger_index;
 	int limit;
 	List<Balance> balances 		= new ArrayList<Balance>();
-	Map<String, Balance> map 	= new HashMap<>(); 
 
 	public String getResult() {
 		return result;
