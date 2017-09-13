@@ -72,8 +72,9 @@ If false, the bot will only counter any order that fully consumes our order.
 
 
 **Version History**
->v.047
-- error arriving in stream. Common dirtied.
+v.047
+- Added non-tesSuccess handler in stream causing false OfferCreate. TecUnfunded and other errors will not register as OfferCreate anymore. 
+- Added warning in Orderbook#generate. Order explosion should only come from this function. 
 
 v.046
 - Account balance check. 
@@ -295,7 +296,7 @@ TODOS
 - [x] add warning email system in case of any unhandled errors
 - [x] automated balance check
 - [] get reference market price 
-- [] error may arrive in stream not response. Handle this.
+- [x] error may arrive in stream not response. Handle this.
 
 ## NOTES
 RESPONSE

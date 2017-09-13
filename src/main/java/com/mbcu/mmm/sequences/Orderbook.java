@@ -236,10 +236,29 @@ public class Orderbook extends Base {
 				break;
 			}
 		}				
+		if (levels > 10){
+			log(logOrderExplosionError(levels, direction == Direction.BUY ? worstBuy : worstSel, margin, sorteds), Level.WARNING);
+		}
 		if (levels > 0){		
 			res.addAll(direction == Direction.BUY ? RLOrder.buildBuysSeed(worstBuy, levels, botConfig) : RLOrder.buildSelsSeed(worstSel, levels, botConfig));
 		}
 		return res;
+	}
+	
+	private String logOrderExplosionError (int levels, BigDecimal worstPrice, BigDecimal margin, List<Entry<Integer, RLOrder>> sorteds){
+	 StringBuilder res = new StringBuilder("Possible Orderbook#generate error, too many generated orders");
+	 res.append("\n");
+	 res.append("levels : ");
+	 res.append(levels);
+	 res.append(" margin : ");
+	 res.append("\n");
+	 res.append(margin.toPlainString());
+	 sorteds.stream().forEach(e -> {
+		 res.append(e.getValue().stringify());
+	 });
+	 res.append("\n");
+	 res.append("--end orderbook#generate error");
+	 return res.toString();		
 	}
 
 	/**

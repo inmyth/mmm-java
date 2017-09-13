@@ -50,19 +50,6 @@ public class Balancer extends Base{
 		});		
 	}
 	
-	private void seed(){
-		super.config.getBotConfigMap().values()
-		.stream()
-		.map(bot -> { 
-			return RLOrder.buildSeed(bot);
-		})
-		.flatMap(l->l.stream())
-		.forEach(seed -> {
-			System.out.println(seed.stringify());
-			bus.send(new State.OnOrderReady(seed));		
-		});
-	}
-	
 	public static Balancer newInstance(Config config){
 		return new Balancer(config);
 	}

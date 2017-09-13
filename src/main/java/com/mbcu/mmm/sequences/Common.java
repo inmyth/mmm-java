@@ -98,10 +98,6 @@ public class Common extends Base {
 
 	private void filterResponse(String raw){
 		JSONObject whole = new JSONObject(raw);	
-		if (raw.contains("engine_result") && raw.contains("tecUNFUNDED_OFFER")){
-			int a = 5;
-			int b = 2;
-		}
 		JSONObject result = whole.optJSONObject("result");
 
 		if (whole.getString("status").equals("error")){
@@ -153,34 +149,36 @@ public class Common extends Base {
 		}
 	}
 	
-	public void filterStream2(String raw) {
-		System.out.println(raw);
-		if (raw.contains("engine_result") && raw.contains("tecUNFUNDED_OFFER")){
-			int a = 5;
-			int b = 2;
-		}
-		if (!raw.contains("tesSUCCESS") && 
-				!(raw.contains("OfferCreate") || raw.contains("Payment") || raw.contains("OfferCancel"))){
-			log("Stream parse condition failed : " + raw, Level.WARNING);
-			return;
-		}
-		
+	public void filterStream2(String raw) {	
 		if (!raw.contains(config.getCredentials().getAddress())){
 			log("Not related to our order : " + raw, Level.WARNING);
 			return;
 		}
-				
+		
+		log("Raw Stream :\n" + raw, Level.FINEST);
+		if (!(raw.contains("OfferCreate") || raw.contains("Payment") || raw.contains("OfferCancel"))){
+			log("Stream not OfferCreate | Payment | OfferCancel : " + raw, Level.WARNING);
+			return;
+		}
+							
 		ArrayList<RLOrder> oes = new ArrayList<>();
 		ArrayList<BefAf> ors = new ArrayList<>();
 		Offer offerCreated = null;
 		JSONObject transaction = new JSONObject(raw);
 
-		JSONObject metaJSON = (JSONObject) transaction.remove("meta");
+		JSONObject metaJSON = (JSONObject) transaction.remove("meta");		
 		TransactionMeta meta = (TransactionMeta) STObject.fromJSONObject(metaJSON);
+		
 		Transaction txn = (Transaction) STObject.fromJSONObject(transaction.getJSONObject("transaction"));
 		AccountID txnAccId = txn.account();
 		Hash256 txnHash = txn.hash();
 		UInt32 txnSequence = txn.sequence();
+		
+		if (meta.engineResult().compareTo(EngineResult.tesSUCCESS) != 0) {	
+			log("Stream NOT TesSuccess : " + meta.engineResult().toString() + " " + txnHash + " " + txnSequence);
+			bus.send(new OnRPCTesFail(meta.engineResult().toString(), txnAccId, txnHash, txnSequence));		
+			return;
+		}
 
 		ArrayList<AffectedNode> deletedNodes = new ArrayList<>();
 		ArrayList<Offer> offersExecuteds = new ArrayList<>();
