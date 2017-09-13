@@ -98,6 +98,10 @@ public class Common extends Base {
 
 	private void filterResponse(String raw){
 		JSONObject whole = new JSONObject(raw);	
+		if (raw.contains("engine_result") && raw.contains("tecUNFUNDED_OFFER")){
+			int a = 5;
+			int b = 2;
+		}
 		JSONObject result = whole.optJSONObject("result");
 
 		if (whole.getString("status").equals("error")){
@@ -151,6 +155,10 @@ public class Common extends Base {
 	
 	public void filterStream2(String raw) {
 		System.out.println(raw);
+		if (raw.contains("engine_result") && raw.contains("tecUNFUNDED_OFFER")){
+			int a = 5;
+			int b = 2;
+		}
 		if (!raw.contains("tesSUCCESS") && 
 				!(raw.contains("OfferCreate") || raw.contains("Payment") || raw.contains("OfferCancel"))){
 			log("Stream parse condition failed : " + raw, Level.WARNING);

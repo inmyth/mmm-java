@@ -193,7 +193,6 @@ public class Starter extends Base{
 		Common.newInstance(config);
 		Balancer.newInstance(config);
 		Notifier.newInstance(config);
-		Dataapi.newInstance(config);
 		WebSocketClient webSocketClient = new WebSocketClient(super.config);
 		webSocketClient.start();	
 		latch.await();
@@ -203,6 +202,7 @@ public class Starter extends Base{
 	private void postInit(){
 		log("Initiation complete");	
 		Yuki.newInstance(config);
+		Dataapi.newInstance(config);
 		bus.send(new OnInitiated());	
 	}
 	

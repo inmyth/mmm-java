@@ -72,6 +72,8 @@ If false, the bot will only counter any order that fully consumes our order.
 
 
 **Version History**
+>v.047
+- error arriving in stream. Common dirtied.
 
 v.046
 - Account balance check. 
@@ -293,6 +295,7 @@ TODOS
 - [x] add warning email system in case of any unhandled errors
 - [x] automated balance check
 - [] get reference market price 
+- [] error may arrive in stream not response. Handle this.
 
 ## NOTES
 RESPONSE
@@ -376,4 +379,8 @@ False edits:
 E94C67ECAB3483015D545C96FD84DFDED6B2D789A1E6CEBD0B330D0855B3C315
 Real edit:
 7DF67EB046C88C49D8D2DFFF4B11339640D0ABFDF26182539E7712DD83530C84
+04601
+Unfunded offer arriving in stream:
+{"engine_result":"tecUNFUNDED_OFFER","engine_result_code":103,"engine_result_message":"Insufficient balance to fund created offer.","ledger_hash":"1DDC59A766EE8C6EEACBBA7B08E967148FD2B86ED86AC8493F2785796CC06CCE","ledger_index":32729222,"meta":{"AffectedNodes":[{"ModifiedNode":{"FinalFields":{"Account":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","Balance":"1256217681","Flags":0,"OwnerCount":30,"Sequence":31392},"LedgerEntryType":"AccountRoot","LedgerIndex":"72A59CDF8FFBF65C20D01D3A3D5DA5BAE3158A3881E7AEE525A01B1CC73D32DD","PreviousFields":{"Balance":"1256217696","Sequence":31391},"PreviousTxnID":"450ACD8995147924A04AB3E10F07F252D0209754B12B4ACD7910387644BD2128","PreviousTxnLgrSeq":32729167}}],"TransactionIndex":5,"TransactionResult":"tecUNFUNDED_OFFER"},"status":"closed","transaction":{"Account":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","Fee":"15","Flags":2147483648,"LastLedgerSequence":32729226,"Sequence":31391,"SigningPubKey":"02E2F1208D1715E18B0957FC819546FA7434B4A19EE38321932D2ED28FA090678E","TakerGets":{"currency":"DOG","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"1060"},"TakerPays":"10000000","TransactionType":"OfferCreate","TxnSignature":"304402204A9C478A41102D1BECD3409E9F125FE091B4F4B597DA4965964C1CBCE61BC1EB022051D4FD1ACA89B8E4276FB7A843C0862B96C09254F023E1F2CD2E5EDB131A8F54","date":558603441,"hash":"3E528E50A60CF4E582BE70976D9177CB162E5CAFA493BAF391ACAC68C4DC54D4","owner_funds":"0"},"type":"transaction","validated":true}
+
 
