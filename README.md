@@ -28,6 +28,7 @@ java -jar mmm.jar <path_to_config_file>
 `datanet` : DataAPI url. 
 
 `emails` : contact emails the bot will send error report to. 
+
 *ATTENTION*
 Emails are sent from AWS SES. To use this feature you need to :
 - Register the emails in SES Sandbox Mode. These emails will be used as both recipient and sender.
