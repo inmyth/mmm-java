@@ -72,6 +72,9 @@ If false, the bot will only counter any order that fully consumes our order.
 
 
 **Version History**
+v.048
+- Attach wallet address on log
+
 v.047
 - Added non-tesSuccess handler in stream causing false OfferCreate. TecUnfunded and other errors will not register as OfferCreate anymore. 
 - Added warning in Orderbook#generate. Order explosion should only come from this function. 
@@ -297,6 +300,7 @@ TODOS
 - [x] automated balance check
 - [] get reference market price 
 - [x] error may arrive in stream not response. Handle this.
+- [x] log files should be named per account
 
 ## NOTES
 RESPONSE

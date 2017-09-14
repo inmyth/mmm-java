@@ -8,19 +8,22 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+import com.mbcu.mmm.models.internal.Config;
+
 public class MyLogger {
 
-	private static final String LOG_NAME = "log.txt";
+	private static final String LOG_NAME = "log.%s.txt";
 	private static final int  limit = 1024 * 1024 * 20; // 20 Mb
 	private static final int numLogFiles = 20;
 	
-	public static void setup(boolean...isConsole) throws IOException {
+	public static void setup(Config config, boolean...isConsole) throws IOException {
 
 		// Get the global logger to configure it
 		Logger logger = Logger.getLogger("");
 
 		logger.setLevel(Level.ALL);
-		FileHandler fileHandler = new FileHandler(LOG_NAME, limit, numLogFiles, true);
+		String fileName = String.format(LOG_NAME, config.getCredentials().getAddress());
+		FileHandler fileHandler = new FileHandler(fileName, limit, numLogFiles, true);
 
 		// Create txt Formatter
 		SimpleFormatter formatter = new SimpleFormatter();
