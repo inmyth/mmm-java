@@ -27,6 +27,12 @@ public class SenderSES {
   }
 
 
+  public void sendAccBalance(String body){
+  	String title = titleAccBalance(config);
+  	config.getEmails().forEach(to -> {send(logger, title, body, to);});
+  }
+  
+   
   public void sendBotError (Notifier.RequestEmailNotice e) {
   	String body 	= bodyBotError(e);
   	String title 	= titleBotError(config);
@@ -67,6 +73,12 @@ public class SenderSES {
   
   private static String titleBotError(Config config){
   	StringBuilder sb = new StringBuilder("Bot Error, Account ");
+  	sb.append(config.getCredentials().getAddress());
+  	return sb.toString();
+  }
+  
+  private static String titleAccBalance(Config config){
+   	StringBuilder sb = new StringBuilder("Account Balance of ");
   	sb.append(config.getCredentials().getAddress());
   	return sb.toString();
   }

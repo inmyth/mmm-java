@@ -72,6 +72,9 @@ If false, the bot will only counter any order that fully consumes our order.
 
 
 **Version History**
+v.049
+- Account balance is sent periodically to emails.
+
 v.048
 - Attach wallet address on log
 
@@ -301,6 +304,7 @@ TODOS
 - [] get reference market price 
 - [x] error may arrive in stream not response. Handle this.
 - [x] log files should be named per account
+- [x] account balance sends email periodically
 
 ## NOTES
 RESPONSE

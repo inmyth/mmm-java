@@ -6,7 +6,13 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 
 import com.mbcu.mmm.api.ApiManager;
@@ -15,6 +21,7 @@ import com.mbcu.mmm.models.dataapi.Balance;
 import com.mbcu.mmm.models.internal.AgBalance;
 import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.models.internal.NameIssuer;
+import com.mbcu.mmm.notice.SenderSES;
 import com.mbcu.mmm.rx.BusBase;
 import com.mbcu.mmm.sequences.Common.OnLedgerClosed;
 import com.mbcu.mmm.utils.MyLogger;
@@ -31,11 +38,16 @@ public class Dataapi extends Base{
 	private ApiManager apiManager;
   private AgBalance  lastAgBalance = new AgBalance();
   private AtomicInteger ledgerValidated = new AtomicInteger(-1);
+  private ScheduledExecutorService accBalanceMailService = Executors.newSingleThreadScheduledExecutor();
+  private StringBuilder cachedAccBalanceMail = new StringBuilder();
+  private AtomicLong startTs;
+  private SenderSES senderSES;
 	
 	public Dataapi(Config config) {
 		super(MyLogger.getLogger(Dataapi.class.getName()), config);
+		senderSES  = new SenderSES(config, LOGGER);
 		apiManager = new ApiManager(config);
-		
+		startTs 	 = new AtomicLong(System.currentTimeMillis());
 		disposable.add(
 				bus.toObservable().subscribeOn(Schedulers.newThread())
 				.subscribeWith(new DisposableObserver<Object>() {
@@ -70,6 +82,17 @@ public class Dataapi extends Base{
 				
 				);
 		
+		accBalanceMailService.schedule(new Runnable() {
+			
+			@Override
+			public void run() {
+				if (cachedAccBalanceMail.length() > 0){
+					senderSES.sendAccBalance(cachedAccBalanceMail.toString());
+					cachedAccBalanceMail.setLength(0);
+				}	
+			}
+		}, Config.HOUR_ACCOUNT_BALANCER_EMAILER, TimeUnit.HOURS);
+		
 		
 	}
 	
@@ -86,7 +109,9 @@ public class Dataapi extends Base{
 					return;
 				}
 				AgBalance newAgBalance 		= AgBalance.from(ab, nowTs);
-				logBalance(newAgBalance);
+				StringBuilder agBalanceString = buildAccBalance(newAgBalance);
+				log(agBalanceString.toString(), Level.FINE);
+				cachedAccBalanceMail.append(agBalanceString);
 				lastAgBalance = newAgBalance;
 			}
 			
@@ -115,7 +140,7 @@ public class Dataapi extends Base{
 		return res;	
 	}
 	
-	private void logBalance(AgBalance newAg) {
+	private StringBuilder buildAccBalance(AgBalance newAg) {
 		Map<NameIssuer, BigDecimal> deltas = deltaBalance(newAg);
 		StringBuilder t = new StringBuilder("\n");
 		t.append("Balance ");
@@ -134,7 +159,7 @@ public class Dataapi extends Base{
 
 		});
 		t.append("\n");
-		log(t.toString(), Level.FINER);
+		return t;
 	}
 	
 	public static Dataapi newInstance(Config config){

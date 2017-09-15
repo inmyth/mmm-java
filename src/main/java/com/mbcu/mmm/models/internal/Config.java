@@ -11,6 +11,7 @@ import com.mbcu.mmm.utils.MyUtils;
 public class Config {
 	private static final int DEFAULT_INTERVAL_BALANCER = 4;
 	private static final int DEFAULT_INTERVAL_ACCOUNT_BALANCE = 2;
+	public static final int HOUR_ACCOUNT_BALANCER_EMAILER = 6;
 	
 	private String net;
 	private String datanet;
