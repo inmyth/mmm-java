@@ -43,6 +43,14 @@ public class UtilsTest {
 
   private Subject<Boolean> seqSyncObs = PublishSubject.create();  
 
+  @Test
+  public void splitTest(){
+  	String a = "111, 999";
+  	String[] els = a.split("-");
+  	assertEquals(a, els[els.length - 1]);
+  	assertEquals(els.length, 1);
+  	
+  }
 
   @Test
   public void nameIssuerMap(){

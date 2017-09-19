@@ -72,6 +72,10 @@ If false, the bot will only counter any order that fully consumes our order.
 
 
 **Version History**
+
+>v.050
+
+
 v.049
 - Account balance is sent periodically to emails.
 
@@ -305,6 +309,11 @@ TODOS
 - [x] error may arrive in stream not response. Handle this.
 - [x] log files should be named per account
 - [x] account balance sends email periodically
+- [] need to trace all retry tx
+- [] missing order error, check response_sample/missing_order.txt
+- [] double orders on same price. old order being retried ?
+- [] need maxFee.
+- [] 05001 ledger number contains holes
 
 ## NOTES
 RESPONSE
@@ -391,5 +400,21 @@ Real edit:
 04601
 Unfunded offer arriving in stream:
 {"engine_result":"tecUNFUNDED_OFFER","engine_result_code":103,"engine_result_message":"Insufficient balance to fund created offer.","ledger_hash":"1DDC59A766EE8C6EEACBBA7B08E967148FD2B86ED86AC8493F2785796CC06CCE","ledger_index":32729222,"meta":{"AffectedNodes":[{"ModifiedNode":{"FinalFields":{"Account":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","Balance":"1256217681","Flags":0,"OwnerCount":30,"Sequence":31392},"LedgerEntryType":"AccountRoot","LedgerIndex":"72A59CDF8FFBF65C20D01D3A3D5DA5BAE3158A3881E7AEE525A01B1CC73D32DD","PreviousFields":{"Balance":"1256217696","Sequence":31391},"PreviousTxnID":"450ACD8995147924A04AB3E10F07F252D0209754B12B4ACD7910387644BD2128","PreviousTxnLgrSeq":32729167}}],"TransactionIndex":5,"TransactionResult":"tecUNFUNDED_OFFER"},"status":"closed","transaction":{"Account":"raNDu1gNyZ5hipBTKxm5zx7NovA1rNnNRf","Fee":"15","Flags":2147483648,"LastLedgerSequence":32729226,"Sequence":31391,"SigningPubKey":"02E2F1208D1715E18B0957FC819546FA7434B4A19EE38321932D2ED28FA090678E","TakerGets":{"currency":"DOG","issuer":"rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS","value":"1060"},"TakerPays":"10000000","TransactionType":"OfferCreate","TxnSignature":"304402204A9C478A41102D1BECD3409E9F125FE091B4F4B597DA4965964C1CBCE61BC1EB022051D4FD1ACA89B8E4276FB7A843C0862B96C09254F023E1F2CD2E5EDB131A8F54","date":558603441,"hash":"3E528E50A60CF4E582BE70976D9177CB162E5CAFA493BAF391ACAC68C4DC54D4","owner_funds":"0"},"type":"transaction","validated":true}
+05001
+{
+  "raw": "{\"fee_base\":10,\"fee_ref\":10,\"ledger_hash\":\"0A9103E0AE7724FA2E355A6B906306A97668A3A6955311C3261F7315148B6172\",\"ledger_index\":419711,\"ledger_time\":558842422,\"reserve_base\":20000000,\"reserve_inc\":5000000,\"txn_count\":0,\"type\":\"ledgerClosed\",\"validated_ledgers\":\"158188-419709,419711\"}\n"
+}
+object-info end
+trace start
+java.lang.NumberFormatException: For input string: "419709,419711"
+	at java.lang.NumberFormatException.forInputString(NumberFormatException.java:65)
+	at java.lang.Integer.parseInt(Integer.java:580)
+	at java.lang.Integer.parseInt(Integer.java:615)
+	at com.mbcu.mmm.models.internal.LedgerEvent.fromJSON(LedgerEvent.java:28)
+	at com.mbcu.mmm.sequences.Common$OnLedgerClosed.<init>(Common.java:583)
+	at com.mbcu.mmm.sequences.Common.filterLedgerClosed(Common.java:96)
+	at com.mbcu.mmm.sequences.Common.reroute(Common.java:90)
+	at com.mbcu.mmm.sequences.Common.access$0(Common.java:82)
+	at com.mbcu.mmm.sequences.Common$1.onNext(Common.java:59)
 
 

@@ -24,7 +24,11 @@ public class LedgerEvent {
 		if (!root.has("validated_ledgers")){
 			return new LedgerEvent(-1, -1);
 		}
-		String[] rangeValids = root.getString("validated_ledgers").split("-");
+		// 158188-419709,419711
+		String a 			= root.getString("validated_ledgers");
+		String els[]  = a.split(",");
+		String raw = els[els.length - 1];	
+		String[] rangeValids = raw.split("-");
 		int validated = Integer.parseInt(rangeValids[rangeValids.length - 1]);
 		int closed = root.getInt("ledger_index");
 		return new LedgerEvent(closed, validated);
