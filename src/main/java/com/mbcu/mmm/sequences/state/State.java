@@ -54,7 +54,7 @@ public class State extends Base {
 	private final AtomicInteger ledgerValidated = new AtomicInteger(0);
 	private final AtomicInteger sequence = new AtomicInteger(0);
 	private final ConcurrentHashMap<Integer, Txc> pending = new ConcurrentHashMap<>();
-	private final ConcurrentLinkedQueue<RLOrder> qPens = new ConcurrentLinkedQueue<>();
+	private final ConcurrentLinkedQueue<OnOrderReady> qPens = new ConcurrentLinkedQueue<>();
 	private final ConcurrentHashMap<Integer, Txd> cancels = new ConcurrentHashMap<>();
 	private final ConcurrentLinkedQueue<TxdMini> qCans = new ConcurrentLinkedQueue<>();
 	private final AtomicBoolean flagWaitSeq = new AtomicBoolean(false);
@@ -92,15 +92,12 @@ public class State extends Base {
 						cancels.remove(event.prevSeq.intValue());
 						setSequence(event.newSeq);
 					}			
-					else if (base instanceof OnOrderReady){
+					else if (base instanceof OnOrderReady){					
 						OnOrderReady event = (OnOrderReady) o;
-						if (event.from != null){
-							log("retry from " + event.from + " " + event.memo);
-						}
 						if (flagWaitSeq.get() || flagWaitLedger.get()){
-							qPens.add(event.outbound);												
+							qPens.add(event);												
 						} else {
-							ocreate(event.outbound);						
+							ocreate(event);						
 						}	
 					}			
 					else if (base instanceof OnCancelReady){
@@ -148,7 +145,7 @@ public class State extends Base {
 					else if (base instanceof Balancer.OnRequestNonOrderbookRLOrder){
 						OnRequestNonOrderbookRLOrder event = (OnRequestNonOrderbookRLOrder) o;
 						List<RLOrder> crts = Stream
-							.concat(pending.values().stream().map(txc -> {return txc.getOutbound();}), qPens.stream())
+							.concat(pending.values().stream().map(txc -> {return txc.getOutbound();}), qPens.stream().map(t -> {return t.outbound;}))
 							.filter(rlo -> rlo.getCpair().isMatch(event.pair) != null)
 							.collect(Collectors.toList());
 	
@@ -219,13 +216,24 @@ public class State extends Base {
 		}
 	}
 	
-	private void ocreate(RLOrder outbound){
+	private void ocreate(OnOrderReady ready){
 		int seq = getIncrementSequence();
 		int maxLedger = ledgerValidated.get() + DEFAULT_MAX_LEDGER_GAP;	
-		SignedTransaction signed = signCreate(outbound, seq, maxLedger, DEFAULT_FEES_DROPS);
-		Txc txc = Txc.newInstance(outbound, signed.hash, seq, maxLedger);		
+		SignedTransaction signed = signCreate(ready.outbound, seq, maxLedger, DEFAULT_FEES_DROPS);
+		Txc txc = Txc.newInstance(ready.outbound, signed.hash, seq, maxLedger);		
 		pending.put(txc.getSeq(), txc);
-		log("submitting offerCreate: " + signed.hash + " " + seq);
+		
+		StringBuilder sb = new StringBuilder("submitting offerCreate: ");
+		sb.append(signed.hash);
+		sb.append(" ");
+		sb.append(seq);
+		if (ready.from != null){
+			sb.append(" retry from ");
+			sb.append(ready.from);
+			sb.append(" ");
+			sb.append(ready.memo);
+		}
+		log(sb.toString());
 		submit(signed.tx_blob);
 	}
  

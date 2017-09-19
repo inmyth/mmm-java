@@ -98,7 +98,7 @@ public class Txc extends Base {
 							disposables.dispose();
 							bus.send(new State.RequestSequenceSync());
 							bus.send(new State.RequestRemoveCreate(seq));
-							bus.send(new State.OnOrderReady(outbound, hash, " retry tefPAST_SEQ"));
+							bus.send(new State.OnOrderReady(outbound, hash, " was tefPAST_SEQ"));
 							return;
 						}
 					
@@ -108,7 +108,7 @@ public class Txc extends Base {
 							bus.send(new State.RequestWaitNextLedger());
 							bus.send(new State.RequestSequenceSync());
 							bus.send(new State.RequestRemoveCreate(seq));
-							bus.send(new State.OnOrderReady(outbound, hash, " retry telINSUF_FEE_P"));
+							bus.send(new State.OnOrderReady(outbound, hash, " was telINSUF_FEE_P"));
 							return;
 						}
 						

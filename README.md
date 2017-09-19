@@ -309,11 +309,12 @@ TODOS
 - [x] error may arrive in stream not response. Handle this.
 - [x] log files should be named per account
 - [x] account balance sends email periodically
-- [] need to trace all retry tx
+- [x] need to trace all retry tx
 - [] missing order error, check response_sample/missing_order.txt
 - [] double orders on same price. old order being retried ?
 - [] need maxFee.
-- [] 05001 ledger number contains holes
+- [x] 05001 ledger number contains holes
+- [] need to know if offerCreate comes from seed or counter
 
 ## NOTES
 RESPONSE
