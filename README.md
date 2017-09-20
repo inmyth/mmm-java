@@ -75,7 +75,7 @@ If false, the bot will only counter any order that fully consumes our order.
 
 >v.050
 - missing order error fix. Txs were inserted with the same sequence number (happens if there's a sequence refresh and counter). Now submission checks if seq exists.   
-
+- removed seed in between orders. 
 
 v.049
 - Account balance is sent periodically to emails.
@@ -315,8 +315,8 @@ TODOS
 - [x] 05001 ledger number contains holes
 - [x] need to know if offerCreate comes from seed or counter
 - [] get reference market price 
-- [] balancer seeder skips a rate if all order consumed
-- [] double orders on same price. old order being retried ?
+- [] balancer seeder skips a rate if all order consumed. If the gap = 2*levels then it's correct. 
+- [] double orders on same price. when restarted, orders will start from startMiddle when empty. This will cause double orders on the other side
 - [] need maxFee.
 
 ## NOTES

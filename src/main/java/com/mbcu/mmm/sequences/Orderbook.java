@@ -37,7 +37,7 @@ import io.reactivex.schedulers.Schedulers;
 
 public class Orderbook extends Base {
 	private final String fileName = "orderbook_%s.txt";
-	private final int seedMidThreshold = 8;
+//	private final int seedMidThreshold = 8;
 
 	private final BotConfig botConfig;
 	private final ConcurrentHashMap<Integer, RLOrder> buys = new ConcurrentHashMap<>();
@@ -68,6 +68,8 @@ public class Orderbook extends Base {
 						ledgerClosed.set(event.ledgerEvent.getClosed());
 						ledgerValidated.set(event.ledgerEvent.getValidated());
 						requestPendings();
+						log("Worst buy : " + worstBuy.toPlainString() + " worst sell : " + worstSel.toPlainString() );
+
 					} else if (base instanceof Common.OnAccountOffers) {
 						Common.OnAccountOffers event = (Common.OnAccountOffers) o;
 						boolean buyMatched = false; 
@@ -89,6 +91,7 @@ public class Orderbook extends Base {
 						if (selMatched){
 							worstRates(Direction.SELL);
 						}
+						
 					} else if (base instanceof Common.OnDifference) {
 						Common.OnDifference event = (Common.OnDifference) o;
 						boolean buyMatched = false; 
@@ -213,30 +216,30 @@ public class Orderbook extends Base {
 			Collections.reverse(sorteds);
 		}
 		
-		int inserted = 0;		
-		for (int i = 0; i < sorteds.size() - 1; i++){
-			BigDecimal p, delta, q;
-			int locLevels = 0;
-			
-			if (direction == Direction.BUY){
-				p = sorteds.get(i).getValue().getRate();
-				q = sorteds.get(i + 1).getValue().getRate();
-				delta = p.subtract(q);
-			} else {
-				p = BigDecimal.ONE.divide(sorteds.get(i).getValue().getRate(), MathContext.DECIMAL64);
-				q = BigDecimal.ONE.divide(sorteds.get(i + 1).getValue().getRate(), MathContext.DECIMAL64);
-  			delta = q.subtract(p);
-			}		
-			locLevels = delta.divide(botConfig.getGridSpace(), MathContext.DECIMAL64).intValue() - 1;				
-			if (locLevels > 0 && levels > 0 && inserted < seedMidThreshold){
-				levels 		= levels - locLevels;
-				inserted  = inserted + locLevels;
-				res.addAll(direction == Direction.BUY ? RLOrder.buildBuysSeed(p, locLevels, botConfig) : RLOrder.buildSelsSeed(p, locLevels, botConfig));
-			}		
-			if (levels <= 0 || inserted > seedMidThreshold){
-				break;
-			}
-		}				
+//		int inserted = 0;		
+//		for (int i = 0; i < sorteds.size() - 1; i++){
+//			BigDecimal p, delta, q;
+//			int locLevels = 0;
+//			
+//			if (direction == Direction.BUY){
+//				p = sorteds.get(i).getValue().getRate();
+//				q = sorteds.get(i + 1).getValue().getRate();
+//				delta = p.subtract(q);
+//			} else {
+//				p = BigDecimal.ONE.divide(sorteds.get(i).getValue().getRate(), MathContext.DECIMAL64);
+//				q = BigDecimal.ONE.divide(sorteds.get(i + 1).getValue().getRate(), MathContext.DECIMAL64);
+//  			delta = q.subtract(p);
+//			}		
+//			locLevels = delta.divide(botConfig.getGridSpace(), MathContext.DECIMAL64).intValue() - 1;				
+//			if (locLevels > 0 && levels > 0 && inserted < seedMidThreshold){
+//				levels 		= levels - locLevels;
+//				inserted  = inserted + locLevels;
+//				res.addAll(direction == Direction.BUY ? RLOrder.buildBuysSeed(p, locLevels, botConfig) : RLOrder.buildSelsSeed(p, locLevels, botConfig));
+//			}		
+//			if (levels <= 0 || inserted > seedMidThreshold){
+//				break;
+//			}
+//		}				
 		if (levels > 10){
 			log(logOrderExplosionError(levels, direction == Direction.BUY ? worstBuy : worstSel, margin, sorteds), Level.WARNING);
 		}
