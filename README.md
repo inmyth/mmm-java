@@ -74,6 +74,7 @@ If false, the bot will only counter any order that fully consumes our order.
 **Version History**
 
 >v.050
+- missing order error fix. Txs were inserted with the same sequence number (happens if there's a sequence refresh and counter). Now submission checks if seq exists.   
 
 
 v.049
@@ -305,16 +306,18 @@ TODOS
 - [x] unknown edit (B078019B57E783C3467419BB4C6ED93770A60CB766ACF6A00A2AABF88D3BE98E). This is rolled into new OfferExecuted logic. 
 - [x] add warning email system in case of any unhandled errors
 - [x] automated balance check
-- [] get reference market price 
 - [x] error may arrive in stream not response. Handle this.
 - [x] log files should be named per account
 - [x] account balance sends email periodically
 - [x] need to trace all retry tx
-- [] missing order error, check response_sample/missing_order.txt
+- [x] missing order error, check response_sample/missing_order.txt
+- [x] log files should be named per start ts
+- [x] 05001 ledger number contains holes
+- [x] need to know if offerCreate comes from seed or counter
+- [] get reference market price 
+- [] balancer seeder skips a rate if all order consumed
 - [] double orders on same price. old order being retried ?
 - [] need maxFee.
-- [x] 05001 ledger number contains holes
-- [] need to know if offerCreate comes from seed or counter
 
 ## NOTES
 RESPONSE

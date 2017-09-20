@@ -81,7 +81,8 @@ public class State extends Base {
 					if (base instanceof Common.OnOfferCreate){
 						OnOfferCreate event = (OnOfferCreate) o;
 						setSequence(event.sequence);
-						pending.remove(event.sequence.intValue());					
+						pending.remove(event.sequence.intValue());	
+									
 					}
 					else if (base instanceof Common.OnOfferEdited){
 						OnOfferEdited event = (OnOfferEdited) o;
@@ -90,23 +91,27 @@ public class State extends Base {
 					else if (base instanceof Common.OnOfferCanceled){
 						OnOfferCanceled event = (OnOfferCanceled) o;
 						cancels.remove(event.prevSeq.intValue());
-						setSequence(event.newSeq);
+						setSequence(event.newSeq);					
 					}			
 					else if (base instanceof OnOrderReady){					
 						OnOrderReady event = (OnOrderReady) o;
-						if (flagWaitSeq.get() || flagWaitLedger.get()){
-							qPens.add(event);												
-						} else {
-							ocreate(event);						
-						}	
+						synchronized (State.this) {
+							if (flagWaitSeq.get() || flagWaitLedger.get()){
+								qPens.add(event);												
+							} else {
+								ocreate(event);						
+							}	
+						}
 					}			
 					else if (base instanceof OnCancelReady){
 						OnCancelReady event = (OnCancelReady) o;
-						if (flagWaitSeq.get() || flagWaitLedger.get()){
-							qCans.add(new TxdMini(Cpair.newInstance(event.pair), event.seq));												
-						} else {
-							ocancel(Cpair.newInstance(event.pair), event.seq);					
-						}	
+						synchronized (State.this) {
+							if (flagWaitSeq.get() || flagWaitLedger.get()){
+								qCans.add(new TxdMini(Cpair.newInstance(event.pair), event.seq));												
+							} else {
+								ocancel(Cpair.newInstance(event.pair), event.seq);					
+							}	
+						}
 					}				
 					else if (base instanceof Common.OnLedgerClosed){
 						OnLedgerClosed event = (OnLedgerClosed) o;		
@@ -115,7 +120,8 @@ public class State extends Base {
 						flagWaitLedger.set(false);
 						if (!flagWaitLedger.get() && !flagWaitSeq.get()){
 							drain();
-						}										
+						}						
+						
 					}
 					else if (base instanceof Common.OnAccountInfoSequence){
 						OnAccountInfoSequence event = (OnAccountInfoSequence) o;
@@ -216,25 +222,31 @@ public class State extends Base {
 		}
 	}
 	
-	private void ocreate(OnOrderReady ready){
-		int seq = getIncrementSequence();
-		int maxLedger = ledgerValidated.get() + DEFAULT_MAX_LEDGER_GAP;	
-		SignedTransaction signed = signCreate(ready.outbound, seq, maxLedger, DEFAULT_FEES_DROPS);
-		Txc txc = Txc.newInstance(ready.outbound, signed.hash, seq, maxLedger);		
-		pending.put(txc.getSeq(), txc);
-		
-		StringBuilder sb = new StringBuilder("submitting offerCreate: ");
-		sb.append(signed.hash);
-		sb.append(" ");
-		sb.append(seq);
-		if (ready.from != null){
-			sb.append(" retry from ");
-			sb.append(ready.from);
+	private synchronized void ocreate(OnOrderReady ready){
+			int seq = getIncrementSequence();
+			while (pending.containsKey(seq)){
+				seq = getIncrementSequence();
+			}		
+			int maxLedger = ledgerValidated.get() + DEFAULT_MAX_LEDGER_GAP;	
+			SignedTransaction signed = signCreate(ready.outbound, seq, maxLedger, DEFAULT_FEES_DROPS);
+			Txc txc = Txc.newInstance(ready.outbound, ready.source, signed.hash, seq, maxLedger);		
+			pending.put(txc.getSeq(), txc);
+			
+			StringBuilder sb = new StringBuilder("submitting offerCreate: ");
+			sb.append(ready.source.text);
 			sb.append(" ");
-			sb.append(ready.memo);
-		}
-		log(sb.toString());
-		submit(signed.tx_blob);
+			sb.append(signed.hash);
+			sb.append(" ");
+			sb.append(seq);
+			if (ready.from != null){
+				sb.append(" retry from ");
+				sb.append(ready.from);
+				sb.append(" ");
+				sb.append(ready.memo);
+			}
+			log(sb.toString());
+			submit(signed.tx_blob);
+		
 	}
  
 	private void ocancel(Cpair cpair, int canSeq){
@@ -278,17 +290,34 @@ public class State extends Base {
 	}
 	
 	public static class OnOrderReady extends BusBase {
+		public enum Source {
+			BALANCER ("balancer"),
+			COUNTER ("counter");	
+			
+			private String text;
+			
+			Source(String text) {
+				this.text = text;
+			}
+
+			public String text() {
+				return text;
+			}
+		}
+		
 		public RLOrder outbound;
 		public Hash256 from;
 		public String memo;
-
-		public OnOrderReady(RLOrder outbound) {
+		public Source source;
+		
+		public OnOrderReady(RLOrder outbound, Source source) {
 			super();
 			this.outbound = outbound;
+			this.source 	= source;
 		}	
 		
-		public OnOrderReady(RLOrder outbound, Hash256 from, String memo){
-			this(outbound);
+		public OnOrderReady(RLOrder outbound, Source source, Hash256 from, String memo){
+			this(outbound, source);
 			this.from = from;
 			this.memo = memo;
 		}

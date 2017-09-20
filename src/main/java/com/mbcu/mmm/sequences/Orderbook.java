@@ -27,6 +27,7 @@ import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.sequences.state.State;
 import com.mbcu.mmm.sequences.state.State.BroadcastPendings;
+import com.mbcu.mmm.sequences.state.State.OnOrderReady;
 import com.mbcu.mmm.utils.MyLogger;
 import com.ripple.core.coretypes.uint.UInt32;
 
@@ -201,7 +202,7 @@ public class Orderbook extends Base {
 			gens.addAll(generate(sortedSels, selsGap, Direction.SELL));
 		} 		
 
-		gens.forEach(rlo -> bus.send(new State.OnOrderReady(rlo)));
+		gens.forEach(rlo -> bus.send(new State.OnOrderReady(rlo, OnOrderReady.Source.BALANCER)));
 	}
 
 	private List<RLOrder> generate(List<Entry<Integer, RLOrder>> sorteds, BigDecimal margin, Direction direction) {
