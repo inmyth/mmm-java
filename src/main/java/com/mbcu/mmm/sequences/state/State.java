@@ -249,8 +249,11 @@ public class State extends Base {
 		
 	}
  
-	private void ocancel(Cpair cpair, int canSeq){
+	private synchronized void ocancel(Cpair cpair, int canSeq){
 		int newSeq = getIncrementSequence();
+		while (cancels.containsKey(newSeq)){
+			newSeq = getIncrementSequence();
+		}	
 		int maxLedger = ledgerValidated.get() + DEFAULT_MAX_LEDGER_GAP;	
 		SignedTransaction signed = signCancel(newSeq, canSeq, maxLedger);
 		Txd txd = Txd.newInstance(cpair, canSeq, newSeq, maxLedger);
