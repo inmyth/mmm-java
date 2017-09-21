@@ -73,9 +73,11 @@ If false, the bot will only counter any order that fully consumes our order.
 
 **Version History**
 
->v.050
+v.050
 - missing order error fix. Txs were inserted with the same sequence number (happens if there's a sequence refresh and counter). Now submission checks if seq exists.   
-- removed seed in between orders. 
+- removed seed in between orders.
+- fixed double order issue. When one side in orderbook was empty, balancer would seed new orders from midPrice. This caused counters to fill already filled price level on the other side. Now when one side is empty, seed it from the best price of the other side with one gridlevel gap. 
+
 
 v.049
 - Account balance is sent periodically to emails.
@@ -315,8 +317,8 @@ TODOS
 - [x] 05001 ledger number contains holes
 - [x] need to know if offerCreate comes from seed or counter
 - [] get reference market price 
-- [] balancer seeder skips a rate if all order consumed. If the gap = 2*levels then it's correct. 
-- [] double orders on same price. when restarted, orders will start from startMiddle when empty. This will cause double orders on the other side
+- [x] balancer seeder skips a rate if all order consumed. If the gap = 2*levels then it's correct. 
+- [x] double orders on same price. when restarted, orders will start from startMiddle when empty. This will cause double orders on the other side
 - [] need maxFee.
 
 ## NOTES
@@ -371,6 +373,12 @@ tecUNFUNDED_OFFER
  
 Edit
 - transaction needs to have OfferSequence
+
+Balancer
+- if both sides in orderbook are empty, seed from midPrice
+- if order level is lower than config, seed more orders toward worse rate
+- if one side is empty, seed it with rate from the best price of the other side with gap gridlevel. without this gap, new order might be countered filling an already filled price level on the other side.  
+- ideally the gap between sells and buys is 2 x gridLevel
 
 Summary
 - Sequence increases when we have OrderCreate, not necessarily OrderCreated

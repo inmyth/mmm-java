@@ -68,8 +68,6 @@ public class Orderbook extends Base {
 						ledgerClosed.set(event.ledgerEvent.getClosed());
 						ledgerValidated.set(event.ledgerEvent.getValidated());
 						requestPendings();
-						log("Worst buy : " + worstBuy.toPlainString() + " worst sell : " + worstSel.toPlainString() );
-
 					} else if (base instanceof Common.OnAccountOffers) {
 						Common.OnAccountOffers event = (Common.OnAccountOffers) o;
 						boolean buyMatched = false; 
@@ -85,13 +83,9 @@ public class Orderbook extends Base {
 								shelve(t.getOrder(), t.getSeq(), pairMatched);
 							}
 						}
-						if (buyMatched) {
-							worstRates(Direction.BUY);
-						} 
-						if (selMatched){
-							worstRates(Direction.SELL);
-						}
-						
+						if (buyMatched || selMatched) {
+							worstRates();
+						} 					
 					} else if (base instanceof Common.OnDifference) {
 						Common.OnDifference event = (Common.OnDifference) o;
 						boolean buyMatched = false; 
@@ -107,24 +101,21 @@ public class Orderbook extends Base {
 								shelve(ba.after, ba.befSeq, pairMatched);
 							}
 						}
-						if (buyMatched) {
-							worstRates(Direction.BUY);
-						} 
-						if (selMatched){
-							worstRates(Direction.SELL);
+						if (buyMatched || selMatched) {
+							worstRates();
 						}
 					} else if (base instanceof Common.OnOfferEdited) {
 						Common.OnOfferEdited event = (Common.OnOfferEdited) o;
 						Boolean pairMatched = pairMatched(event.ba.after);
 						if (pairMatched != null) {
 							edit(event.ba, event.newSeq, pairMatched);
-							worstRates(pairMatched ? Direction.BUY : Direction.SELL);
+							worstRates();
 						}
 					} else if (base instanceof Common.OnOfferCanceled) {
 						Common.OnOfferCanceled event = (Common.OnOfferCanceled) o;
 						Boolean pairMatched = remove(event.prevSeq.intValue());
 						if (pairMatched != null) {
-							worstRates(pairMatched ? Direction.BUY : Direction.SELL);
+							worstRates();
 						}
 					} else if (base instanceof State.BroadcastPendings) {
 						BroadcastPendings event = (BroadcastPendings) o;
@@ -132,8 +123,8 @@ public class Orderbook extends Base {
 							if (event.creates.isEmpty() && event.cancels.isEmpty() && lastBalanced.get() >= config.getIntervals().getBalancer()) {
 								lastBalanced.set(0);
 								List<Entry<Integer, RLOrder>> sortedSels, sortedBuys;
-								sortedSels = sortSels();
-								sortedBuys = sortBuys();
+								sortedSels = sortSels(false);
+								sortedBuys = sortBuys(false);
 								printOrderbook(sortedSels, sortedBuys);
 								balancer(sortedSels, sortedBuys);
 							}
@@ -168,23 +159,28 @@ public class Orderbook extends Base {
 		bus.send(new Balancer.OnRequestNonOrderbookRLOrder(botConfig.getPair()));
 	}
 
-	private void worstRates(Direction direction) {		
-		List<Entry<Integer, RLOrder>> sorted;
-		if (direction == Direction.BUY){
-			sorted = sortBuys();
-			if (sorted.isEmpty()) {
-				worstBuy = worstBuy.subtract(botConfig.getGridSpace());
-			} else {
-				Collections.reverse(sorted);
-				worstBuy = sorted.get(0).getValue().getRate();
-			}
-		} else{
-			sorted = sortSels();
-			if (sorted.isEmpty()) {	
-				worstSel = worstSel.add(botConfig.getGridSpace());
-			} else {
-				worstSel = BigDecimal.ONE.divide(sorted.get(0).getValue().getRate(), MathContext.DECIMAL64);
-			}
+	private void worstRates() {		
+		if (buys.isEmpty() && sels.isEmpty()){
+			worstBuy = worstBuy.subtract(botConfig.getGridSpace());
+			worstSel = worstSel.add(botConfig.getGridSpace());
+			return;
+		}
+		List<Entry<Integer, RLOrder>> sorted = new ArrayList<>();	
+		if (buys.isEmpty()){
+			worstBuy = BigDecimal.ONE.divide(sortSels(true).get(0).getValue().getRate(), MathContext.DECIMAL64);
+			worstBuy = worstBuy.subtract(botConfig.getGridSpace());
+		} else {
+			sorted.addAll(sortBuys(false));
+			Collections.reverse(sorted);
+			worstBuy = sorted.get(0).getValue().getRate();
+		}		
+		sorted.clear();
+	  if (sels.isEmpty()){
+			worstSel = sortBuys(false).get(0).getValue().getRate();
+			worstSel = worstSel.add(botConfig.getGridSpace());
+		} else {
+			sorted.addAll(sortSels(false));
+			worstSel = BigDecimal.ONE.divide(sorted.get(0).getValue().getRate(), MathContext.DECIMAL64);
 		}
 	}
 
@@ -204,7 +200,6 @@ public class Orderbook extends Base {
 		if (selsGap.compareTo(BigDecimal.ZERO) >= 0) {
 			gens.addAll(generate(sortedSels, selsGap, Direction.SELL));
 		} 		
-
 		gens.forEach(rlo -> bus.send(new State.OnOrderReady(rlo, OnOrderReady.Source.BALANCER)));
 	}
 
@@ -240,6 +235,7 @@ public class Orderbook extends Base {
 //				break;
 //			}
 //		}				
+			
 		if (levels > 10){
 			log(logOrderExplosionError(levels, direction == Direction.BUY ? worstBuy : worstSel, margin, sorteds), Level.WARNING);
 		}
@@ -370,20 +366,20 @@ public class Orderbook extends Base {
 		shelve(after, seq.intValue(), isAligned);
 	}
 
-	private List<Entry<Integer, RLOrder>> sortBuys() {
+	private List<Entry<Integer, RLOrder>> sortBuys(boolean isReversed) {
 		Set<Entry<Integer, RLOrder>> entries = buys.entrySet();
 		List<Entry<Integer, RLOrder>> res = new ArrayList<Entry<Integer, RLOrder>>(entries);
-		Collections.sort(res, Collections.reverseOrder(obMapComparator));
+		Collections.sort(res, !isReversed ? Collections.reverseOrder(obMapComparator) : obMapComparator);
 		return res;
 	}
 
-	private List<Entry<Integer, RLOrder>> sortSels() {
+	private List<Entry<Integer, RLOrder>> sortSels(boolean isReversed) {
 		Set<Entry<Integer, RLOrder>> entries = sels.entrySet();
 		List<Entry<Integer, RLOrder>> res = new ArrayList<Entry<Integer, RLOrder>>(entries);
-		Collections.sort(res, obMapComparator);
+		Collections.sort(res, !isReversed ? obMapComparator : Collections.reverseOrder(obMapComparator));
 		return res;
 	}
-
+	
 	public Comparator<Entry<Integer, RLOrder>> obMapComparator = new Comparator<Entry<Integer, RLOrder>>() {
 
 		@Override
