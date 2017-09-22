@@ -3,6 +3,7 @@ package com.mbcu.mmm.utils;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
@@ -21,16 +22,25 @@ import static org.junit.Assert.assertNull;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.Before;
 import org.junit.Test;
 
 import com.mbcu.mmm.main.WebSocketClient;
+import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.models.internal.NameIssuer;
+import com.mbcu.mmm.models.internal.RLOrder.Direction;
 import com.mbcu.mmm.models.request.AccountInfo;
 import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
+import com.mbcu.mmm.sequences.Common;
+import com.mbcu.mmm.sequences.counters.Yuki;
 import com.ripple.core.coretypes.AccountID;
 import com.ripple.core.coretypes.Amount;
 import com.ripple.core.coretypes.Currency;
+import com.ripple.core.coretypes.uint.UInt32;
+import com.ripple.core.types.known.tx.Transaction;
+import com.ripple.core.types.known.tx.signed.SignedTransaction;
+import com.ripple.core.types.known.tx.txns.OfferCreate;
 
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
@@ -42,7 +52,32 @@ public class UtilsTest {
 	private final AtomicBoolean flagWaitSeq2 = new AtomicBoolean(false);
 
   private Subject<Boolean> seqSyncObs = PublishSubject.create();  
-
+	private static final String configPath = "config.txt";
+	private Config config;
+	
+	@Before
+	public void init() throws IOException{
+		config = Config.build(configPath);
+	}
+	
+  @Test
+  public void signTest(){
+		int nowLedger = 32953426;
+  	OfferCreate offerCreate = new OfferCreate();
+		Amount amount = new Amount(new BigDecimal("20"), Currency.fromString("JPY"), AccountID.fromAddress("rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS"));
+		offerCreate.takerGets(amount);
+		offerCreate.takerPays(new Amount(new BigDecimal("1")));
+		
+		offerCreate.sequence(new UInt32(String.valueOf("32441")));
+		offerCreate.fee(new Amount(new BigDecimal("0.00012")));
+		offerCreate.maxFee(new Amount(new BigDecimal("0.001")));
+		offerCreate.lastLedgerSequence(new UInt32(String.valueOf(nowLedger + 5)));
+		offerCreate.account(AccountID.fromAddress(config.getCredentials().getAddress()));
+		offerCreate.prettyJSON();
+		SignedTransaction signed = offerCreate.sign(config.getCredentials().getSecret());  	
+  	
+  }
+  
   @Test
   public void splitTest(){
   	String a = "111, 999";

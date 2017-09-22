@@ -73,6 +73,9 @@ If false, the bot will only counter any order that fully consumes our order.
 
 **Version History**
 
+v.051
+- attempt to add maxFee by adding it in Transaction failed
+
 v.050
 - missing order error fix. Txs were inserted with the same sequence number (happens if there's a sequence refresh and counter). Now submission checks if seq exists.   
 - removed seed in between orders.
