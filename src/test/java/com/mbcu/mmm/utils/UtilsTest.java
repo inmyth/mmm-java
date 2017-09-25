@@ -70,12 +70,12 @@ public class UtilsTest {
 		
 		offerCreate.sequence(new UInt32(String.valueOf("32441")));
 		offerCreate.fee(new Amount(new BigDecimal("0.00012")));
-//		offerCreate.maxFee(new Amount(new BigDecimal("0.001")));
+		offerCreate.maxFee(new Amount(new BigDecimal("0.001")));
 		offerCreate.lastLedgerSequence(new UInt32(String.valueOf(nowLedger + 5)));
 		offerCreate.account(AccountID.fromAddress(config.getCredentials().getAddress()));
-		offerCreate.prettyJSON();
+		System.out.println(offerCreate.prettyJSON());
 		SignedTransaction signed = offerCreate.sign(config.getCredentials().getSecret());  	
-  	
+  	System.out.println(signed.tx_blob);
   }
   
   @Test

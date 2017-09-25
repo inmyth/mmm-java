@@ -1,10 +1,16 @@
 package com.mbcu.mmm.models.internal;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
 import com.mbcu.mmm.utils.GsonUtils;
 import com.mbcu.mmm.utils.MyUtils;
 
@@ -12,9 +18,11 @@ public class Config {
 	private static final int DEFAULT_INTERVAL_BALANCER = 4;
 	private static final int DEFAULT_INTERVAL_ACCOUNT_BALANCE = 2;
 	public static final int HOUR_ACCOUNT_BALANCER_EMAILER = 6;
+	private static final String DEFAULT_FEE_XRP = "0.000012";
 	
 	private String net;
 	private String datanet;
+	private BigDecimal feeXRP;
 	private Credentials credentials;
 	private ArrayList<String> emails;
 	private Intervals intervals;
@@ -37,6 +45,10 @@ public class Config {
 		this.credentials = credentials;
 	}
 
+	public BigDecimal getFeeXRP() {
+		return feeXRP;
+	}
+	
 	public void setDatanet(String datanet) {
 		this.datanet = datanet;
 	}
@@ -87,6 +99,10 @@ public class Config {
 			throw new IOException("Bots are empty");
 		}
 		
+		if (res.feeXRP == null){
+			res.feeXRP = new BigDecimal(DEFAULT_FEE_XRP);
+		}
+		
 		if (res.intervals == null){
 			Intervals intervals = new Intervals();
 			intervals.accountBalance = DEFAULT_INTERVAL_ACCOUNT_BALANCE;
@@ -115,5 +131,14 @@ public class Config {
 		return res;
 	}
 	
+	class BigDecimalDeserializer implements JsonDeserializer<BigDecimal> {
+
+		@Override
+		public BigDecimal deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext c) 
+				throws JsonParseException {
+
+			return json.getAsBigDecimal();
+		}
+	}
 
 }

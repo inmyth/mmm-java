@@ -25,6 +25,8 @@ java -jar mmm.jar <path_to_config_file>
 
 *General configuration*
 
+`feeXRP` : base fee in XRP (default 0.000012)
+
 `datanet` : DataAPI url. 
 
 `emails` : contact emails the bot will send error report to. 
@@ -323,6 +325,7 @@ TODOS
 - [x] balancer seeder skips a rate if all order consumed. If the gap = 2*levels then it's correct. 
 - [x] double orders on same price. when restarted, orders will start from startMiddle when empty. This will cause double orders on the other side
 - [] need maxFee.
+- [] move fee to config
 
 ## NOTES
 RESPONSE

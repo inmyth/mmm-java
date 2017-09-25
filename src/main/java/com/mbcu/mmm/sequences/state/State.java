@@ -47,7 +47,6 @@ import io.reactivex.subjects.PublishSubject;
 import io.reactivex.subjects.Subject;
 
 public class State extends Base {
-	private static final BigDecimal DEFAULT_FEES_DROPS = new BigDecimal("0.000015");
 	private static final int DEFAULT_MAX_LEDGER_GAP = 5;
 	
 	private final AtomicInteger ledgerClosed = new AtomicInteger(0);
@@ -228,7 +227,7 @@ public class State extends Base {
 				seq = getIncrementSequence();
 			}		
 			int maxLedger = ledgerValidated.get() + DEFAULT_MAX_LEDGER_GAP;	
-			SignedTransaction signed = signCreate(ready.outbound, seq, maxLedger, DEFAULT_FEES_DROPS);
+			SignedTransaction signed = signCreate(ready.outbound, seq, maxLedger, config.getFeeXRP());
 			Txc txc = Txc.newInstance(ready.outbound, ready.source, signed.hash, seq, maxLedger);		
 			pending.put(txc.getSeq(), txc);
 			
@@ -270,7 +269,7 @@ public class State extends Base {
 	private SignedTransaction signCancel(int seq, int canSeq, int maxLedger){
 		OfferCancel offerCancel = new OfferCancel();
 		offerCancel.put(UInt32.OfferSequence, new UInt32(String.valueOf(canSeq)));
-		offerCancel.fee(new Amount(DEFAULT_FEES_DROPS));
+		offerCancel.fee(new Amount(config.getFeeXRP()));
 		offerCancel.sequence(new UInt32(String.valueOf(seq)));
 		offerCancel.lastLedgerSequence(new UInt32(String.valueOf(maxLedger)));
 		offerCancel.account(AccountID.fromAddress(config.getCredentials().getAddress()));
