@@ -15,6 +15,7 @@ import com.ripple.core.coretypes.AccountID;
 import com.ripple.core.coretypes.Amount;
 import com.ripple.core.coretypes.Currency;
 import com.ripple.core.coretypes.STObject;
+import com.ripple.core.coretypes.hash.Hash256;
 import com.ripple.core.coretypes.uint.UInt32;
 import com.ripple.core.fields.Field;
 import com.ripple.core.types.known.sle.entries.Offer;
@@ -170,7 +171,7 @@ public final class RLOrder extends Base{
 		return res;
 	}
 	
-	public static BefAf toBA(Amount bTakerPays, Amount bTakerGets, Amount aTakerPays, Amount aTakerGets, UInt32 seq){		
+	public static BefAf toBA(Amount bTakerPays, Amount bTakerGets, Amount aTakerPays, Amount aTakerGets, UInt32 seq, Hash256 txnId){		
 		Cpair bPair = Cpair.newInstance(bTakerGets, bTakerPays);		
 		BigDecimal bAsk = bTakerGets.value().divide(bTakerPays.value(), MathContext.DECIMAL64);
 		RLOrder before = new RLOrder(Direction.BUY, bTakerPays, bTakerGets, bAsk, bPair);	
@@ -179,7 +180,7 @@ public final class RLOrder extends Base{
 			aTakerGets = new Amount(new BigDecimal("0"), bTakerGets.currency(), bTakerGets.issuer());
 		}
 		RLOrder after = RLOrder.rateUnneeded(Direction.BUY, aTakerPays, aTakerGets);		
-		return new BefAf(before, after, seq);		
+		return new BefAf(before, after, seq, txnId);		
 	}
 	
 	

@@ -75,6 +75,13 @@ If false, the bot will only counter any order that fully consumes our order.
 
 **Version History**
 
+>v.053
+- see in progress tasks
+- Befaf now holds txHash for debugging. prolly need one for XRP too small error
+
+v.052
+- fixed email sender. Supervisor runs on sudo so need to place credentials on the same level. 
+
 v.051
 - attempt to add maxFee by adding it in Transaction failed
 
@@ -325,7 +332,11 @@ TODOS
 - [x] balancer seeder skips a rate if all order consumed. If the gap = 2*levels then it's correct. 
 - [x] double orders on same price. when restarted, orders will start from startMiddle when empty. This will cause double orders on the other side
 - [] need maxFee.
-- [] move fee to config
+- [x] move fee to config
+- [x] test email sender with credentials in env. 
+- [] fix division by zero
+- [] fix XRP too small
+- [] need pagination for account_offer
 
 ## NOTES
 RESPONSE
