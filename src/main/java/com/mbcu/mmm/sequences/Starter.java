@@ -28,8 +28,8 @@ public class Starter extends Base{
   
 	private Starter(Config config) {
 		super(MyLogger.getLogger(Starter.class.getName()), config);
-		List<CompositeDisposable> dispos = new ArrayList<>();
-				
+	  List<CompositeDisposable> dispos = new ArrayList<>();
+
 		CompositeDisposable disSubscribeLedger = new CompositeDisposable();
 		disSubscribeLedger
 		.add(bus.toObservable().subscribeOn(Schedulers.newThread())
@@ -84,6 +84,34 @@ public class Starter extends Base{
 				
 			}));
 		dispos.add(disAccInfo);
+		
+		CompositeDisposable disAccountOffers = new CompositeDisposable();
+		disAccountOffers
+		.add(bus.toObservable().subscribeOn(Schedulers.newThread())
+		.subscribeWith(new DisposableObserver<Object>() {
+
+			@Override
+			public void onNext(Object o) {
+				BusBase base = (BusBase) o;
+				try {
+					if (base instanceof Common.OnLedgerClosed){
+						latch.countDown();
+						disAccountOffers.dispose();
+					}					
+				} catch (Exception e) {
+					MyLogger.exception(LOGGER, base.toString(), e);		
+					throw e;
+				}
+			}
+
+			@Override
+			public void onError(Throwable e) {}
+
+			@Override
+			public void onComplete() {}
+			
+		}));		
+		dispos.add(disAccountOffers);
 		
 		CompositeDisposable disLedgerClosed = new CompositeDisposable();
 		disLedgerClosed
@@ -143,14 +171,14 @@ public class Starter extends Base{
 		}));
 		dispos.add(disOnWSConnected);
 	
-		CompositeDisposable disOnAccountOffers = new CompositeDisposable();
-		disOnAccountOffers
+		CompositeDisposable disOnAccountOffersDone = new CompositeDisposable();
+		disOnAccountOffersDone
 		.add(bus.toObservable().subscribeOn(Schedulers.newThread())
 		.subscribeWith(new DisposableObserver<Object>() {
 
 			@Override
 			public void onNext(Object o) {			
-				if (o instanceof Common.OnAccountOffers){
+				if (o instanceof Orderbook.OnAccOffersDone){
 					latch.countDown();
 				}				
 			}
@@ -167,7 +195,7 @@ public class Starter extends Base{
 			}
 		
 		}));
-		dispos.add(disOnAccountOffers);	
+		dispos.add(disOnAccountOffersDone);	
 		latch = new CountDownLatch(dispos.size());			
 	}
 	
@@ -195,7 +223,7 @@ public class Starter extends Base{
 		Notifier.newInstance(config);
 		WebSocketClient webSocketClient = new WebSocketClient(super.config);
 		webSocketClient.start();	
-		latch.await();
+		latch.await();	
     postInit();
 	}
 	
@@ -206,6 +234,7 @@ public class Starter extends Base{
 		bus.send(new OnInitiated());	
 	}
 	
+
 	public static class OnInitiated extends BusBase {}
 	
 }

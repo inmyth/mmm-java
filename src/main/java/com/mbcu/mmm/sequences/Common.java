@@ -114,7 +114,8 @@ public class Common extends Base {
 				TAccountOffer offer = TAccountOffer.of((JSONObject) offers.get(i));
 				tAccOffs.add(offer);
 			}		
-			bus.send(new OnAccountOffers(tAccOffs));
+			String marker = result.has("marker") ? result.getString("marker") : null;
+			bus.send(new OnAccountOffers(tAccOffs, marker));
 			return;
 		}
 		
@@ -595,10 +596,12 @@ public class Common extends Base {
 		
 	public static class OnAccountOffers extends BusBase {
 		public final List<TAccountOffer> accOffs;
+		public final String marker;
 
-		public OnAccountOffers(List<TAccountOffer> accOffs) {
+		public OnAccountOffers(List<TAccountOffer> accOffs, String marker) {
 			super();
 			this.accOffs = accOffs;
+			this.marker	 = marker;
 		}
 	}
 	

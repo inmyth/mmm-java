@@ -75,9 +75,12 @@ If false, the bot will only counter any order that fully consumes our order.
 
 **Version History**
 
->v.053
+>v.054
 - see in progress tasks
 - Befaf now holds txHash for debugging. prolly need one for XRP too small error
+
+v.053
+- fixed account_offers for more than 200 orders
 
 v.052
 - fixed email sender. Supervisor runs on sudo so need to place credentials on the same level. 
@@ -337,6 +340,7 @@ TODOS
 - [] fix division by zero
 - [] fix XRP too small
 - [] need pagination for account_offer
+- [x] fix account_offers for more than 200 orders
 
 ## NOTES
 RESPONSE

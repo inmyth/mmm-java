@@ -2,8 +2,6 @@ package com.mbcu.mmm.sequences;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -36,7 +34,6 @@ import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 
 public class Orderbook extends Base {
-	private final String fileName = "orderbook_%s.txt";
 //	private final int seedMidThreshold = 8;
 
 	private final BotConfig botConfig;
@@ -44,7 +41,7 @@ public class Orderbook extends Base {
 	private final ConcurrentHashMap<Integer, RLOrder> sels = new ConcurrentHashMap<>();
 	private final RxBus bus = RxBusProvider.getInstance();
 	private final CompositeDisposable disposables = new CompositeDisposable();
-	private final Path path;
+	private final CompositeDisposable accountOffersDispo = new CompositeDisposable();
 	private final AtomicInteger lastBalanced = new AtomicInteger(0);
 	private final AtomicInteger ledgerValidated = new AtomicInteger(0);
 	private final AtomicInteger ledgerClosed = new AtomicInteger(0);
@@ -55,7 +52,46 @@ public class Orderbook extends Base {
 		this.botConfig = botConfig;
 		this.worstBuy = botConfig.getStartMiddlePrice();
 		this.worstSel = botConfig.getStartMiddlePrice();
-		path = Paths.get(String.format(fileName, botConfig.getPair().replaceAll("[/]", "_")));
+		
+		accountOffersDispo.add(bus.toObservable().subscribeOn(Schedulers.newThread())
+				.subscribeWith(new DisposableObserver<Object>() {
+
+					@Override
+					public void onNext(Object o) {
+						BusBase base = (BusBase) o;
+						if (base instanceof Common.OnAccountOffers) {
+							Common.OnAccountOffers event = (Common.OnAccountOffers) o;
+							boolean buyMatched 	= false; 
+							boolean selMatched 	= false;
+							Boolean pairMatched = null;
+							for (TAccountOffer t : event.accOffs) {
+								pairMatched = pairMatched(t.getOrder());
+								if (pairMatched != null) {
+									if (pairMatched){
+										buyMatched = true;
+									} else {
+										selMatched = true;
+									}
+									shelve(t.getOrder(), t.getSeq(), pairMatched);
+								}
+							}
+							if (buyMatched || selMatched) {
+								worstRates();
+							} 		
+						}
+					}
+
+					@Override
+					public void onError(Throwable e) {
+						log(e.getMessage(), Level.SEVERE);											
+					}
+
+					@Override
+					public void onComplete() {}
+				})
+		);
+		
+		
 		disposables.add(bus.toObservable().subscribeOn(Schedulers.newThread()).subscribeWith(new DisposableObserver<Object>() {
 
 			@Override
@@ -68,24 +104,6 @@ public class Orderbook extends Base {
 						ledgerClosed.set(event.ledgerEvent.getClosed());
 						ledgerValidated.set(event.ledgerEvent.getValidated());
 						requestPendings();
-					} else if (base instanceof Common.OnAccountOffers) {
-						Common.OnAccountOffers event = (Common.OnAccountOffers) o;
-						boolean buyMatched = false; 
-						boolean selMatched = false;
-						for (TAccountOffer t : event.accOffs) {
-							Boolean pairMatched = pairMatched(t.getOrder());
-							if (pairMatched != null) {
-								if (pairMatched){
-									buyMatched = true;
-								} else {
-									selMatched = true;
-								}
-								shelve(t.getOrder(), t.getSeq(), pairMatched);
-							}
-						}
-						if (buyMatched || selMatched) {
-							worstRates();
-						} 					
 					} else if (base instanceof Common.OnDifference) {
 						Common.OnDifference event = (Common.OnDifference) o;
 						boolean buyMatched = false; 
@@ -439,5 +457,9 @@ public class Orderbook extends Base {
 		Orderbook res = new Orderbook(config, botConfig);
 		return res;
 	}
+	
+	public static class OnAccOffersDoneLog extends BusBase{}
+	
+	public static class OnAccOffersDone extends BusBase{}
 
 }
