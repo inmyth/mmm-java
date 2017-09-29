@@ -94,7 +94,7 @@ public class Starter extends Base{
 			public void onNext(Object o) {
 				BusBase base = (BusBase) o;
 				try {
-					if (base instanceof Common.OnLedgerClosed){
+					if (base instanceof Orderbook.OnAccOffersDone){
 						latch.countDown();
 						disAccountOffers.dispose();
 					}					

@@ -457,9 +457,7 @@ public class Orderbook extends Base {
 		Orderbook res = new Orderbook(config, botConfig);
 		return res;
 	}
-	
-	public static class OnAccOffersDoneLog extends BusBase{}
-	
+		
 	public static class OnAccOffersDone extends BusBase{}
 
 }
