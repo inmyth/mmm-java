@@ -20,7 +20,11 @@ public class BefAf extends Base{
 
 	@Override
 	public String stringify() {
-		StringBuffer res = new StringBuffer(before.stringify());
+		StringBuffer res = new StringBuffer("BefAf");
+		res.append("\n");
+		res.append(txnId.toString());
+		res.append("\n");
+		res.append(before.stringify());
 		if (after != null){
 			res.append(after.stringify());
 		}else{

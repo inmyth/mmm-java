@@ -109,10 +109,10 @@ public final class RLOrder extends Base{
 	
 	public static Amount amount(BigDecimal value, Currency currency, AccountID issuer){
 		if (currency.isNative()){
-			value = value.round(new MathContext(6, RoundingMode.HALF_DOWN));
+			value = value.round(new MathContext(6, RoundingMode.HALF_DOWN)).setScale(6, RoundingMode.HALF_DOWN);			
 			return new Amount(value);
 		}
-		value = value.round(new MathContext(16, RoundingMode.HALF_DOWN));
+		value = value.round(new MathContext(16, RoundingMode.HALF_DOWN)).setScale(16, RoundingMode.HALF_DOWN);
 		return new Amount(value, currency, issuer);		
 	}
 	public static Amount amount(Amount amount){

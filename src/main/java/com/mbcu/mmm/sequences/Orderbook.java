@@ -201,7 +201,9 @@ public class Orderbook extends Base {
 			worstSel = BigDecimal.ONE.divide(sorted.get(0).getValue().getRate(), MathContext.DECIMAL64);
 		}
 	}
+	
 
+	
 	private void balancer(List<Entry<Integer, RLOrder>> sortedSels, List<Entry<Integer, RLOrder>> sortedBuys) {
 		// using pendings is unrealiable.
 		BigDecimal sumBuys = sum(Direction.BUY);

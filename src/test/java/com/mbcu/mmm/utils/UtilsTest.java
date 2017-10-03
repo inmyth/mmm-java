@@ -28,6 +28,7 @@ import org.junit.Test;
 import com.mbcu.mmm.main.WebSocketClient;
 import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.models.internal.NameIssuer;
+import com.mbcu.mmm.models.internal.RLOrder;
 import com.mbcu.mmm.models.internal.RLOrder.Direction;
 import com.mbcu.mmm.models.request.AccountInfo;
 import com.mbcu.mmm.rx.RxBus;
@@ -59,6 +60,21 @@ public class UtilsTest {
 	public void init() throws IOException{
 		config = Config.build(configPath);
 	}
+
+	
+	@Test
+	public void testMinAmount() {
+		BigDecimal value = new BigDecimal("0.0061864");
+		Amount a = RLOrder.amount(value, Currency.XRP, null);
+		assertEquals("0.006186", a.valueText());
+	}
+	
+	@Test
+	public void testMinRLOrder(){
+		BigDecimal a = BigDecimal.ONE.divide(new BigDecimal("5.4E-15"), MathContext.DECIMAL64);
+		System.out.println("aaa" + a.toPlainString());
+	}
+	
 	
   @Test
   public void signTest(){
