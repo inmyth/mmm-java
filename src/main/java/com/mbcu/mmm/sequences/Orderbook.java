@@ -181,6 +181,7 @@ public class Orderbook extends Base {
 		if (buys.isEmpty() && sels.isEmpty()){
 			worstBuy = worstBuy.subtract(botConfig.getGridSpace());
 			worstSel = worstSel.add(botConfig.getGridSpace());
+		
 			return;
 		}
 		List<Entry<Integer, RLOrder>> sorted = new ArrayList<>();	

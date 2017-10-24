@@ -284,13 +284,6 @@ public final class RLOrder extends Base{
 		return in;		
 	}
 
-	public static ArrayList<RLOrder> buildSeed(BotConfig bot){
-		ArrayList<RLOrder> res = new ArrayList<>();
-		res.addAll(buildBuysSeed(new BigDecimal(bot.startMiddlePrice), bot.getBuyGridLevels(), bot));
-		res.addAll(buildSelsSeed(new BigDecimal(bot.startMiddlePrice), bot.getSellGridLevels(), bot));
-		return res;
-	}
-	
 	private static Queue<Integer> getLevels(int max){
 		Queue<Integer> res = new LinkedList<>();
 		IntStream.range(1, max + 1).forEach(a -> {res.add(a);});
@@ -298,6 +291,9 @@ public final class RLOrder extends Base{
 	}
 		
 	public static List<RLOrder> buildBuysSeed(BigDecimal startRate, int levels, BotConfig bot){
+		if (bot.isPctGridSpace()){
+			return buildBuysSeedPct(startRate, levels, bot);
+		}
 		ArrayList<RLOrder> res = new ArrayList<>();
 		BigDecimal margin = new BigDecimal(bot.gridSpace);
 		Queue<Integer> buyLevels = getLevels(levels);
@@ -308,7 +304,7 @@ public final class RLOrder extends Base{
 			}
 			if (!buyLevels.isEmpty()){
 				Amount quantity =	bot.base.add(bot.getBuyOrderQuantity());					
-				BigDecimal rate = startRate.subtract(margin.multiply(new BigDecimal(buyLevels.remove()), MathContext.DECIMAL64));
+				BigDecimal rate = startRate.subtract(margin.multiply(new BigDecimal(buyLevels.remove()), MathContext.DECIMAL64));			
 				if (rate.compareTo(BigDecimal.ZERO) <= 0){
 					buyLevels.clear();				
 				}else{
@@ -322,7 +318,29 @@ public final class RLOrder extends Base{
 		return res;
 	}
 	
+	public static List<RLOrder> buildBuysSeedPct(BigDecimal startPrice, int levels, BotConfig bot){
+		ArrayList<RLOrder> res = new ArrayList<>();
+		BigDecimal pct = new BigDecimal(bot.gridSpace);
+
+		for (int i = 1; i <= levels; i++){
+			Amount quantity =	bot.base.add(bot.getBuyOrderQuantity());		
+			BigDecimal newPrice = startPrice.subtract(pct.multiply(startPrice, MathContext.DECIMAL64));
+			if (newPrice.compareTo(BigDecimal.ZERO) <= 0){
+				break;			
+			}					
+			BigDecimal totalPriceValue = quantity.value().multiply(newPrice, MathContext.DECIMAL64);
+			Amount totalPrice =  RLOrder.amount(totalPriceValue, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
+			RLOrder buy = RLOrder.rateUnneeded(Direction.BUY, quantity, totalPrice);
+			res.add(buy);
+			startPrice = newPrice;
+		}		
+		return res;		
+	}
+	
 	public static List<RLOrder> buildSelsSeed(BigDecimal startRate, int levels, BotConfig bot){
+		if (bot.isPctGridSpace()){
+			return buildSelsSeedPct(startRate, levels, bot);
+		}
 		ArrayList<RLOrder> res = new ArrayList<>();
 		BigDecimal margin = new BigDecimal(bot.gridSpace);
 		Queue<Integer> sellLevels = getLevels(levels);
@@ -339,6 +357,21 @@ public final class RLOrder extends Base{
 				RLOrder sell = RLOrder.rateUnneeded(Direction.SELL, quantity, totalPrice);
 				res.add(sell);	
 			}			
+		}	
+		return res;
+	}
+	
+	public static List<RLOrder> buildSelsSeedPct(BigDecimal startPrice, int levels, BotConfig bot){
+		ArrayList<RLOrder> res = new ArrayList<>();
+		BigDecimal pct = new BigDecimal(bot.gridSpace);	
+		for (int i = 1; i <= levels; i++){
+			Amount quantity =	bot.base.add(bot.getBuyOrderQuantity());		
+			BigDecimal newPrice = startPrice.add(pct.multiply(startPrice, MathContext.DECIMAL64));
+			BigDecimal totalPriceValue = quantity.value().multiply(newPrice, MathContext.DECIMAL64);
+			Amount totalPrice = RLOrder.amount(totalPriceValue, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
+			RLOrder sell = RLOrder.rateUnneeded(Direction.SELL, quantity, totalPrice);
+			res.add(sell);	
+			startPrice = newPrice;
 		}	
 		return res;
 	}

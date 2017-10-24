@@ -4,10 +4,7 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
-import java.util.stream.IntStream;
 
 import org.parceler.Parcel;
 
@@ -28,6 +25,7 @@ public class BotConfig {
 	String buyOrderQuantity;
 	String sellOrderQuantity;	
 	boolean isPartialCounter;
+	boolean isGridSpacePercentage;
 
 	transient Amount base;
 	transient Amount quote;
@@ -43,6 +41,11 @@ public class BotConfig {
 			bot.orderbookReqs 		= BookOffers.buildRequest(credentials.address, bot);
 			bot.totalBuyQty 			= buildTotalQuantity(bot.buyGridLevels, bot.buyOrderQuantity);
 			bot.totalSelQty				= buildTotalQuantity(bot.sellGridLevels, bot.sellOrderQuantity);
+			if (bot.isPctGridSpace()) {
+				BigDecimal pct 			= new BigDecimal(bot.gridSpace);
+				pct 								= pct.divide(new BigDecimal("100"), MathContext.DECIMAL64);
+				bot.gridSpace				= pct.toPlainString();
+			}
 			res.put(bot.getPair(), bot);
 		}
 		return res;
@@ -150,6 +153,9 @@ public class BotConfig {
 		return totalSelQty;
 	}
 	
+	public boolean isPctGridSpace(){
+		return true;
+	}
 
 
 }

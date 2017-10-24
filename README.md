@@ -72,8 +72,18 @@ If true, the bot will counter any order that fully or partially consumes our ord
 
 If false, the bot will only counter any order that fully consumes our order. 
 
+`isGridSpacePercentage` : boolean
+
+If true, grid space of seed is percentage of rate. The next order on the ladder will be the previous order's rate (added or subtracted depending on direction) gridSpace / 100 * previous order's rate.  
+
+If false, grid space is absolute rate. 
+
 
 **Version History**
+
+v.055
+- added seed by percentage gridspace
+- balancer not adding missing orders ? 
 
 v.054
 - see in progress tasks
@@ -342,7 +352,8 @@ TODOS
 - [] capture txnId for BefAf
 - [x] fix XRP too small
 - [x] fix account_offers for more than 200 orders
-
+- [] add percentage counter 
+ 
 ## NOTES
 RESPONSE
 - (FALSE !) websocket offers high abstraction. tx sent is guaranteed to be tesSUCCESS and validated=true. This is because I set the fees at 12 XRP not 12 drops !!!
