@@ -15,49 +15,49 @@
 		"accountBalance" : 2000	
 	},
 	"bots": [
-	   	{
-			"pair": "XRP/JPY.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
-			"startMiddlePrice": 31.75,
-			"gridSpace": 0.05,
-			"buyGridLevels": 10,
-			"sellGridLevels": 9,
-			"buyOrderQuantity": 2,
-			"sellOrderQuantity": 1.9,
-			"isPartialCounter" : false,
-			"isGridSpacePercentage" : true
-		},
-		{
-			"pair": "RJP.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS/JPY.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
-			"startMiddlePrice": 27300,
-			"gridSpace": 50,
-			"buyGridLevels": 3,
-			"sellGridLevels": 2,
-			"buyOrderQuantity": 200,
-			"sellOrderQuantity": 0.00001,
-			"isPartialCounter" : false,
-			"isGridSpacePercentage" : true
-		},
-		{
-			"pair": "JPY.r94s8px6kSw1uZ1MV98dhSRTvc6VMPoPcN/JPY.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
-			"startMiddlePrice": 0.994,
-			"gridSpace": 0.005,
-			"buyGridLevels": 3,
-			"sellGridLevels": 2,
-			"buyOrderQuantity": 2,
-			"sellOrderQuantity": 2,
-			"isPartialCounter" : false,
-			"isGridSpacePercentage" : true				
-		},
-		{
-			"pair": "XRP/USD.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
-			"startMiddlePrice": 0.227,
-			"gridSpace": 0.05,
-			"buyGridLevels": 3,
-			"sellGridLevels": 2,
-			"buyOrderQuantity": 2,
-			"sellOrderQuantity": 1.20,
-			"isPartialCounter" : false,
-			"isGridSpacePercentage" : true				
-		}
+       {
+            "pair": "XRP/USD.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
+            "startMiddlePrice": 0.2,
+            "gridSpace": 1,
+            "buyGridLevels": 2,
+            "sellGridLevels": 2,
+            "buyOrderQuantity": 2,
+            "sellOrderQuantity": 1.9,
+            "isPartialCounter" : false,
+			"isGridSpacePercentage" : true          
+        },
+        {
+            "pair": "XRP/ETH.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
+            "startMiddlePrice": 0.00069,
+            "gridSpace": 1,
+            "buyGridLevels": 2,
+            "sellGridLevels": 2,
+            "buyOrderQuantity": 2,
+            "sellOrderQuantity": 1.9,
+            "isPartialCounter" : false,
+			"isGridSpacePercentage" : true          
+        },
+        {
+            "pair": "XRP/LTC.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
+            "startMiddlePrice": 0.0035,
+            "gridSpace": 1,
+            "buyGridLevels": 2,
+            "sellGridLevels": 2,
+            "buyOrderQuantity": 2,
+            "sellOrderQuantity": 1.9,
+            "isPartialCounter" : false,
+			"isGridSpacePercentage" : true          
+        },
+        {
+            "pair": "XRP/BTC.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
+            "startMiddlePrice": 0.000027,
+            "gridSpace": 1,
+            "buyGridLevels": 2,
+            "sellGridLevels": 2,
+            "buyOrderQuantity": 2,
+            "sellOrderQuantity": 1.9,
+            "isPartialCounter" : false,
+			"isGridSpacePercentage" : true          
+        }
 	]
 }

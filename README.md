@@ -81,6 +81,9 @@ If false, grid space is absolute rate.
 
 **Version History**
 
+v.056
+- in percentage mode, counter needs to add/subtract from percentage of the consumed price (yuki counter)
+
 v.055
 - added seed by percentage gridspace
 - balancer not adding missing orders ? 
