@@ -82,7 +82,7 @@ If false, grid space is absolute rate.
 **Version History**
 
 v.056
-- in percentage mode, counter needs to add/subtract from percentage of the consumed price (yuki counter)
+- in percentage mode, counter needs to create new order at what rate ?
 
 v.055
 - added seed by percentage gridspace

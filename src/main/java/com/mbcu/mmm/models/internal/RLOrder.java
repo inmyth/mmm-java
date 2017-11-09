@@ -320,7 +320,7 @@ public final class RLOrder extends Base{
 	
 	public static List<RLOrder> buildBuysSeedPct(BigDecimal startPrice, int levels, BotConfig bot){
 		ArrayList<RLOrder> res = new ArrayList<>();
-		BigDecimal pct = new BigDecimal(bot.gridSpace);
+		BigDecimal pct = bot.getGridSpace();
 
 		for (int i = 1; i <= levels; i++){
 			Amount quantity =	bot.base.add(bot.getBuyOrderQuantity());		
@@ -363,7 +363,7 @@ public final class RLOrder extends Base{
 	
 	public static List<RLOrder> buildSelsSeedPct(BigDecimal startPrice, int levels, BotConfig bot){
 		ArrayList<RLOrder> res = new ArrayList<>();
-		BigDecimal pct = new BigDecimal(bot.gridSpace);	
+		BigDecimal pct = bot.getGridSpace();	
 		for (int i = 1; i <= levels; i++){
 			Amount quantity =	bot.base.add(bot.getBuyOrderQuantity());		
 			BigDecimal newPrice = startPrice.add(pct.multiply(startPrice, MathContext.DECIMAL64));

@@ -91,7 +91,7 @@ public class Yuki extends Base implements Counter {
 	}
 	
 	/*
-	 * This part can be configured so it instead of countering, the bot will replace taken order. 
+	 * This part can be configured so instead of countering, the bot will replace taken order. 
 	 */
 	@Nullable
 	public RLOrder buildWholeCounter(BefAf ba){
@@ -154,14 +154,15 @@ public class Yuki extends Base implements Counter {
 	private RLOrder yuki(RLOrder origin, BotConfig botConfig, boolean isDirectionMatch){
 		Amount oldQuantity = origin.getQuantity();
 		Amount oldTotalPrice = origin.getTotalPrice();
+		Amount newQuantity = origin.getTotalPrice().multiply(new BigDecimal("-1"));
+
 		RLOrder res = null;
 		if (isDirectionMatch) {
-			Amount newQuantity = origin.getQuantity().multiply(new BigDecimal("-1"));
 			BigDecimal newRate = origin.getRate().add(botConfig.getGridSpace());
 			Amount newTotalPrice = RLOrder.amount(newQuantity.value().multiply(newRate), oldTotalPrice.currency(), oldTotalPrice.issuer());
 			res = RLOrder.rateUnneeded(Direction.SELL, newQuantity, newTotalPrice);
-		} else {
-			Amount newQuantity = origin.getTotalPrice().multiply(new BigDecimal("-1"));
+		} 
+		else {
 			BigDecimal newRate = BigDecimal.ONE.divide(origin.getRate(), MathContext.DECIMAL128).subtract(botConfig.getGridSpace());
 			if (newRate.compareTo(BigDecimal.ZERO) <= 0) {
 				log("counter rate below zero " + newRate + " " + origin.getCpair(), Level.SEVERE);
@@ -172,6 +173,34 @@ public class Yuki extends Base implements Counter {
 		}
 		return res;
 	}
+	
+//	private RLOrder yukiPct(RLOrder origin, BotConfig botConfig, boolean isDirectionMatch){
+//		Amount oldQuantity 		 = origin.getQuantity();
+//		Amount oldTotalPrice	 = origin.getTotalPrice();
+//		BigDecimal pct				 = botConfig.getGridSpace();	
+//		BigDecimal oldRate   	 = origin.getRate();
+//		BigDecimal newRate     = null;
+//		Amount newQuantity 		 = origin.getQuantity().multiply(new BigDecimal("-1"));
+//		
+//		RLOrder res = null;
+//		if (isDirectionMatch){
+//		  newRate 				  	 = oldRate.add(pct.multiply(oldRate, MathContext.DECIMAL64));
+//			Amount newTotalPrice = RLOrder.amount(newQuantity.value().multiply(newRate), oldTotalPrice.currency(), oldTotalPrice.issuer());
+//			res = RLOrder.rateUnneeded(Direction.SELL, newQuantity, newTotalPrice);
+//		}
+//		else {
+//			newRate 						 = BigDecimal.ONE.divide(origin.getRate(), MathContext.DECIMAL128);
+//			newRate						   = newRate.subtract(pct.multiply(newRate, MathContext.DECIMAL64));
+//			if (newRate.compareTo(BigDecimal.ZERO) <= 0) {
+//				log("counter rate below zero " + newRate + " " + origin.getCpair(), Level.SEVERE);
+//				return null;
+//			}
+//			Amount newTotalPrice = RLOrder.amount(newQuantity.value().multiply(newRate), oldQuantity.currency(), oldQuantity.issuer());
+//			res = RLOrder.rateUnneeded(Direction.BUY, newQuantity, newTotalPrice);
+//		}
+//		return res;	
+//	}
+	
 
 	@Override
 	public void onCounterReady(RLOrder counter) {
