@@ -100,19 +100,38 @@ public class Yuki extends Base implements Counter {
 		if (bcd.botConfig == null || bcd.botConfig.isPartialCounter()) {
 			return null;
 		}
-		BigDecimal rate = ba.before.getRate();	
-		RLOrder origin;
-		if (bcd.isDirectionMatch){
-			BigDecimal botQuantity 	= bcd.botConfig.getSellOrderQuantity();		
-			Amount quantity 				= ba.after.getQuantity().subtract(botQuantity);
-			origin = RLOrder.fromWholeConsumed(Direction.BUY, quantity, ba.after.getTotalPrice(), rate);
+		
+		if (bcd.botConfig.isPctGridSpace()){
+			BigDecimal rate = ba.before.getRate();	
+			RLOrder origin;
+			if (bcd.isDirectionMatch){
+				BigDecimal botQuantity 	= bcd.botConfig.getSellOrderQuantity();		
+				//subtract is used to conveniently preserve Amount issuer and currency
+				Amount quantity 				= ba.before.getQuantity().subtract(botQuantity);
+				origin = RLOrder.fromWholeConsumed(Direction.BUY, quantity, ba.after.getTotalPrice(), rate);			
+			}
+			else {
+				BigDecimal botQuantity 	= bcd.botConfig.getBuyOrderQuantity();
+				Amount totalPrice 			= ba.after.getTotalPrice().subtract(botQuantity);			
+				origin = RLOrder.fromWholeConsumed(Direction.BUY, ba.before.getQuantity(), totalPrice, rate);
+			}		
+			res = yukiPct(origin, bcd.botConfig, bcd.isDirectionMatch);
 		}
 		else {
-			BigDecimal botQuantity 	= bcd.botConfig.getBuyOrderQuantity();
-			Amount totalPrice 			= ba.after.getTotalPrice().subtract(botQuantity);			
-			origin = RLOrder.fromWholeConsumed(Direction.BUY, ba.after.getQuantity(), totalPrice, rate);
-		}		
-		res = yuki(origin, bcd.botConfig, bcd.isDirectionMatch);
+			BigDecimal rate = ba.before.getRate();	
+			RLOrder origin;
+			if (bcd.isDirectionMatch){
+				BigDecimal botQuantity 	= bcd.botConfig.getSellOrderQuantity();		
+				Amount quantity 				= ba.after.getQuantity().subtract(botQuantity);
+				origin = RLOrder.fromWholeConsumed(Direction.BUY, quantity, ba.after.getTotalPrice(), rate);
+			}
+			else {
+				BigDecimal botQuantity 	= bcd.botConfig.getBuyOrderQuantity();
+				Amount totalPrice 			= ba.after.getTotalPrice().subtract(botQuantity);			
+				origin = RLOrder.fromWholeConsumed(Direction.BUY, ba.after.getQuantity(), totalPrice, rate);
+			}		
+			res = yuki(origin, bcd.botConfig, bcd.isDirectionMatch);
+		}
 		return res;
 	}
 	
@@ -152,9 +171,9 @@ public class Yuki extends Base implements Counter {
 	}
 	
 	private RLOrder yuki(RLOrder origin, BotConfig botConfig, boolean isDirectionMatch){
-		Amount oldQuantity = origin.getQuantity();
+		Amount oldQuantity   = origin.getQuantity();
 		Amount oldTotalPrice = origin.getTotalPrice();
-		Amount newQuantity = origin.getTotalPrice().multiply(new BigDecimal("-1"));
+		Amount newQuantity   = origin.getTotalPrice().multiply(new BigDecimal("-1"));
 
 		RLOrder res = null;
 		if (isDirectionMatch) {
@@ -174,32 +193,32 @@ public class Yuki extends Base implements Counter {
 		return res;
 	}
 	
-//	private RLOrder yukiPct(RLOrder origin, BotConfig botConfig, boolean isDirectionMatch){
-//		Amount oldQuantity 		 = origin.getQuantity();
-//		Amount oldTotalPrice	 = origin.getTotalPrice();
-//		BigDecimal pct				 = botConfig.getGridSpace();	
-//		BigDecimal oldRate   	 = origin.getRate();
-//		BigDecimal newRate     = null;
-//		Amount newQuantity 		 = origin.getQuantity().multiply(new BigDecimal("-1"));
-//		
-//		RLOrder res = null;
-//		if (isDirectionMatch){
-//		  newRate 				  	 = oldRate.add(pct.multiply(oldRate, MathContext.DECIMAL64));
-//			Amount newTotalPrice = RLOrder.amount(newQuantity.value().multiply(newRate), oldTotalPrice.currency(), oldTotalPrice.issuer());
-//			res = RLOrder.rateUnneeded(Direction.SELL, newQuantity, newTotalPrice);
-//		}
-//		else {
-//			newRate 						 = BigDecimal.ONE.divide(origin.getRate(), MathContext.DECIMAL128);
-//			newRate						   = newRate.subtract(pct.multiply(newRate, MathContext.DECIMAL64));
-//			if (newRate.compareTo(BigDecimal.ZERO) <= 0) {
-//				log("counter rate below zero " + newRate + " " + origin.getCpair(), Level.SEVERE);
-//				return null;
-//			}
-//			Amount newTotalPrice = RLOrder.amount(newQuantity.value().multiply(newRate), oldQuantity.currency(), oldQuantity.issuer());
-//			res = RLOrder.rateUnneeded(Direction.BUY, newQuantity, newTotalPrice);
-//		}
-//		return res;	
-//	}
+	private RLOrder yukiPct(RLOrder origin, BotConfig botConfig, boolean isDirectionMatch){
+		Amount oldQuantity 		 = origin.getQuantity();
+		Amount oldTotalPrice	 = origin.getTotalPrice();
+		BigDecimal pct				 = botConfig.getGridSpace();	
+		BigDecimal oldRate   	 = origin.getRate();
+		BigDecimal newRate     = null;
+		Amount newQuantity 		 = origin.getQuantity().multiply(new BigDecimal("-1"));
+		
+		RLOrder res = null;
+		if (isDirectionMatch){
+		  newRate 				  	 = oldRate.add(pct.multiply(oldRate, MathContext.DECIMAL64));
+			Amount newTotalPrice = RLOrder.amount(newQuantity.value().multiply(newRate), oldTotalPrice.currency(), oldTotalPrice.issuer());
+			res = RLOrder.rateUnneeded(Direction.SELL, newQuantity, newTotalPrice);
+		}
+		else {
+			newRate 						 = BigDecimal.ONE.divide(origin.getRate(), MathContext.DECIMAL128);
+			newRate						   = newRate.subtract(pct.multiply(newRate, MathContext.DECIMAL64));
+			if (newRate.compareTo(BigDecimal.ZERO) <= 0) {
+				log("counter rate below zero " + newRate + " " + origin.getCpair(), Level.SEVERE);
+				return null;
+			}
+			Amount newTotalPrice = RLOrder.amount(newQuantity.value().multiply(newRate), oldQuantity.currency(), oldQuantity.issuer());
+			res = RLOrder.rateUnneeded(Direction.BUY, newQuantity, newTotalPrice);
+		}
+		return res;	
+	}
 	
 
 	@Override
