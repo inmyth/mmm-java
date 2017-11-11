@@ -199,8 +199,7 @@ public class State extends Base {
 	}
 	
 	public static State newInstance(Config config){
-		return new State(config);
-		
+		return new State(config);	
 	}
 	
 	private void setSequence(UInt32 seq){

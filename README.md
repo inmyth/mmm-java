@@ -60,7 +60,7 @@ Margin between seed and counter orders.
 
 `buyGridLevels` and `sellGridLevels` : int
 
-Number of seed orders for each side.
+Number of seed orders for each side. 
 
 `buyOrderQuantity` and `sellOrderQuantity` : float
 
@@ -82,7 +82,8 @@ If false, grid space is absolute rate.
 **Version History**
 
 v.056
-- in percentage mode, counter needs to create new order at what rate ?
+- fixed percentage mode. Counter order is created from percentage of the rate consumed. 
+- added log to drop below zero in buy seed and counter. 
 
 v.055
 - added seed by percentage gridspace

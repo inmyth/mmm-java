@@ -15,47 +15,36 @@
 		"accountBalance" : 2000	
 	},
 	"bots": [
-       {
+	    {
+            "pair": "XRP/JPY.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
+            "startMiddlePrice": 22,
+            "gridSpace": 1,
+            "buyGridLevels": 2,
+            "sellGridLevels": 2,
+            "buyOrderQuantity": 2,
+            "sellOrderQuantity": 1.5,
+            "isPartialCounter" : false,
+			"isGridSpacePercentage" : true          
+        },
+	       {
             "pair": "XRP/USD.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
             "startMiddlePrice": 0.2,
-            "gridSpace": 1,
+            "gridSpace": 0.02,
             "buyGridLevels": 2,
             "sellGridLevels": 2,
             "buyOrderQuantity": 2,
-            "sellOrderQuantity": 1.9,
+            "sellOrderQuantity": 1,
             "isPartialCounter" : false,
-			"isGridSpacePercentage" : true          
-        },
-        {
-            "pair": "XRP/ETH.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
-            "startMiddlePrice": 0.00069,
-            "gridSpace": 1,
-            "buyGridLevels": 2,
-            "sellGridLevels": 2,
-            "buyOrderQuantity": 2,
-            "sellOrderQuantity": 1.9,
-            "isPartialCounter" : false,
-			"isGridSpacePercentage" : true          
-        },
-        {
-            "pair": "XRP/LTC.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
-            "startMiddlePrice": 0.0035,
-            "gridSpace": 1,
-            "buyGridLevels": 2,
-            "sellGridLevels": 2,
-            "buyOrderQuantity": 2,
-            "sellOrderQuantity": 1.9,
-            "isPartialCounter" : false,
-			"isGridSpacePercentage" : true          
+			"isGridSpacePercentage" : false          
         },
         {
             "pair": "XRP/BTC.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
-            "startMiddlePrice": 0.000027,
+            "startMiddlePrice": 0.000031,
             "gridSpace": 1,
             "buyGridLevels": 2,
             "sellGridLevels": 2,
             "buyOrderQuantity": 2,
-            "sellOrderQuantity": 1.9,
+            "sellOrderQuantity": 1,
             "isPartialCounter" : false,
 			"isGridSpacePercentage" : true          
         }

@@ -4,10 +4,16 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Logger;
 import java.util.stream.IntStream;
 
 import com.mbcu.mmm.models.Base;
@@ -52,7 +58,6 @@ public final class RLOrder extends Base{
   private final Cpair cpair;
 
 	private RLOrder(Direction direction, Amount quantity, Amount totalPrice, BigDecimal rate, Cpair cpair) {
-		super();
 		this.direction 	= direction.text;
 		this.quantity 	= amount(quantity);
 		this.totalPrice = amount(totalPrice);
@@ -290,9 +295,9 @@ public final class RLOrder extends Base{
 		return res;
 	}
 		
-	public static List<RLOrder> buildBuysSeed(BigDecimal startRate, int levels, BotConfig bot){
+	public static List<RLOrder> buildBuysSeed(BigDecimal startRate, int levels, BotConfig bot, Logger log){
 		if (bot.isPctGridSpace()){
-			return buildBuysSeedPct(startRate, levels, bot);
+			return buildBuysSeedPct(startRate, levels, bot, log);
 		}
 		ArrayList<RLOrder> res = new ArrayList<>();
 		BigDecimal margin = new BigDecimal(bot.gridSpace);
@@ -306,7 +311,7 @@ public final class RLOrder extends Base{
 				Amount quantity =	bot.base.add(bot.getBuyOrderQuantity());					
 				BigDecimal rate = startRate.subtract(margin.multiply(new BigDecimal(buyLevels.remove()), MathContext.DECIMAL64));			
 				if (rate.compareTo(BigDecimal.ZERO) <= 0){
-					buyLevels.clear();				
+					log.severe("RLOrder.buildBuySeed rate below zero. Check config for the pair " + bot.getPair());
 				}else{
 					BigDecimal totalPriceValue = quantity.value().multiply(rate, MathContext.DECIMAL64);
 					Amount totalPrice =  RLOrder.amount(totalPriceValue, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
@@ -318,7 +323,7 @@ public final class RLOrder extends Base{
 		return res;
 	}
 	
-	public static List<RLOrder> buildBuysSeedPct(BigDecimal startPrice, int levels, BotConfig bot){
+	public static List<RLOrder> buildBuysSeedPct(BigDecimal startPrice, int levels, BotConfig bot, Logger log){
 		ArrayList<RLOrder> res = new ArrayList<>();
 		BigDecimal pct = bot.getGridSpace();
 
@@ -326,6 +331,7 @@ public final class RLOrder extends Base{
 			Amount quantity =	bot.base.add(bot.getBuyOrderQuantity());		
 			BigDecimal newPrice = startPrice.subtract(pct.multiply(startPrice, MathContext.DECIMAL64));
 			if (newPrice.compareTo(BigDecimal.ZERO) <= 0){
+				log.severe("RLOrder.buildBuySeedPct rate below zero. Check config for the pair " + bot.getPair());
 				break;			
 			}					
 			BigDecimal totalPriceValue = quantity.value().multiply(newPrice, MathContext.DECIMAL64);
@@ -365,7 +371,7 @@ public final class RLOrder extends Base{
 		ArrayList<RLOrder> res = new ArrayList<>();
 		BigDecimal pct = bot.getGridSpace();	
 		for (int i = 1; i <= levels; i++){
-			Amount quantity =	bot.base.add(bot.getBuyOrderQuantity());		
+			Amount quantity =	bot.base.add(bot.getSellOrderQuantity());		
 			BigDecimal newPrice = startPrice.add(pct.multiply(startPrice, MathContext.DECIMAL64));
 			BigDecimal totalPriceValue = quantity.value().multiply(newPrice, MathContext.DECIMAL64);
 			Amount totalPrice = RLOrder.amount(totalPriceValue, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
@@ -375,6 +381,71 @@ public final class RLOrder extends Base{
 		}	
 		return res;
 	}
+	
+	public static BuySellRateTuple worstRates(ConcurrentHashMap<Integer, RLOrder> buys, ConcurrentHashMap<Integer, RLOrder> sels, BigDecimal worstBuy, BigDecimal worstSel, BotConfig botConfig) {		
+		BuySellRateTuple res = new BuySellRateTuple();
+		if (buys.isEmpty() && sels.isEmpty()){
+			if (botConfig.isPctGridSpace()){
+				res.setBuyRate(worstBuy.subtract(worstBuy.multiply(botConfig.getGridSpace(), MathContext.DECIMAL64)));;
+				res.setSelRate(worstSel.add(worstSel.multiply(botConfig.getGridSpace(), MathContext.DECIMAL64)));
+			}
+			else{
+				res.setBuyRate(worstBuy.subtract(botConfig.getGridSpace()));
+				res.setBuyRate(worstSel.add(botConfig.getGridSpace()));
+			}		
+			return res;
+		}
+		List<Entry<Integer, RLOrder>> sorted = new ArrayList<>();	
+		if (buys.isEmpty()){
+			worstBuy = BigDecimal.ONE.divide(sortSels(sels, true).get(0).getValue().getRate(), MathContext.DECIMAL64);
+			worstBuy = botConfig.isPctGridSpace() ?
+					worstBuy = worstBuy.subtract(worstBuy.multiply(botConfig.getGridSpace(), MathContext.DECIMAL64)):
+					worstBuy.subtract(botConfig.getGridSpace());
+		} else {
+			sorted.addAll(sortBuys(buys, false));
+			Collections.reverse(sorted);
+			worstBuy = sorted.get(0).getValue().getRate();
+		}		
+		sorted.clear();
+	  if (sels.isEmpty()){
+			worstSel = sortBuys(buys, false).get(0).getValue().getRate();
+			worstSel = botConfig.isPctGridSpace() ? 
+					worstSel = worstSel.add(worstSel.multiply(botConfig.getGridSpace(), MathContext.DECIMAL64)):
+					worstSel.add(botConfig.getGridSpace());
+		} else {
+			sorted.addAll(sortSels(sels, false));
+			worstSel = BigDecimal.ONE.divide(sorted.get(0).getValue().getRate(), MathContext.DECIMAL64);
+		}
+	  
+	  res.setBuyRate(worstBuy);
+	  res.setSelRate(worstSel);
+	  return res;
+	}
+	
+	public static List<Entry<Integer, RLOrder>> sortBuys(ConcurrentHashMap<Integer, RLOrder> buys, boolean isReversed) {
+		Set<Entry<Integer, RLOrder>> entries = buys.entrySet();
+		List<Entry<Integer, RLOrder>> res = new ArrayList<Entry<Integer, RLOrder>>(entries);
+		Collections.sort(res, !isReversed ? Collections.reverseOrder(obMapComparator) : obMapComparator);
+		return res;
+	}
+
+	public static List<Entry<Integer, RLOrder>> sortSels(ConcurrentHashMap<Integer, RLOrder> sels, boolean isReversed) {
+		Set<Entry<Integer, RLOrder>> entries = sels.entrySet();
+		List<Entry<Integer, RLOrder>> res = new ArrayList<Entry<Integer, RLOrder>>(entries);
+		Collections.sort(res, !isReversed ? obMapComparator : Collections.reverseOrder(obMapComparator));
+		return res;
+	}
+	
+	private static Comparator<Entry<Integer, RLOrder>> obMapComparator = new Comparator<Entry<Integer, RLOrder>>() {
+
+		@Override
+		public int compare(Entry<Integer, RLOrder> e1, Entry<Integer, RLOrder> e2) {
+			return e1.getValue().getRate().compareTo(e2.getValue().getRate());
+		}
+	};
+
+	
+
 	
 	@Override
 	public String stringify() {	
