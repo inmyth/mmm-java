@@ -132,6 +132,9 @@ public class Yuki extends Base implements Counter {
 			}		
 			res = yuki(origin, bcd.botConfig, bcd.isDirectionMatch);
 		}
+		if (res.getQuantity().value().compareTo(BigDecimal.ZERO) <= 0 || res.getTotalPrice().value().compareTo(BigDecimal.ZERO) <= 0){
+			log("Counter anomaly\n" + res.stringify());
+		}
 		return res;
 	}
 	
