@@ -113,7 +113,7 @@ public class Yuki extends Base implements Counter {
 			else {
 				BigDecimal botQuantity 	= bcd.botConfig.getBuyOrderQuantity();
 				Amount totalPrice 			= ba.after.getTotalPrice().subtract(botQuantity);			
-				origin = RLOrder.fromWholeConsumed(Direction.BUY, ba.before.getQuantity(), totalPrice, rate);
+				origin = RLOrder.fromWholeConsumed(Direction.BUY, ba.before.getQuantity().multiply(new BigDecimal("-1")), totalPrice, rate);
 			}		
 			res = yukiPct(origin, bcd.botConfig, bcd.isDirectionMatch);
 		}
@@ -136,6 +136,33 @@ public class Yuki extends Base implements Counter {
 			log("Counter anomaly\n" + res.stringify());
 		}
 		return res;
+	}
+	
+	private RLOrder yukiPct(RLOrder base, BotConfig botConfig, boolean isDirectionMatch){
+		BigDecimal minOne 		 = new BigDecimal("-1");
+		Amount baseTotalPrice	 = base.getTotalPrice().multiply(minOne);
+		BigDecimal pct				 = botConfig.getGridSpace();	
+		BigDecimal baseRate    = base.getRate();
+		BigDecimal newRate     = null;
+		Amount baseQuantity 	 = base.getQuantity().multiply(minOne);
+		
+		RLOrder res = null;
+		if (isDirectionMatch){
+		  newRate 				  	 = baseRate.add(pct.multiply(baseRate, MathContext.DECIMAL64));
+			Amount newTotalPrice = RLOrder.amount(baseQuantity.value().multiply(newRate), baseTotalPrice.currency(), baseTotalPrice.issuer());
+			res = RLOrder.rateUnneeded(Direction.SELL, baseQuantity, newTotalPrice);
+		}
+		else {
+			newRate 						 = BigDecimal.ONE.divide(baseRate, MathContext.DECIMAL128);
+			newRate						   = newRate.multiply(BigDecimal.ONE.subtract(pct));
+			if (newRate.compareTo(BigDecimal.ZERO) <= 0) {
+				log("counter rate below zero " + newRate + " " + base.getCpair(), Level.SEVERE);
+				return null;
+			}
+			Amount newTotalPrice = RLOrder.amount(baseTotalPrice.value().multiply(newRate), baseQuantity.currency(), baseQuantity.issuer());
+			res = RLOrder.rateUnneeded(Direction.BUY, baseTotalPrice, newTotalPrice);
+		}
+		return res;	
 	}
 	
 	public void counterOE(List<RLOrder> oes) {
@@ -196,32 +223,7 @@ public class Yuki extends Base implements Counter {
 		return res;
 	}
 	
-	private RLOrder yukiPct(RLOrder origin, BotConfig botConfig, boolean isDirectionMatch){
-		Amount oldQuantity 		 = origin.getQuantity();
-		Amount oldTotalPrice	 = origin.getTotalPrice();
-		BigDecimal pct				 = botConfig.getGridSpace();	
-		BigDecimal oldRate   	 = origin.getRate();
-		BigDecimal newRate     = null;
-		Amount newQuantity 		 = origin.getQuantity().multiply(new BigDecimal("-1"));
-		
-		RLOrder res = null;
-		if (isDirectionMatch){
-		  newRate 				  	 = oldRate.add(pct.multiply(oldRate, MathContext.DECIMAL64));
-			Amount newTotalPrice = RLOrder.amount(newQuantity.value().multiply(newRate), oldTotalPrice.currency(), oldTotalPrice.issuer());
-			res = RLOrder.rateUnneeded(Direction.SELL, newQuantity, newTotalPrice);
-		}
-		else {
-			newRate 						 = BigDecimal.ONE.divide(origin.getRate(), MathContext.DECIMAL128);
-			newRate						   = newRate.subtract(pct.multiply(newRate, MathContext.DECIMAL64));
-			if (newRate.compareTo(BigDecimal.ZERO) <= 0) {
-				log("counter rate below zero " + newRate + " " + origin.getCpair(), Level.SEVERE);
-				return null;
-			}
-			Amount newTotalPrice = RLOrder.amount(newQuantity.value().multiply(newRate), oldQuantity.currency(), oldQuantity.issuer());
-			res = RLOrder.rateUnneeded(Direction.BUY, newQuantity, newTotalPrice);
-		}
-		return res;	
-	}
+
 	
 
 	@Override
