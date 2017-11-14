@@ -107,7 +107,7 @@ public class Yuki extends Base implements Counter {
 			if (bcd.isDirectionMatch){
 				BigDecimal botQuantity 	= bcd.botConfig.getSellOrderQuantity();		
 				//subtract is used to conveniently preserve Amount issuer and currency
-				Amount quantity 				= ba.before.getQuantity().subtract(botQuantity);
+				Amount quantity 				= ba.after.getQuantity().subtract(botQuantity);
 				origin = RLOrder.fromWholeConsumed(Direction.BUY, quantity, ba.after.getTotalPrice(), rate);			
 			}
 			else {
@@ -138,6 +138,13 @@ public class Yuki extends Base implements Counter {
 		return res;
 	}
 	
+	/**
+	 * 
+	 * @param base RLOrder reflecting consumed offer. Both totalPrice and quantity have to be negative
+	 * @param botConfig
+	 * @param isDirectionMatch Direction reflecting counter direction (not consumed order direction)
+	 * @return
+	 */
 	private RLOrder yukiPct(RLOrder base, BotConfig botConfig, boolean isDirectionMatch){
 		BigDecimal minOne 		 = new BigDecimal("-1");
 		Amount baseTotalPrice	 = base.getTotalPrice().multiply(minOne);
@@ -148,7 +155,7 @@ public class Yuki extends Base implements Counter {
 		
 		RLOrder res = null;
 		if (isDirectionMatch){
-		  newRate 				  	 = baseRate.add(pct.multiply(baseRate, MathContext.DECIMAL64));
+		  newRate 				  	 = baseRate.multiply(BigDecimal.ONE.add(pct), MathContext.DECIMAL64);
 			Amount newTotalPrice = RLOrder.amount(baseQuantity.value().multiply(newRate), baseTotalPrice.currency(), baseTotalPrice.issuer());
 			res = RLOrder.rateUnneeded(Direction.SELL, baseQuantity, newTotalPrice);
 		}
