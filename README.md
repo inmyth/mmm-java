@@ -81,6 +81,12 @@ If false, grid space is absolute rate.
 
 **Version History**
 
+> v.058
+- amount is changing by percentage too
+
+v.057
+- fixed percentage mode on counters. 
+
 v.056
 - fixed percentage mode. Counter order is created from percentage of the rate consumed. 
 - added log to drop below zero in buy seed and counter. 
