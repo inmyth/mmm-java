@@ -82,7 +82,7 @@ If false, grid space is absolute rate.
 **Version History**
 
 > v.058
-- amount is changing by percentage too
+- amount should be changed by percentage too
 
 v.057
 - fixed percentage mode on counters. 
