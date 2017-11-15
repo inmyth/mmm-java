@@ -157,6 +157,9 @@ public class BotConfig {
 		return isGridSpacePercentage;
 	}
 	
+	public boolean isPctAmount(){
+		return true;
+	}
 
 
 }
