@@ -23,40 +23,40 @@ public class BotConfig {
 	int buyGridLevels;
 	int sellGridLevels;
 	String buyOrderQuantity;
-	String sellOrderQuantity;	
+	String sellOrderQuantity;
 	boolean isPartialCounter;
 	boolean isGridSpacePercentage;
 
 	transient Amount base;
 	transient Amount quote;
-	transient BigDecimal totalBuyQty, totalSelQty; 
+	transient BigDecimal totalBuyQty, totalSelQty;
 	transient List<String> orderbookReqs;
 
-	public static HashMap<String, BotConfig> buildMap(Credentials credentials, ArrayList<BotConfig> bots)  {
+	public static HashMap<String, BotConfig> buildMap(Credentials credentials, ArrayList<BotConfig> bots) {
 		HashMap<String, BotConfig> res = new HashMap<>();
 		for (BotConfig bot : bots) {
-			String[] pair 				= buildBaseAndQuote(bot.getPair());
-			bot.base 							= fromDotForm(pair[0]);
-			bot.quote 						= fromDotForm(pair[1]);	
-			bot.orderbookReqs 		= BookOffers.buildRequest(credentials.address, bot);
-			bot.totalBuyQty 			= buildTotalQuantity(bot.buyGridLevels, bot.buyOrderQuantity);
-			bot.totalSelQty				= buildTotalQuantity(bot.sellGridLevels, bot.sellOrderQuantity);
+			String[] pair = buildBaseAndQuote(bot.getPair());
+			bot.base = fromDotForm(pair[0]);
+			bot.quote = fromDotForm(pair[1]);
+			bot.orderbookReqs = BookOffers.buildRequest(credentials.address, bot);
+			bot.totalBuyQty = buildTotalQuantity(bot.buyGridLevels, bot.buyOrderQuantity);
+			bot.totalSelQty = buildTotalQuantity(bot.sellGridLevels, bot.sellOrderQuantity);
 			if (bot.isPctGridSpace()) {
-				BigDecimal pct 			= new BigDecimal(bot.gridSpace);
-				pct 								= pct.divide(new BigDecimal("100"), MathContext.DECIMAL64);
-				bot.gridSpace				= pct.toPlainString();
+				BigDecimal pct = new BigDecimal(bot.gridSpace);
+				pct = pct.divide(new BigDecimal("100"), MathContext.DECIMAL64);
+				bot.gridSpace = pct.toPlainString();
 			}
 			res.put(bot.getPair(), bot);
 		}
 		return res;
 	}
-	
-	private static BigDecimal buildTotalQuantity(int gridLevels, String orderQuantity){
+
+	private static BigDecimal buildTotalQuantity(int gridLevels, String orderQuantity) {
 		BigDecimal a = new BigDecimal(gridLevels);
 		BigDecimal b = new BigDecimal(orderQuantity);
 		return a.multiply(b, MathContext.DECIMAL64);
 	}
-	
+
 	public static Amount fromDotForm(String part) throws IllegalArgumentException {
 		String currency = null;
 		String issuer = null;
@@ -68,10 +68,11 @@ public class BotConfig {
 			if (b.length == 2) {
 				issuer = b[1];
 			}
-		}		
-		return issuer == null ? new Amount(new BigDecimal("0")) : new Amount(Currency.fromString(currency), AccountID.fromAddress(issuer));		
+		}
+		return issuer == null ? new Amount(new BigDecimal("0"))
+				: new Amount(Currency.fromString(currency), AccountID.fromAddress(issuer));
 	}
-	
+
 	public static String[] buildBaseAndQuote(String pair) {
 		return pair.split("[/]");
 	}
@@ -79,8 +80,8 @@ public class BotConfig {
 	public String getPair() {
 		return pair;
 	}
-	
-	public String getReversePair(){
+
+	public String getReversePair() {
 		String[] els = pair.split("[/]");
 		StringBuffer res = new StringBuffer(els[1]);
 		res.append("/");
@@ -120,7 +121,6 @@ public class BotConfig {
 		this.sellGridLevels = sellGridLevels;
 	}
 
-
 	public BigDecimal getBuyOrderQuantity() {
 		return new BigDecimal(buyOrderQuantity);
 	}
@@ -128,19 +128,19 @@ public class BotConfig {
 	public BigDecimal getSellOrderQuantity() {
 		return new BigDecimal(sellOrderQuantity);
 	}
-	
+
 	public List<String> getOrderbookRequests() {
 		return orderbookReqs;
 	}
-	
+
 	public boolean isPartialCounter() {
 		return isPartialCounter;
 	}
-	
+
 	public Amount getBase() {
 		return base;
 	}
-	
+
 	public Amount getQuote() {
 		return quote;
 	}
@@ -148,18 +148,17 @@ public class BotConfig {
 	public BigDecimal getTotalBuyQty() {
 		return totalBuyQty;
 	}
-	
+
 	public BigDecimal getTotalSelQty() {
 		return totalSelQty;
 	}
-	
-	public boolean isPctGridSpace(){
+
+	public boolean isPctGridSpace() {
 		return isGridSpacePercentage;
 	}
-	
-	public boolean isPctAmount(){
+
+	public boolean isPctAmount() {
 		return true;
 	}
-
 
 }

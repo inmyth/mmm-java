@@ -10,24 +10,23 @@ import com.mbcu.mmm.models.dataapi.AccountBalance;
 import com.mbcu.mmm.models.dataapi.Balance;
 
 public class AgBalance {
-	
+
 	long ts;
 	int ledgerIndex;
 	DateTime dt;
 	Map<NameIssuer, Balance> data = new HashMap<>();
-	
-	public static AgBalance from(AccountBalance in, long ts){
+
+	public static AgBalance from(AccountBalance in, long ts) {
 		AgBalance res = new AgBalance();
-		Map<NameIssuer, Balance> data = new HashMap<>();	
-		in.getBalances()
-		.forEach(balance -> {
+		Map<NameIssuer, Balance> data = new HashMap<>();
+		in.getBalances().forEach(balance -> {
 			data.put(balance.toSignature(), balance);
-		});		
-		
+		});
+
 		res.data.putAll(data);
-		res.ts = ts;	
+		res.ts = ts;
 		res.dt = new DateTime(ts * 1000, DateTimeZone.forID("Asia/Tokyo"));
-		return res;	
+		return res;
 	}
 
 	public long getTs() {
@@ -46,10 +45,4 @@ public class AgBalance {
 		return data;
 	}
 
-
-
-	
-	
-
-	
 }

@@ -21,13 +21,13 @@ public class LedgerEvent {
 	}
 
 	public static LedgerEvent fromJSON(JSONObject root) {
-		if (!root.has("validated_ledgers")){
+		if (!root.has("validated_ledgers")) {
 			return new LedgerEvent(-1, -1);
 		}
 		// 158188-419709,419711
-		String a 			= root.getString("validated_ledgers");
-		String els[]  = a.split(",");
-		String raw = els[els.length - 1];	
+		String a = root.getString("validated_ledgers");
+		String els[] = a.split(",");
+		String raw = els[els.length - 1];
 		String[] rangeValids = raw.split("-");
 		int validated = Integer.parseInt(rangeValids[rangeValids.length - 1]);
 		int closed = root.getInt("ledger_index");
@@ -38,5 +38,5 @@ public class LedgerEvent {
 	public String toString() {
 		return String.format("Ledger closed: %d, Ledger validated: %d", this.closed, this.validated);
 	}
-	
+
 }

@@ -11,17 +11,16 @@ public class Base {
 	protected final RxBus bus = RxBusProvider.getInstance();
 	protected Config config;
 	protected Logger LOGGER;
-	
+
 	public Base(Logger logger, Config config) {
 		this.LOGGER = logger;
 		this.config = config;
 	}
-	
-	
-	protected void log(String message, Level...level){
+
+	protected void log(String message, Level... level) {
 		Level l = level.length > 0 ? level[0] : Level.FINE;
 		this.LOGGER.log(l, message);
-		System.out.println(message);		
+		System.out.println(message);
 	}
 
 }

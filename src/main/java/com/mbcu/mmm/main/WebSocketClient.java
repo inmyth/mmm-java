@@ -200,7 +200,7 @@ public class WebSocketClient {
 					ws.disconnect();
 				}
 			} catch (Exception e) {
-				MyLogger.exception(LOGGER, base.toString(), e);		
+				MyLogger.exception(LOGGER, base.toString(), e);
 			}
 
 		});

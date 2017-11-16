@@ -1,4 +1,4 @@
- package com.mbcu.mmm.models.internal;
+package com.mbcu.mmm.models.internal;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -14,6 +14,7 @@ import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import com.mbcu.mmm.models.Base;
@@ -32,8 +33,8 @@ import com.ripple.core.types.known.tx.txns.OfferCreate;
 
 import io.reactivex.annotations.Nullable;
 
-public final class RLOrder extends Base{
-	
+public final class RLOrder extends Base {
+
 	public enum Direction {
 		BUY("buy"), SELL("sell");
 
@@ -55,16 +56,16 @@ public final class RLOrder extends Base{
 	private final boolean fillOrKill;
 
 	private final BigDecimal rate;
-  private final Cpair cpair;
+	private final Cpair cpair;
 
 	private RLOrder(Direction direction, Amount quantity, Amount totalPrice, BigDecimal rate, Cpair cpair) {
-		this.direction 	= direction.text;
-		this.quantity 	= amount(quantity);
+		this.direction = direction.text;
+		this.quantity = amount(quantity);
 		this.totalPrice = amount(totalPrice);
-		this.passive 		= false;
+		this.passive = false;
 		this.fillOrKill = false;
-		this.rate 			= rate;
-		this.cpair 			= cpair;
+		this.rate = rate;
+		this.cpair = cpair;
 	}
 
 	public String getDirection() {
@@ -74,11 +75,11 @@ public final class RLOrder extends Base{
 	public Amount getQuantity() {
 		return quantity;
 	}
-	
+
 	public Amount getTotalPrice() {
 		return totalPrice;
 	}
-	
+
 	public boolean isPassive() {
 		return passive;
 	}
@@ -90,63 +91,67 @@ public final class RLOrder extends Base{
 	public Cpair getCpair() {
 		return cpair;
 	}
-	
-	public RLOrder reverse(){
+
+	public RLOrder reverse() {
 		Direction newDirection = this.direction.equals(Direction.BUY.text()) ? Direction.SELL : Direction.BUY;
 		String newPair = cpair.toString();
 		Amount newQuantity = totalPrice;
 		Amount newTotalPrice = quantity;
-		BigDecimal rate = newTotalPrice.value().divide(newQuantity.value(), MathContext.DECIMAL64);	
+		BigDecimal rate = newTotalPrice.value().divide(newQuantity.value(), MathContext.DECIMAL64);
 		RLOrder res = new RLOrder(newDirection, newQuantity, newTotalPrice, rate, Cpair.newInstance(newPair));
 		return res;
 	}
-	
+
 	@Nullable
 	public BigDecimal getRate() {
-		if (rate != null){
+		if (rate != null) {
 			return rate;
 		}
-		if (quantity.value().compareTo(BigDecimal.ZERO) == 0){
+		if (quantity.value().compareTo(BigDecimal.ZERO) == 0) {
 			return null;
 		}
 		return totalPrice.value().divide(quantity.value(), MathContext.DECIMAL128);
 	}
-	
-	public static Amount amount(BigDecimal value, Currency currency, AccountID issuer){
-		if (currency.isNative()){
-			value = value.round(new MathContext(6, RoundingMode.HALF_DOWN)).setScale(6, RoundingMode.HALF_DOWN);			
+
+	public static Amount amount(BigDecimal value, Currency currency, AccountID issuer) {
+		if (currency.isNative()) {
+			value = value.round(new MathContext(6, RoundingMode.HALF_DOWN)).setScale(6, RoundingMode.HALF_DOWN);
 			return new Amount(value);
 		}
 		value = value.round(new MathContext(16, RoundingMode.HALF_DOWN)).setScale(16, RoundingMode.HALF_DOWN);
-		return new Amount(value, currency, issuer);		
+		return new Amount(value, currency, issuer);
 	}
-	public static Amount amount(Amount amount){
+
+	public static Amount amount(Amount amount) {
 		return amount(amount.value(), amount.currency(), amount.issuer());
 	}
-	
-	
-	public static Amount amount(BigDecimal value){
+
+	public static Amount amount(BigDecimal value) {
 		return amount(value, Currency.XRP, null);
 	}
-	
+
 	/**
-	 * Instantiate RLORder where ask rate is not needed or used for log. This object typically goes to submit or test. 
+	 * Instantiate RLORder where ask rate is not needed or used for log. This
+	 * object typically goes to submit or test.
+	 * 
 	 * @param direction
 	 * @param quantity
 	 * @param totalPrice
 	 * @return
 	 */
-	public static RLOrder rateUnneeded(Direction direction, Amount quantity, Amount totalPrice){
-		Cpair cpair = direction == Direction.BUY ? Cpair.newInstance(totalPrice, quantity) : Cpair.newInstance(quantity, totalPrice);
+	public static RLOrder rateUnneeded(Direction direction, Amount quantity, Amount totalPrice) {
+		Cpair cpair = direction == Direction.BUY ? Cpair.newInstance(totalPrice, quantity)
+				: Cpair.newInstance(quantity, totalPrice);
 		return new RLOrder(direction, quantity, totalPrice, null, cpair);
 	}
-	
-	public static RLOrder fromWholeConsumed(Direction direction, Amount quantity, Amount totalPrice, BigDecimal rate){
-		Cpair cpair = direction == Direction.BUY ? Cpair.newInstance(totalPrice, quantity) : Cpair.newInstance(quantity, totalPrice);
+
+	public static RLOrder fromWholeConsumed(Direction direction, Amount quantity, Amount totalPrice, BigDecimal rate) {
+		Cpair cpair = direction == Direction.BUY ? Cpair.newInstance(totalPrice, quantity)
+				: Cpair.newInstance(quantity, totalPrice);
 		return new RLOrder(direction, quantity, totalPrice, rate, cpair);
 	}
-	
-	public static RLOrder fromOfferCreate(Transaction txn){
+
+	public static RLOrder fromOfferCreate(Transaction txn) {
 		Amount gets = txn.get(Amount.TakerPays);
 		Amount pays = txn.get(Amount.TakerGets);
 		Cpair cpair = Cpair.newInstance(gets, pays);
@@ -154,8 +159,8 @@ public final class RLOrder extends Base{
 		return res;
 	}
 
-	public static RLOrder fromOfferCreated(Offer offer) {		
-		BigDecimal ask = askFrom(offer);		
+	public static RLOrder fromOfferCreated(Offer offer) {
+		BigDecimal ask = askFrom(offer);
 		Amount pays = offer.takerPays();
 		Amount gets = offer.takerGets();
 		Cpair cpair = Cpair.newInstance(gets, pays);
@@ -168,98 +173,101 @@ public final class RLOrder extends Base{
 		BigDecimal ask = isOCOwn ? BigDecimal.ONE.divide(askFrom(offer), MathContext.DECIMAL64) : askFrom(offer);
 		STObject executed = offer.executed(offer.get(STObject.FinalFields));
 		Amount paid = executed.get(Amount.TakerPays);
-		Amount got = executed.get(Amount.TakerGets);	
-		Amount rlGot = isOCOwn ? amount(paid.value(), paid.currency(), paid.issuer()) : amount(got.value(), got.currency(), got.issuer());
-		Amount rlPaid = isOCOwn ? amount(got.value(), got.currency(), got.issuer()) :amount(paid.value(), paid.currency(), paid.issuer()) ;
-		Cpair cpair = Cpair.newInstance(isOCOwn ? got : paid , isOCOwn ? paid: got);
-		RLOrder res = new RLOrder(Direction.BUY, rlGot, rlPaid, ask, cpair);	
+		Amount got = executed.get(Amount.TakerGets);
+		Amount rlGot = isOCOwn ? amount(paid.value(), paid.currency(), paid.issuer())
+				: amount(got.value(), got.currency(), got.issuer());
+		Amount rlPaid = isOCOwn ? amount(got.value(), got.currency(), got.issuer())
+				: amount(paid.value(), paid.currency(), paid.issuer());
+		Cpair cpair = Cpair.newInstance(isOCOwn ? got : paid, isOCOwn ? paid : got);
+		RLOrder res = new RLOrder(Direction.BUY, rlGot, rlPaid, ask, cpair);
 		return res;
 	}
-	
-	public static BefAf toBA(Amount bTakerPays, Amount bTakerGets, Amount aTakerPays, Amount aTakerGets, UInt32 seq, Hash256 txnId){		
-		Cpair bPair = Cpair.newInstance(bTakerGets, bTakerPays);		
+
+	public static BefAf toBA(Amount bTakerPays, Amount bTakerGets, Amount aTakerPays, Amount aTakerGets, UInt32 seq,
+			Hash256 txnId) {
+		Cpair bPair = Cpair.newInstance(bTakerGets, bTakerPays);
 		BigDecimal bAsk = bTakerGets.value().divide(bTakerPays.value(), MathContext.DECIMAL64);
-		RLOrder before = new RLOrder(Direction.BUY, bTakerPays, bTakerGets, bAsk, bPair);	
-		if (aTakerPays == null){
+		RLOrder before = new RLOrder(Direction.BUY, bTakerPays, bTakerGets, bAsk, bPair);
+		if (aTakerPays == null) {
 			aTakerPays = new Amount(new BigDecimal("0"), bTakerPays.currency(), bTakerPays.issuer());
 			aTakerGets = new Amount(new BigDecimal("0"), bTakerGets.currency(), bTakerGets.issuer());
 		}
-		RLOrder after = RLOrder.rateUnneeded(Direction.BUY, aTakerPays, aTakerGets);		
-		return new BefAf(before, after, seq, txnId);		
+		RLOrder after = RLOrder.rateUnneeded(Direction.BUY, aTakerPays, aTakerGets);
+		return new BefAf(before, after, seq, txnId);
 	}
-	
-	
-	public static List<RLOrder> fromAutobridge(Map<String, ArrayList<Offer>> map){
+
+	public static List<RLOrder> fromAutobridge(Map<String, ArrayList<Offer>> map) {
 		List<RLOrder> res = new ArrayList<>();
-		
+
 		ArrayList<Offer> majorities = null;
 		ArrayList<Offer> minorities = null;
 
-		for (ArrayList<Offer> offers : map.values()){
-			if (majorities == null && minorities == null){
+		for (ArrayList<Offer> offers : map.values()) {
+			if (majorities == null && minorities == null) {
 				majorities = offers;
 				minorities = offers;
-			}else{
-				if (offers.size() > majorities.size()){
+			} else {
+				if (offers.size() > majorities.size()) {
 					majorities = offers;
-				}else{
+				} else {
 					minorities = offers;
 				}
 			}
 		}
-		
+
 		BigDecimal refAsk = oeAvg(minorities);
 		STObject oeExecutedMinor = minorities.get(0).executed(minorities.get(0).get(STObject.FinalFields));
 		boolean isXRPGotInMajority = majorities.get(0).getPayCurrencyPair().startsWith(Currency.XRP.toString());
-		
-		Direction direction = Direction.BUY;		
-		for (Offer oe : majorities){
+
+		Direction direction = Direction.BUY;
+		for (Offer oe : majorities) {
 			STObject oeExecuted = oe.executed(oe.get(STObject.FinalFields));
-			BigDecimal newAsk = refAsk.multiply(oe.directoryAskQuality(), MathContext.DECIMAL64);			
-			Amount oePaid = oeExecuted.get(Amount.TakerPays);	
+			BigDecimal newAsk = refAsk.multiply(oe.directoryAskQuality(), MathContext.DECIMAL64);
+			Amount oePaid = oeExecuted.get(Amount.TakerPays);
 			Amount oeGot = oeExecuted.get(Amount.TakerGets);
-			if(!isXRPGotInMajority){
-				Amount oePaidRef = oeExecutedMinor.get(Amount.TakerPays);			
-				Amount newPaid = new Amount(oePaid.value().multiply(refAsk, MathContext.DECIMAL64), oePaidRef.currency(), oePaidRef.issuer());
+			if (!isXRPGotInMajority) {
+				Amount oePaidRef = oeExecutedMinor.get(Amount.TakerPays);
+				Amount newPaid = new Amount(oePaid.value().multiply(refAsk, MathContext.DECIMAL64), oePaidRef.currency(),
+						oePaidRef.issuer());
 				Cpair cpair = Cpair.newInstance(newPaid, oeGot);
 				Amount oeGotPositive = new Amount(oeGot.value(), oeGot.currency(), oeGot.issuer());
-				res.add(new RLOrder(direction, oeGotPositive, newPaid, newAsk, cpair));			
-			}
-			else{
+				res.add(new RLOrder(direction, oeGotPositive, newPaid, newAsk, cpair));
+			} else {
 				Amount oeGotRef = oeExecutedMinor.get(Amount.TakerGets);
-				Amount newGot = new Amount(oeGot.value().divide(refAsk,  MathContext.DECIMAL64), oeGotRef.currency(), oeGotRef.issuer());
+				Amount newGot = new Amount(oeGot.value().divide(refAsk, MathContext.DECIMAL64), oeGotRef.currency(),
+						oeGotRef.issuer());
 				Amount oePaidPositive = new Amount(oePaid.value(), oePaid.currency(), oePaid.issuer());
 				Cpair cpair = Cpair.newInstance(oePaid, newGot);
-				res.add(new RLOrder(direction, newGot, oePaidPositive, newAsk, cpair));			
+				res.add(new RLOrder(direction, newGot, oePaidPositive, newAsk, cpair));
 			}
 		}
 		return res;
 	}
-		
-	private static BigDecimal oeAvg(ArrayList<Offer> offers){
+
+	private static BigDecimal oeAvg(ArrayList<Offer> offers) {
 		BigDecimal paids = new BigDecimal(0);
 		BigDecimal gots = new BigDecimal(0);
-		for (Offer oe : offers){
+		for (Offer oe : offers) {
 			STObject executed = oe.executed(oe.get(STObject.FinalFields));
 			paids = paids.add(executed.get(Amount.TakerPays).value(), MathContext.DECIMAL128);
 			gots = gots.add(executed.get(Amount.TakerGets).value(), MathContext.DECIMAL128);
 		}
-		return paids.divide(gots, MathContext.DECIMAL64);	
+		return paids.divide(gots, MathContext.DECIMAL64);
 	}
-	
+
 	private static BigDecimal askFrom(Offer offer) {
 		return offer.directoryAskQuality().stripTrailingZeros();
 	}
-	
-	public SignedTransaction signOfferCreate(Config config, int sequence, int maxLedger, BigDecimal fees){	
+
+	public SignedTransaction signOfferCreate(Config config, int sequence, int maxLedger, BigDecimal fees) {
 		OfferCreate offerCreate = new OfferCreate();
-		if (this.direction.equals(Direction.BUY.text())){
+		if (this.direction.equals(Direction.BUY.text())) {
 			offerCreate.takerGets(clearXRPIssuer(totalPrice));
 			offerCreate.takerPays(clearXRPIssuer(quantity));
-		}else if (this.direction.equals(Direction.SELL.text())){
+		} else if (this.direction.equals(Direction.SELL.text())) {
 			offerCreate.takerGets(clearXRPIssuer(quantity));
-			offerCreate.takerPays(clearXRPIssuer(totalPrice));			
-		}else{
+			offerCreate.takerPays(clearXRPIssuer(totalPrice));
+		} else {
 			throw new IllegalArgumentException("Direction not valid");
 		}
 		offerCreate.sequence(new UInt32(String.valueOf(sequence)));
@@ -267,10 +275,10 @@ public final class RLOrder extends Base{
 		offerCreate.lastLedgerSequence(new UInt32(String.valueOf(maxLedger)));
 		offerCreate.account(AccountID.fromAddress(config.getCredentials().getAddress()));
 		SignedTransaction signed = offerCreate.sign(config.getCredentials().getSecret());
-		return signed;	
+		return signed;
 	}
-	
-	public static SignedTransaction signOfferCancel(Config config, int seq, int newSeq, int maxLedger, BigDecimal fees){
+
+	public static SignedTransaction signOfferCancel(Config config, int seq, int newSeq, int maxLedger, BigDecimal fees) {
 		OfferCancel res = new OfferCancel();
 		res.put(Field.OfferSequence, new UInt32(String.valueOf(seq)));
 		res.sequence(new UInt32(String.valueOf(seq)));
@@ -281,147 +289,202 @@ public final class RLOrder extends Base{
 		SignedTransaction signed = res.sign(config.getCredentials().getSecret());
 		return signed;
 	}
-	
-	private static Amount clearXRPIssuer(Amount in){		
-		if (in.issuer() != null && in.issuer().address.equals("rrrrrrrrrrrrrrrrrrrrrhoLvTp")){
-			return new Amount(in.value());		
+
+	private static Amount clearXRPIssuer(Amount in) {
+		if (in.issuer() != null && in.issuer().address.equals("rrrrrrrrrrrrrrrrrrrrrhoLvTp")) {
+			return new Amount(in.value());
 		}
-		return in;		
+		return in;
 	}
 
-	private static Queue<Integer> getLevels(int max){
+	private static Queue<Integer> getLevels(int max) {
 		Queue<Integer> res = new LinkedList<>();
-		IntStream.range(1, max + 1).forEach(a -> {res.add(a);});
+		IntStream.range(1, max + 1).forEach(a -> {
+			res.add(a);
+		});
 		return res;
 	}
-		
-	public static List<RLOrder> buildBuysSeed(BigDecimal startRate, int levels, BotConfig bot, Logger log){
-		if (bot.isPctGridSpace()){
+
+	public static List<RLOrder> buildBuysSeed(BigDecimal startRate, int levels, BotConfig bot, Logger log) {
+		if (bot.isPctGridSpace()) {
 			return buildBuysSeedPct(startRate, levels, bot, log);
 		}
 		ArrayList<RLOrder> res = new ArrayList<>();
 		BigDecimal margin = new BigDecimal(bot.gridSpace);
 		Queue<Integer> buyLevels = getLevels(levels);
-		
-		while (true){
-			if (buyLevels.isEmpty()){
+
+		while (true) {
+			if (buyLevels.isEmpty()) {
 				break;
 			}
-			if (!buyLevels.isEmpty()){
-				Amount quantity =	bot.base.add(bot.getBuyOrderQuantity());					
-				BigDecimal rate = startRate.subtract(margin.multiply(new BigDecimal(buyLevels.remove()), MathContext.DECIMAL64));			
-				if (rate.compareTo(BigDecimal.ZERO) <= 0){
+			if (!buyLevels.isEmpty()) {
+				Amount quantity = bot.base.add(bot.getBuyOrderQuantity());
+				BigDecimal rate = startRate
+						.subtract(margin.multiply(new BigDecimal(buyLevels.remove()), MathContext.DECIMAL64));
+				if (rate.compareTo(BigDecimal.ZERO) <= 0) {
 					log.severe("RLOrder.buildBuySeed rate below zero. Check config for the pair " + bot.getPair());
-				}else{
+				} else {
 					BigDecimal totalPriceValue = quantity.value().multiply(rate, MathContext.DECIMAL64);
-					Amount totalPrice =  RLOrder.amount(totalPriceValue, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
+					Amount totalPrice = RLOrder.amount(totalPriceValue, Currency.fromString(bot.quote.currencyString()),
+							AccountID.fromAddress(bot.quote.issuerString()));
 					RLOrder buy = RLOrder.rateUnneeded(Direction.BUY, quantity, totalPrice);
 					res.add(buy);
 				}
-			}		
-		}	
+			}
+		}
 		return res;
 	}
-	
-	public static List<RLOrder> buildBuysSeedPct(BigDecimal startPrice, int levels, BotConfig bot, Logger log){
-		ArrayList<RLOrder> res = new ArrayList<>();
-		BigDecimal pct = bot.getGridSpace();
 
-		for (int i = 1; i <= levels; i++){
-			Amount quantity =	bot.base.add(bot.getBuyOrderQuantity());		
+	public static List<RLOrder> buildBuysSeedPct(BigDecimal startPrice, int levels, BotConfig bot, Logger log) {		
+		BigDecimal pct = bot.getGridSpace();
+		List<RLOrder> res = new ArrayList<>();
+		
+//		BigDecimal pcHi = BigDecimal.ONE.subtract(bot.getGridSpace().divide(new BigDecimal(100), MathContext.DECIMAL64));
+//		BigDecimal pcLo = BigDecimal.ONE.add(bot.getGridSpace().divide(new BigDecimal(100), MathContext.DECIMAL64));
+//		
+//		BigDecimal botQuantity = bot.getBuyOrderQuantity();
+//		List<RLOrder> res = IntStream
+//				.range(1, levels + 1)
+//				.mapToObj(l -> {
+//					BigDecimal rateHi = Collections.nCopies(1, pcHi).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();
+//					BigDecimal rateLo = Collections.nCopies(1, pcLo).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();		
+//					BigDecimal newPri = startPrice.multiply(rateLo, MathContext.DECIMAL64);
+//					BigDecimal newQty = bot.isPctAmount() ? botQuantity.multiply(rateHi, MathContext.DECIMAL64) : botQuantity;
+//					if (newPri.compareTo(BigDecimal.ZERO) <= 0) {
+//						log.severe("RLOrder.buildBuySeedPct rate below zero. Check config for the pair " + bot.getPair());
+//					}			
+//					Amount newAmt		  = bot.base.add(newQty);
+//					BigDecimal totalPriceValue = newAmt.value().multiply(newPri, MathContext.DECIMAL64);
+//					Amount totalPrice = RLOrder.amount(totalPriceValue, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
+//					RLOrder buy = RLOrder.rateUnneeded(Direction.BUY, newAmt, totalPrice);		
+//					return buy;
+//			})
+//	   .filter(o -> o.getQuantity().value().compareTo(BigDecimal.ONE) > 0)
+//	   .filter(o -> o.getTotalPrice().value().compareTo(BigDecimal.ONE) > 0)
+//	   .collect(Collectors.toList());
+//		
+		
+		for (int i = 1; i <= levels; i++) {
+		  
+			Amount quantity = bot.base.add(bot.getBuyOrderQuantity());
 			BigDecimal newPrice = startPrice.subtract(pct.multiply(startPrice, MathContext.DECIMAL64));
-			if (newPrice.compareTo(BigDecimal.ZERO) <= 0){
+			if (newPrice.compareTo(BigDecimal.ZERO) <= 0) {
 				log.severe("RLOrder.buildBuySeedPct rate below zero. Check config for the pair " + bot.getPair());
-				break;			
-			}					
+				break;
+			}
 			BigDecimal totalPriceValue = quantity.value().multiply(newPrice, MathContext.DECIMAL64);
-			Amount totalPrice =  RLOrder.amount(totalPriceValue, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
+			Amount totalPrice = RLOrder.amount(totalPriceValue, Currency.fromString(bot.quote.currencyString()),
+					AccountID.fromAddress(bot.quote.issuerString()));
 			RLOrder buy = RLOrder.rateUnneeded(Direction.BUY, quantity, totalPrice);
 			res.add(buy);
 			startPrice = newPrice;
-		}		
-		return res;		
+		}
+		return res;
 	}
-	
-	public static List<RLOrder> buildSelsSeed(BigDecimal startRate, int levels, BotConfig bot){
-		if (bot.isPctGridSpace()){
+
+	public static List<RLOrder> buildSelsSeed(BigDecimal startRate, int levels, BotConfig bot) {
+		if (bot.isPctGridSpace()) {
 			return buildSelsSeedPct(startRate, levels, bot);
 		}
 		ArrayList<RLOrder> res = new ArrayList<>();
 		BigDecimal margin = new BigDecimal(bot.gridSpace);
 		Queue<Integer> sellLevels = getLevels(levels);
-		
-		while (true){
-			if (sellLevels.isEmpty()){
+
+		while (true) {
+			if (sellLevels.isEmpty()) {
 				break;
 			}
-			if (!sellLevels.isEmpty()){
+			if (!sellLevels.isEmpty()) {
 				Amount quantity = bot.base.add(bot.getSellOrderQuantity());
 				BigDecimal rate = startRate.add(margin.multiply(new BigDecimal(sellLevels.remove()), MathContext.DECIMAL64));
 				BigDecimal totalPriceValue = quantity.value().multiply(rate, MathContext.DECIMAL64);
-				Amount totalPrice = RLOrder.amount(totalPriceValue, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
+				Amount totalPrice = RLOrder.amount(totalPriceValue, Currency.fromString(bot.quote.currencyString()),
+						AccountID.fromAddress(bot.quote.issuerString()));
 				RLOrder sell = RLOrder.rateUnneeded(Direction.SELL, quantity, totalPrice);
-				res.add(sell);	
-			}			
-		}	
+				res.add(sell);
+			}
+		}
 		return res;
 	}
-	
-	public static List<RLOrder> buildSelsSeedPct(BigDecimal startPrice, int levels, BotConfig bot){
+
+	public static List<RLOrder> buildSelsSeedPct(BigDecimal startPrice, int levels, BotConfig bot) {		
+//		BigDecimal pcHi = BigDecimal.ONE.subtract(bot.getGridSpace().divide(new BigDecimal(100), MathContext.DECIMAL64));
+//		BigDecimal pcLo = BigDecimal.ONE.add(bot.getGridSpace().divide(new BigDecimal(100), MathContext.DECIMAL64));
+//		
+//		BigDecimal botQuantity = bot.getSellOrderQuantity();
+//		List<RLOrder> res = IntStream
+//				.range(1, levels + 1)
+//				.mapToObj(l -> {
+//					BigDecimal rateHi = Collections.nCopies(1, pcHi).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();
+//					BigDecimal rateLo = Collections.nCopies(1, pcLo).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();		
+//					BigDecimal newPri = startPrice.multiply(rateHi, MathContext.DECIMAL64);
+//					BigDecimal newQty = bot.isPctAmount() ? botQuantity.multiply(rateLo, MathContext.DECIMAL64) : botQuantity;
+//	
+//					Amount newAmt		  = bot.base.add(newQty);
+//					BigDecimal totalPriceValue = newAmt.value().multiply(newPri, MathContext.DECIMAL64);
+//					Amount totalPrice = RLOrder.amount(totalPriceValue, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
+//					RLOrder buy = RLOrder.rateUnneeded(Direction.BUY, newAmt, totalPrice);		
+//					return buy;
+//			})
+//	   .filter(o -> o.getQuantity().value().compareTo(BigDecimal.ONE) > 0)
+//	   .filter(o -> o.getTotalPrice().value().compareTo(BigDecimal.ONE) > 0)
+//	   .collect(Collectors.toList());
+		
+		
 		ArrayList<RLOrder> res = new ArrayList<>();
-		BigDecimal pct = bot.getGridSpace();	
-		for (int i = 1; i <= levels; i++){
-			Amount quantity =	bot.base.add(bot.getSellOrderQuantity());		
+		BigDecimal pct = bot.getGridSpace();
+		for (int i = 1; i <= levels; i++) {
+			Amount quantity = bot.base.add(bot.getSellOrderQuantity());
 			BigDecimal newPrice = startPrice.add(pct.multiply(startPrice, MathContext.DECIMAL64));
 			BigDecimal totalPriceValue = quantity.value().multiply(newPrice, MathContext.DECIMAL64);
 			Amount totalPrice = RLOrder.amount(totalPriceValue, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
 			RLOrder sell = RLOrder.rateUnneeded(Direction.SELL, quantity, totalPrice);
-			res.add(sell);	
+			res.add(sell);
 			startPrice = newPrice;
-		}	
+		}
 		return res;
 	}
-	
-	public static BuySellRateTuple worstRates(ConcurrentHashMap<Integer, RLOrder> buys, ConcurrentHashMap<Integer, RLOrder> sels, BigDecimal worstBuy, BigDecimal worstSel, BotConfig botConfig) {		
+
+	public static BuySellRateTuple worstRates(ConcurrentHashMap<Integer, RLOrder> buys,
+			ConcurrentHashMap<Integer, RLOrder> sels, BigDecimal worstBuy, BigDecimal worstSel, BotConfig botConfig) {
 		BuySellRateTuple res = new BuySellRateTuple();
-		if (buys.isEmpty() && sels.isEmpty()){
-			if (botConfig.isPctGridSpace()){
-				res.setBuyRate(worstBuy.subtract(worstBuy.multiply(botConfig.getGridSpace(), MathContext.DECIMAL64)));;
+		if (buys.isEmpty() && sels.isEmpty()) {
+			if (botConfig.isPctGridSpace()) {
+				res.setBuyRate(worstBuy.subtract(worstBuy.multiply(botConfig.getGridSpace(), MathContext.DECIMAL64)));			
 				res.setSelRate(worstSel.add(worstSel.multiply(botConfig.getGridSpace(), MathContext.DECIMAL64)));
-			}
-			else{
+			} else {
 				res.setBuyRate(worstBuy.subtract(botConfig.getGridSpace()));
 				res.setBuyRate(worstSel.add(botConfig.getGridSpace()));
-			}		
+			}
 			return res;
 		}
-		List<Entry<Integer, RLOrder>> sorted = new ArrayList<>();	
-		if (buys.isEmpty()){
+		List<Entry<Integer, RLOrder>> sorted = new ArrayList<>();
+		if (buys.isEmpty()) {
 			worstBuy = BigDecimal.ONE.divide(sortSels(sels, true).get(0).getValue().getRate(), MathContext.DECIMAL64);
-			worstBuy = botConfig.isPctGridSpace() ?
-					worstBuy = worstBuy.subtract(worstBuy.multiply(botConfig.getGridSpace(), MathContext.DECIMAL64)):
-					worstBuy.subtract(botConfig.getGridSpace());
+			worstBuy = botConfig.isPctGridSpace()
+					? worstBuy = worstBuy.subtract(worstBuy.multiply(botConfig.getGridSpace(), MathContext.DECIMAL64))
+					: worstBuy.subtract(botConfig.getGridSpace());
 		} else {
 			sorted.addAll(sortBuys(buys, false));
 			Collections.reverse(sorted);
 			worstBuy = sorted.get(0).getValue().getRate();
-		}		
+		}
 		sorted.clear();
-	  if (sels.isEmpty()){
+		if (sels.isEmpty()) {
 			worstSel = sortBuys(buys, false).get(0).getValue().getRate();
-			worstSel = botConfig.isPctGridSpace() ? 
-					worstSel = worstSel.add(worstSel.multiply(botConfig.getGridSpace(), MathContext.DECIMAL64)):
-					worstSel.add(botConfig.getGridSpace());
+			worstSel = botConfig.isPctGridSpace()
+					? worstSel = worstSel.add(worstSel.multiply(botConfig.getGridSpace(), MathContext.DECIMAL64))
+					: worstSel.add(botConfig.getGridSpace());
 		} else {
 			sorted.addAll(sortSels(sels, false));
 			worstSel = BigDecimal.ONE.divide(sorted.get(0).getValue().getRate(), MathContext.DECIMAL64);
 		}
-	  
-	  res.setBuyRate(worstBuy);
-	  res.setSelRate(worstSel);
-	  return res;
+
+		res.setBuyRate(worstBuy);
+		res.setSelRate(worstSel);
+		return res;
 	}
-	
+
 	public static List<Entry<Integer, RLOrder>> sortBuys(ConcurrentHashMap<Integer, RLOrder> buys, boolean isReversed) {
 		Set<Entry<Integer, RLOrder>> entries = buys.entrySet();
 		List<Entry<Integer, RLOrder>> res = new ArrayList<Entry<Integer, RLOrder>>(entries);
@@ -435,7 +498,7 @@ public final class RLOrder extends Base{
 		Collections.sort(res, !isReversed ? obMapComparator : Collections.reverseOrder(obMapComparator));
 		return res;
 	}
-	
+
 	private static Comparator<Entry<Integer, RLOrder>> obMapComparator = new Comparator<Entry<Integer, RLOrder>>() {
 
 		@Override
@@ -444,11 +507,8 @@ public final class RLOrder extends Base{
 		}
 	};
 
-	
-
-	
 	@Override
-	public String stringify() {	
+	public String stringify() {
 		StringBuffer sb = new StringBuffer(direction);
 		sb.append("\n");
 		sb.append("quantity:");
@@ -464,8 +524,7 @@ public final class RLOrder extends Base{
 		sb.append("pair:");
 		sb.append(getCpair());
 		sb.append("\n");
-		return sb.toString();		
+		return sb.toString();
 	}
-	
-	
+
 }

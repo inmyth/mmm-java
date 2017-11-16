@@ -48,7 +48,7 @@ import io.reactivex.subjects.Subject;
 
 public class State extends Base {
 	private static final int DEFAULT_MAX_LEDGER_GAP = 5;
-	
+
 	private final AtomicInteger ledgerClosed = new AtomicInteger(0);
 	private final AtomicInteger ledgerValidated = new AtomicInteger(0);
 	private final AtomicInteger sequence = new AtomicInteger(0);
@@ -59,15 +59,13 @@ public class State extends Base {
 	private final AtomicBoolean flagWaitSeq = new AtomicBoolean(false);
 	private final AtomicBoolean flagWaitLedger = new AtomicBoolean(false);
 	private RxBus bus = RxBusProvider.getInstance();
-	
-  private Subject<Boolean> sequenceRefreshObs = PublishSubject.create();  
- 
+
+	private Subject<Boolean> sequenceRefreshObs = PublishSubject.create();
+
 	public State(Config config) {
 		super(MyLogger.getLogger(Common.class.getName()), config);
-		
-		bus.toObservable()
-		.subscribeOn(Schedulers.newThread())
-		.subscribe(new Observer<Object>() {
+
+		bus.toObservable().subscribeOn(Schedulers.newThread()).subscribe(new Observer<Object>() {
 
 			@Override
 			public void onSubscribe(Disposable d) {
@@ -77,99 +75,85 @@ public class State extends Base {
 			public void onNext(Object o) {
 				BusBase base = (BusBase) o;
 				try {
-					if (base instanceof Common.OnOfferCreate){
+					if (base instanceof Common.OnOfferCreate) {
 						OnOfferCreate event = (OnOfferCreate) o;
 						setSequence(event.sequence);
-						pending.remove(event.sequence.intValue());	
-									
-					}
-					else if (base instanceof Common.OnOfferEdited){
+						pending.remove(event.sequence.intValue());
+
+					} else if (base instanceof Common.OnOfferEdited) {
 						OnOfferEdited event = (OnOfferEdited) o;
 						setSequence(event.newSeq);
-					}
-					else if (base instanceof Common.OnOfferCanceled){
+					} else if (base instanceof Common.OnOfferCanceled) {
 						OnOfferCanceled event = (OnOfferCanceled) o;
 						cancels.remove(event.prevSeq.intValue());
-						setSequence(event.newSeq);					
-					}			
-					else if (base instanceof OnOrderReady){					
+						setSequence(event.newSeq);
+					} else if (base instanceof OnOrderReady) {
 						OnOrderReady event = (OnOrderReady) o;
 						synchronized (State.this) {
-							if (flagWaitSeq.get() || flagWaitLedger.get()){
-								qPens.add(event);												
+							if (flagWaitSeq.get() || flagWaitLedger.get()) {
+								qPens.add(event);
 							} else {
-								ocreate(event);						
-							}	
+								ocreate(event);
+							}
 						}
-					}			
-					else if (base instanceof OnCancelReady){
+					} else if (base instanceof OnCancelReady) {
 						OnCancelReady event = (OnCancelReady) o;
 						synchronized (State.this) {
-							if (flagWaitSeq.get() || flagWaitLedger.get()){
-								qCans.add(new TxdMini(Cpair.newInstance(event.pair), event.seq));												
+							if (flagWaitSeq.get() || flagWaitLedger.get()) {
+								qCans.add(new TxdMini(Cpair.newInstance(event.pair), event.seq));
 							} else {
-								ocancel(Cpair.newInstance(event.pair), event.seq);					
-							}	
+								ocancel(Cpair.newInstance(event.pair), event.seq);
+							}
 						}
-					}				
-					else if (base instanceof Common.OnLedgerClosed){
-						OnLedgerClosed event = (OnLedgerClosed) o;		
-						log(event.ledgerEvent.toString() +  " seq : " + sequence);
-						setLedgerIndex(event.ledgerEvent);	
+					} else if (base instanceof Common.OnLedgerClosed) {
+						OnLedgerClosed event = (OnLedgerClosed) o;
+						log(event.ledgerEvent.toString() + " seq : " + sequence);
+						setLedgerIndex(event.ledgerEvent);
 						flagWaitLedger.set(false);
-						if (!flagWaitLedger.get() && !flagWaitSeq.get()){
+						if (!flagWaitLedger.get() && !flagWaitSeq.get()) {
 							drain();
-						}						
-						
-					}
-					else if (base instanceof Common.OnAccountInfoSequence){
+						}
+
+					} else if (base instanceof Common.OnAccountInfoSequence) {
 						OnAccountInfoSequence event = (OnAccountInfoSequence) o;
 						log(String.format("New Sequence %d", event.sequence.intValue()));
 						setSequence(event.sequence);
 						flagWaitSeq.set(false);
-						if (!flagWaitLedger.get() && !flagWaitSeq.get()){
+						if (!flagWaitLedger.get() && !flagWaitSeq.get()) {
 							drain();
-						}									
-					}
-					else if (base instanceof RequestRemoveCreate){
+						}
+					} else if (base instanceof RequestRemoveCreate) {
 						RequestRemoveCreate event = (RequestRemoveCreate) o;
 						pending.remove(event.seq);
-					}
-					else if (base instanceof RequestRemoveCancel){
+					} else if (base instanceof RequestRemoveCancel) {
 						RequestRemoveCancel event = (RequestRemoveCancel) o;
 						System.out.println("Removing from cancels " + event.seq);
 						cancels.remove(event.seq);
-						
-					}
-					else if (base instanceof RequestSequenceSync){
-						sequenceRefreshObs.onNext(flagWaitSeq.compareAndSet(false, true));					
-					}
-					else if (base instanceof RequestWaitNextLedger){
-						flagWaitLedger.set(true);					
-					}
-					else if (base instanceof Balancer.OnRequestNonOrderbookRLOrder){
+
+					} else if (base instanceof RequestSequenceSync) {
+						sequenceRefreshObs.onNext(flagWaitSeq.compareAndSet(false, true));
+					} else if (base instanceof RequestWaitNextLedger) {
+						flagWaitLedger.set(true);
+					} else if (base instanceof Balancer.OnRequestNonOrderbookRLOrder) {
 						OnRequestNonOrderbookRLOrder event = (OnRequestNonOrderbookRLOrder) o;
-						List<RLOrder> crts = Stream
-							.concat(pending.values().stream().map(txc -> {return txc.getOutbound();}), qPens.stream().map(t -> {return t.outbound;}))
-							.filter(rlo -> rlo.getCpair().isMatch(event.pair) != null)
-							.collect(Collectors.toList());
-	
-						List<Integer> cans = Stream.concat(
-								cancels.values().stream()
-								.filter(txd -> txd.getPair().isMatch(event.pair) != null)
-								.map(txd -> {return txd.getCanSeq();})
-								, 
-								qCans.stream()
-								.filter(mini -> mini.cpair.isMatch(event.pair) != null)
-								.map(mini -> {return mini.canSeq;})							
-								)
-								.collect(Collectors.toList());
-	
+						List<RLOrder> crts = Stream.concat(pending.values().stream().map(txc -> {
+							return txc.getOutbound();
+						}), qPens.stream().map(t -> {
+							return t.outbound;
+						})).filter(rlo -> rlo.getCpair().isMatch(event.pair) != null).collect(Collectors.toList());
+
+						List<Integer> cans = Stream
+								.concat(cancels.values().stream().filter(txd -> txd.getPair().isMatch(event.pair) != null).map(txd -> {
+									return txd.getCanSeq();
+								}), qCans.stream().filter(mini -> mini.cpair.isMatch(event.pair) != null).map(mini -> {
+									return mini.canSeq;
+								})).collect(Collectors.toList());
+
 						bus.send(new BroadcastPendings(event.pair, crts, cans));
 					}
 				} catch (Exception e) {
-					MyLogger.exception(LOGGER, base.toString(), e);		
-					throw e;				
+					MyLogger.exception(LOGGER, base.toString(), e);
+					throw e;
 				}
 			}
 
@@ -179,37 +163,37 @@ public class State extends Base {
 			}
 
 			@Override
-			public void onComplete() {				
+			public void onComplete() {
 			}
-		});		
-		
-		sequenceRefreshObs.subscribe(flag -> {
-			if(flag){
-				bus.send(new WebSocketClient.WSRequestSendText(AccountInfo.of(config).stringify()));		
-			}	
 		});
-						
+
+		sequenceRefreshObs.subscribe(flag -> {
+			if (flag) {
+				bus.send(new WebSocketClient.WSRequestSendText(AccountInfo.of(config).stringify()));
+			}
+		});
+
 	}
-	
-	public void setLedgerIndex(LedgerEvent event){
+
+	public void setLedgerIndex(LedgerEvent event) {
 		synchronized (ledgerValidated) {
 			this.ledgerClosed.set(event.getClosed());
 			this.ledgerValidated.set(event.getValidated());
 		}
 	}
-	
-	public static State newInstance(Config config){
-		return new State(config);	
+
+	public static State newInstance(Config config) {
+		return new State(config);
 	}
-	
-	private void setSequence(UInt32 seq){
-		sequence.set(seq.intValue());			
+
+	private void setSequence(UInt32 seq) {
+		sequence.set(seq.intValue());
 	}
-	
-	private int getIncrementSequence(){
+
+	private int getIncrementSequence() {
 		return this.sequence.getAndIncrement();
 	}
-	
+
 	private void drain() {
 		while (!qPens.isEmpty()) {
 			ocreate(qPens.poll());
@@ -219,40 +203,40 @@ public class State extends Base {
 			ocancel(load.cpair, load.canSeq);
 		}
 	}
-	
-	private synchronized void ocreate(OnOrderReady ready){
-			int seq = getIncrementSequence();
-			while (pending.containsKey(seq)){
-				seq = getIncrementSequence();
-			}		
-			int maxLedger = ledgerValidated.get() + DEFAULT_MAX_LEDGER_GAP;	
-			SignedTransaction signed = signCreate(ready.outbound, seq, maxLedger, config.getFeeXRP());
-			Txc txc = Txc.newInstance(ready.outbound, ready.source, signed.hash, seq, maxLedger);		
-			pending.put(txc.getSeq(), txc);
-			
-			StringBuilder sb = new StringBuilder("submitting offerCreate: ");
-			sb.append(ready.source.text);
+
+	private synchronized void ocreate(OnOrderReady ready) {
+		int seq = getIncrementSequence();
+		while (pending.containsKey(seq)) {
+			seq = getIncrementSequence();
+		}
+		int maxLedger = ledgerValidated.get() + DEFAULT_MAX_LEDGER_GAP;
+		SignedTransaction signed = signCreate(ready.outbound, seq, maxLedger, config.getFeeXRP());
+		Txc txc = Txc.newInstance(ready.outbound, ready.source, signed.hash, seq, maxLedger);
+		pending.put(txc.getSeq(), txc);
+
+		StringBuilder sb = new StringBuilder("submitting offerCreate: ");
+		sb.append(ready.source.text);
+		sb.append(" ");
+		sb.append(signed.hash);
+		sb.append(" ");
+		sb.append(seq);
+		if (ready.from != null) {
+			sb.append(" retry from ");
+			sb.append(ready.from);
 			sb.append(" ");
-			sb.append(signed.hash);
-			sb.append(" ");
-			sb.append(seq);
-			if (ready.from != null){
-				sb.append(" retry from ");
-				sb.append(ready.from);
-				sb.append(" ");
-				sb.append(ready.memo);
-			}
-			log(sb.toString());
-			submit(signed.tx_blob);
-		
+			sb.append(ready.memo);
+		}
+		log(sb.toString());
+		submit(signed.tx_blob);
+
 	}
- 
-	private synchronized void ocancel(Cpair cpair, int canSeq){
+
+	private synchronized void ocancel(Cpair cpair, int canSeq) {
 		int newSeq = getIncrementSequence();
-		while (cancels.containsKey(newSeq)){
+		while (cancels.containsKey(newSeq)) {
 			newSeq = getIncrementSequence();
-		}	
-		int maxLedger = ledgerValidated.get() + DEFAULT_MAX_LEDGER_GAP;	
+		}
+		int maxLedger = ledgerValidated.get() + DEFAULT_MAX_LEDGER_GAP;
 		SignedTransaction signed = signCancel(newSeq, canSeq, maxLedger);
 		Txd txd = Txd.newInstance(cpair, canSeq, newSeq, maxLedger);
 		cancels.put(canSeq, txd);
@@ -260,12 +244,12 @@ public class State extends Base {
 		submit(signed.tx_blob);
 	}
 
-	private SignedTransaction signCreate(RLOrder order, int seq, int maxLedger, BigDecimal fees){
+	private SignedTransaction signCreate(RLOrder order, int seq, int maxLedger, BigDecimal fees) {
 		SignedTransaction signed = order.signOfferCreate(config, seq, maxLedger, fees);
 		return signed;
 	}
-	
-	private SignedTransaction signCancel(int seq, int canSeq, int maxLedger){
+
+	private SignedTransaction signCancel(int seq, int canSeq, int maxLedger) {
 		OfferCancel offerCancel = new OfferCancel();
 		offerCancel.put(UInt32.OfferSequence, new UInt32(String.valueOf(canSeq)));
 		offerCancel.fee(new Amount(config.getFeeXRP()));
@@ -273,30 +257,29 @@ public class State extends Base {
 		offerCancel.lastLedgerSequence(new UInt32(String.valueOf(maxLedger)));
 		offerCancel.account(AccountID.fromAddress(config.getCredentials().getAddress()));
 		SignedTransaction signed = offerCancel.sign(config.getCredentials().getSecret());
-		return signed;	
+		return signed;
 
 	}
-	
-	private void submit(String txBlob){
+
+	private void submit(String txBlob) {
 		bus.send(new WebSocketClient.WSRequestSendText(Submit.build(txBlob).stringify()));
 	}
-		
+
 	public static class OnOrderValidated extends BusBase {
 		public int seq;
 
 		public OnOrderValidated(int seq) {
 			super();
 			this.seq = seq;
-		}			
+		}
 	}
-	
+
 	public static class OnOrderReady extends BusBase {
 		public enum Source {
-			BALANCER ("balancer"),
-			COUNTER ("counter");	
-			
+			BALANCER("balancer"), COUNTER("counter");
+
 			private String text;
-			
+
 			Source(String text) {
 				this.text = text;
 			}
@@ -305,25 +288,25 @@ public class State extends Base {
 				return text;
 			}
 		}
-		
+
 		public RLOrder outbound;
 		public Hash256 from;
 		public String memo;
 		public Source source;
-		
+
 		public OnOrderReady(RLOrder outbound, Source source) {
 			super();
 			this.outbound = outbound;
-			this.source 	= source;
-		}	
-		
-		public OnOrderReady(RLOrder outbound, Source source, Hash256 from, String memo){
+			this.source = source;
+		}
+
+		public OnOrderReady(RLOrder outbound, Source source, Hash256 from, String memo) {
 			this(outbound, source);
 			this.from = from;
 			this.memo = memo;
 		}
 	}
-	
+
 	public static class OnCancelReady extends BusBase {
 		public final int seq;
 		public final String pair;
@@ -333,7 +316,7 @@ public class State extends Base {
 			this.pair = pair;
 			this.seq = seq;
 		}
-		
+
 	}
 
 	public static class RequestRemoveCreate extends BusBase {
@@ -344,7 +327,7 @@ public class State extends Base {
 			this.seq = seq;
 		}
 	}
-	
+
 	public static class RequestRemoveCancel extends BusBase {
 		public int seq;
 
@@ -352,13 +335,15 @@ public class State extends Base {
 			super();
 			this.seq = seq;
 		}
-		
+
 	}
-	
-	public static class RequestSequenceSync extends BusBase {}
-	
-	public static class RequestWaitNextLedger extends BusBase {}
-	
+
+	public static class RequestSequenceSync extends BusBase {
+	}
+
+	public static class RequestWaitNextLedger extends BusBase {
+	}
+
 	public static class BroadcastPendings extends BusBase {
 		public final String pair;
 		public final List<RLOrder> creates;
@@ -370,13 +355,13 @@ public class State extends Base {
 			this.cancels = cancels;
 		}
 	}
-	
+
 	public static class RequestOrderCancel extends BusBase {
 		public final int seq;
 
 		public RequestOrderCancel(int seq) {
 			super();
 			this.seq = seq;
-		}	
+		}
 	}
 }

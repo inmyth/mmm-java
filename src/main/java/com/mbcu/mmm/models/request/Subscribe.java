@@ -58,30 +58,27 @@ public class Subscribe extends Request {
 		return this;
 	}
 
-	public Subscribe withOrderbook(BotConfig botConfig){
+	public Subscribe withOrderbook(BotConfig botConfig) {
 		this.books = new Book[1];
 		this.books[0] = new Book(botConfig.getQuote(), botConfig.getBase());
 		return this;
 	}
-		
-	public static class Book{
+
+	public static class Book {
 		NameIssuer taker_gets, taker_pays;
 		boolean snapshot = true;
 		boolean both = true;
+
 		public Book(Amount taker_gets, Amount taker_pays) {
 			super();
 			this.taker_gets = NameIssuer.from(taker_gets);
 			this.taker_pays = NameIssuer.from(taker_pays);
 		}
 	}
-	
 
-
-
-	
 	@Override
-	public String stringify(){
-		return super.stringify(this);	
+	public String stringify() {
+		return super.stringify(this);
 	}
-	
+
 }

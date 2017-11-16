@@ -16,17 +16,16 @@ import com.mbcu.mmm.models.internal.Config;
 public class MyLogger {
 
 	private static final String LOG_NAME = "log.%s.%s.txt";
-	private static final int  limit = 1024 * 1024 * 20; // 20 Mb
+	private static final int limit = 1024 * 1024 * 20; // 20 Mb
 	private static final int numLogFiles = 20;
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss_SS");
 
-	
-	public static void setup(Config config, boolean...isConsole) throws IOException {
+	public static void setup(Config config, boolean... isConsole) throws IOException {
 
 		// Get the global logger to configure it
 		Logger logger = Logger.getLogger("");
 		logger.setLevel(Level.ALL);
-		String timeStamp =sdf.format(new Date());
+		String timeStamp = sdf.format(new Date());
 		sdf.setTimeZone(TimeZone.getTimeZone("Asia/Tokyo"));
 
 		String fileName = String.format(LOG_NAME, config.getCredentials().getAddress(), timeStamp);
@@ -36,9 +35,9 @@ public class MyLogger {
 		SimpleFormatter formatter = new SimpleFormatter();
 		fileHandler.setFormatter(formatter);
 		logger.addHandler(fileHandler);
-		
-		if (isConsole.length > 0){
-			if (isConsole[0]){
+
+		if (isConsole.length > 0) {
+			if (isConsole[0]) {
 				Handler consoleHandler = new ConsoleHandler();
 				consoleHandler.setLevel(Level.ALL);
 				consoleHandler.setFormatter(formatter);
@@ -51,13 +50,13 @@ public class MyLogger {
 		return Logger.getLogger(name);
 	}
 
-	public static void exception(Logger log, String cause, Exception e){
+	public static void exception(Logger log, String cause, Exception e) {
 		StringBuffer res = new StringBuffer("EXCEPTION\n");
 		res.append("object-info start\n");
-		res.append(cause);		
+		res.append(cause);
 		res.append("\nobject-info end\ntrace start\n");
 		res.append(MyUtils.stackTrace(e));
 		res.append("\ntrace end");
-		log.log(Level.SEVERE, res.toString());	
+		log.log(Level.SEVERE, res.toString());
 	}
 }

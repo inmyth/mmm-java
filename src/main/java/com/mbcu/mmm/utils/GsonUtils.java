@@ -8,8 +8,8 @@ import com.google.gson.JsonSyntaxException;
 
 public class GsonUtils {
 	public static <T> T toBean(String response, Class<T> classOfT) {
-		GsonBuilder builder = new GsonBuilder();  
-//		builder.excludeFieldsWithoutExposeAnnotation();
+		GsonBuilder builder = new GsonBuilder();
+		// builder.excludeFieldsWithoutExposeAnnotation();
 		Gson gson = builder.create();
 		try {
 			return gson.fromJson(response, classOfT);
@@ -19,16 +19,16 @@ public class GsonUtils {
 	}
 
 	public static String toJson(Object object) {
-		GsonBuilder builder = new GsonBuilder();  
+		GsonBuilder builder = new GsonBuilder();
 		builder.setPrettyPrinting();
-		Gson gson = builder.create();		
+		Gson gson = builder.create();
 		String json = gson.toJson(object);
 		return json;
 	}
 
 	public static <T> T toBean(String response, Type t) {
-		GsonBuilder builder = new GsonBuilder();  
-//		builder.excludeFieldsWithoutExposeAnnotation();
+		GsonBuilder builder = new GsonBuilder();
+		// builder.excludeFieldsWithoutExposeAnnotation();
 		Gson gson = builder.create();
 		try {
 			return gson.fromJson(response, t);

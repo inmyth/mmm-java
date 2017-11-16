@@ -33,7 +33,7 @@ import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 
 public class Orderbook extends Base {
-//	private final int seedMidThreshold = 8;
+	// private final int seedMidThreshold = 8;
 
 	private final BotConfig botConfig;
 	private final ConcurrentHashMap<Integer, RLOrder> buys = new ConcurrentHashMap<>();
@@ -51,22 +51,22 @@ public class Orderbook extends Base {
 		this.botConfig = botConfig;
 		this.worstBuy = botConfig.getStartMiddlePrice();
 		this.worstSel = botConfig.getStartMiddlePrice();
-		
-		accountOffersDispo.add(bus.toObservable().subscribeOn(Schedulers.newThread())
-				.subscribeWith(new DisposableObserver<Object>() {
+
+		accountOffersDispo
+				.add(bus.toObservable().subscribeOn(Schedulers.newThread()).subscribeWith(new DisposableObserver<Object>() {
 
 					@Override
 					public void onNext(Object o) {
 						BusBase base = (BusBase) o;
 						if (base instanceof Common.OnAccountOffers) {
 							Common.OnAccountOffers event = (Common.OnAccountOffers) o;
-							boolean buyMatched 	= false; 
-							boolean selMatched 	= false;
+							boolean buyMatched = false;
+							boolean selMatched = false;
 							Boolean pairMatched = null;
 							for (TAccountOffer t : event.accOffs) {
 								pairMatched = pairMatched(t.getOrder());
 								if (pairMatched != null) {
-									if (pairMatched){
+									if (pairMatched) {
 										buyMatched = true;
 									} else {
 										selMatched = true;
@@ -78,110 +78,112 @@ public class Orderbook extends Base {
 								BuySellRateTuple worstBuySel = RLOrder.worstRates(buys, sels, worstBuy, worstSel, botConfig);
 								worstBuy = worstBuySel.getBuyRate();
 								worstSel = worstBuySel.getSelRate();
-							} 		
+							}
 						}
 					}
 
 					@Override
 					public void onError(Throwable e) {
-						log(e.getMessage(), Level.SEVERE);											
+						log(e.getMessage(), Level.SEVERE);
 					}
 
 					@Override
-					public void onComplete() {}
-				})
-		);
-		
-		
-		disposables.add(bus.toObservable().subscribeOn(Schedulers.newThread()).subscribeWith(new DisposableObserver<Object>() {
+					public void onComplete() {
+					}
+				}));
 
-			@Override
-			public void onNext(Object o) {
-				BusBase base = (BusBase) o;
-				try{
-					if (base instanceof Common.OnLedgerClosed) {
-						lastBalanced.incrementAndGet();
-						Common.OnLedgerClosed event = (Common.OnLedgerClosed) o;
-						ledgerClosed.set(event.ledgerEvent.getClosed());
-						ledgerValidated.set(event.ledgerEvent.getValidated());
-						requestPendings();
-					} else if (base instanceof Common.OnDifference) {
-						Common.OnDifference event = (Common.OnDifference) o;
-						boolean buyMatched = false; 
-						boolean selMatched = false;
-						for (BefAf ba : event.bas) {
-							Boolean pairMatched = pairMatched(ba.after);
-							if (pairMatched != null) {
-								if (pairMatched){
-									buyMatched = true;
-								} else {
-									selMatched = true;
+		disposables
+				.add(bus.toObservable().subscribeOn(Schedulers.newThread()).subscribeWith(new DisposableObserver<Object>() {
+
+					@Override
+					public void onNext(Object o) {
+						BusBase base = (BusBase) o;
+						try {
+							if (base instanceof Common.OnLedgerClosed) {
+								lastBalanced.incrementAndGet();
+								Common.OnLedgerClosed event = (Common.OnLedgerClosed) o;
+								ledgerClosed.set(event.ledgerEvent.getClosed());
+								ledgerValidated.set(event.ledgerEvent.getValidated());
+								requestPendings();
+							} else if (base instanceof Common.OnDifference) {
+								Common.OnDifference event = (Common.OnDifference) o;
+								boolean buyMatched = false;
+								boolean selMatched = false;
+								for (BefAf ba : event.bas) {
+									Boolean pairMatched = pairMatched(ba.after);
+									if (pairMatched != null) {
+										if (pairMatched) {
+											buyMatched = true;
+										} else {
+											selMatched = true;
+										}
+										shelve(ba.after, ba.befSeq, pairMatched);
+									}
 								}
-								shelve(ba.after, ba.befSeq, pairMatched);
+								if (buyMatched || selMatched) {
+									BuySellRateTuple worstBuySel = RLOrder.worstRates(buys, sels, worstBuy, worstSel, botConfig);
+									worstBuy = worstBuySel.getBuyRate();
+									worstSel = worstBuySel.getSelRate();
+								}
+							} else if (base instanceof Common.OnOfferEdited) {
+								Common.OnOfferEdited event = (Common.OnOfferEdited) o;
+								Boolean pairMatched = pairMatched(event.ba.after);
+								if (pairMatched != null) {
+									edit(event.ba, event.newSeq, pairMatched);
+									BuySellRateTuple worstBuySel = RLOrder.worstRates(buys, sels, worstBuy, worstSel, botConfig);
+									worstBuy = worstBuySel.getBuyRate();
+									worstSel = worstBuySel.getSelRate();
+								}
+							} else if (base instanceof Common.OnOfferCanceled) {
+								Common.OnOfferCanceled event = (Common.OnOfferCanceled) o;
+								Boolean pairMatched = remove(event.prevSeq.intValue());
+								if (pairMatched != null) {
+									BuySellRateTuple worstBuySel = RLOrder.worstRates(buys, sels, worstBuy, worstSel, botConfig);
+									worstBuy = worstBuySel.getBuyRate();
+									worstSel = worstBuySel.getSelRate();
+								}
+							} else if (base instanceof State.BroadcastPendings) {
+								BroadcastPendings event = (BroadcastPendings) o;
+								if (event.pair.equals(botConfig.getPair())) {
+									if (event.creates.isEmpty() && event.cancels.isEmpty()
+											&& lastBalanced.get() >= config.getIntervals().getBalancer()) {
+										lastBalanced.set(0);
+										List<Entry<Integer, RLOrder>> sortedSels, sortedBuys;
+										sortedSels = RLOrder.sortSels(sels, false);
+										sortedBuys = RLOrder.sortBuys(buys, false);
+										printOrderbook(sortedSels, sortedBuys);
+										balancer(sortedSels, sortedBuys);
+									}
+								}
 							}
+						} catch (Exception e) {
+							MyLogger.exception(LOGGER, base.toString(), e);
+							throw e;
 						}
-						if (buyMatched || selMatched) {
-							BuySellRateTuple worstBuySel = RLOrder.worstRates(buys, sels, worstBuy, worstSel, botConfig);
-							worstBuy = worstBuySel.getBuyRate();
-							worstSel = worstBuySel.getSelRate();
-						}
-					} else if (base instanceof Common.OnOfferEdited) {
-						Common.OnOfferEdited event = (Common.OnOfferEdited) o;
-						Boolean pairMatched = pairMatched(event.ba.after);
-						if (pairMatched != null) {
-							edit(event.ba, event.newSeq, pairMatched);
-							BuySellRateTuple worstBuySel = RLOrder.worstRates(buys, sels, worstBuy, worstSel, botConfig);
-							worstBuy = worstBuySel.getBuyRate();
-							worstSel = worstBuySel.getSelRate();						}
-					} else if (base instanceof Common.OnOfferCanceled) {
-						Common.OnOfferCanceled event = (Common.OnOfferCanceled) o;
-						Boolean pairMatched = remove(event.prevSeq.intValue());
-						if (pairMatched != null) {
-							BuySellRateTuple worstBuySel = RLOrder.worstRates(buys, sels, worstBuy, worstSel, botConfig);
-							worstBuy = worstBuySel.getBuyRate();
-							worstSel = worstBuySel.getSelRate();						}
-					} else if (base instanceof State.BroadcastPendings) {
-						BroadcastPendings event = (BroadcastPendings) o;
-						if (event.pair.equals(botConfig.getPair())) {
-							if (event.creates.isEmpty() && event.cancels.isEmpty() && lastBalanced.get() >= config.getIntervals().getBalancer()) {
-								lastBalanced.set(0);
-								List<Entry<Integer, RLOrder>> sortedSels, sortedBuys;
-								sortedSels = RLOrder.sortSels(sels, false);
-								sortedBuys = RLOrder.sortBuys(buys, false);
-								printOrderbook(sortedSels, sortedBuys);
-								balancer(sortedSels, sortedBuys);
-							}
-						}
-					} 
-				} catch (Exception e) {
-					MyLogger.exception(LOGGER, base.toString(), e);		
-					throw e;			
-				}
-			}
+					}
 
-			@Override
-			public void onError(Throwable e) {
-				log(e.getMessage(), Level.SEVERE);					
-			}
+					@Override
+					public void onError(Throwable e) {
+						log(e.getMessage(), Level.SEVERE);
+					}
 
-			@Override
-			public void onComplete() {
-				// TODO Auto-generated method stub
-			}
+					@Override
+					public void onComplete() {
+						// TODO Auto-generated method stub
+					}
 
-		}));
+				}));
 	}
 
 	private void printOrderbook(List<Entry<Integer, RLOrder>> sortedSels, List<Entry<Integer, RLOrder>> sortedBuys) {
 		String ob = dump(ledgerClosed.get(), ledgerValidated.get(), sortedSels, sortedBuys);
-//		MyUtils.toFile(ob, path);
-		log(ob,  Level.FINER);
+		// MyUtils.toFile(ob, path);
+		log(ob, Level.FINER);
 	}
-	
+
 	private void requestPendings() {
 		bus.send(new Balancer.OnRequestNonOrderbookRLOrder(botConfig.getPair()));
 	}
-
 
 	private void balancer(List<Entry<Integer, RLOrder>> sortedSels, List<Entry<Integer, RLOrder>> sortedBuys) {
 		// using pendings is unrealiable.
@@ -193,71 +195,31 @@ public class Orderbook extends Base {
 		BigDecimal buysGap = margin(sumBuys, Direction.BUY);
 		if (buysGap.compareTo(BigDecimal.ZERO) > 0) {
 			gens.addAll(generate(sortedBuys, buysGap, Direction.BUY));
-		} 
-		
+		}
+
 		BigDecimal selsGap = margin(sumSels, Direction.SELL);
 		if (selsGap.compareTo(BigDecimal.ZERO) > 0) {
 			gens.addAll(generate(sortedSels, selsGap, Direction.SELL));
-		} 		
+		}
 		gens.forEach(rlo -> bus.send(new State.OnOrderReady(rlo, OnOrderReady.Source.BALANCER)));
 	}
 
 	private List<RLOrder> generate(List<Entry<Integer, RLOrder>> sorteds, BigDecimal margin, Direction direction) {
 		List<RLOrder> res = new ArrayList<>();
-		margin = margin.abs();	
-		int levels = margin.divide(direction == Direction.BUY ? botConfig.getBuyOrderQuantity() : botConfig.getSellOrderQuantity(), MathContext.DECIMAL32).intValue();
-		if (direction == Direction.SELL){
+		margin = margin.abs();
+		int levels = margin
+				.divide(direction == Direction.BUY ? botConfig.getBuyOrderQuantity() : botConfig.getSellOrderQuantity(),
+						MathContext.DECIMAL32)
+				.intValue();
+		if (direction == Direction.SELL) {
 			Collections.reverse(sorteds);
 		}
-		
-//		int inserted = 0;		
-//		for (int i = 0; i < sorteds.size() - 1; i++){
-//			BigDecimal p, delta, q;
-//			int locLevels = 0;
-//			
-//			if (direction == Direction.BUY){
-//				p = sorteds.get(i).getValue().getRate();
-//				q = sorteds.get(i + 1).getValue().getRate();
-//				delta = p.subtract(q);
-//			} else {
-//				p = BigDecimal.ONE.divide(sorteds.get(i).getValue().getRate(), MathContext.DECIMAL64);
-//				q = BigDecimal.ONE.divide(sorteds.get(i + 1).getValue().getRate(), MathContext.DECIMAL64);
-//  			delta = q.subtract(p);
-//			}		
-//			locLevels = delta.divide(botConfig.getGridSpace(), MathContext.DECIMAL64).intValue() - 1;				
-//			if (locLevels > 0 && levels > 0 && inserted < seedMidThreshold){
-//				levels 		= levels - locLevels;
-//				inserted  = inserted + locLevels;
-//				res.addAll(direction == Direction.BUY ? RLOrder.buildBuysSeed(p, locLevels, botConfig) : RLOrder.buildSelsSeed(p, locLevels, botConfig));
-//			}		
-//			if (levels <= 0 || inserted > seedMidThreshold){
-//				break;
-//			}
-//		}				
-			
-		if (levels > 10){
-			log(logOrderExplosionError(levels, direction == Direction.BUY ? worstBuy : worstSel, margin, sorteds), Level.WARNING);
-		}
-		if (levels > 0){		
-			res.addAll(direction == Direction.BUY ? RLOrder.buildBuysSeed(worstBuy, levels, botConfig, super.LOGGER) : RLOrder.buildSelsSeed(worstSel, levels, botConfig));
+
+		if (levels > 0) {
+			res.addAll(direction == Direction.BUY ? RLOrder.buildBuysSeed(worstBuy, levels, botConfig, super.LOGGER)
+					: RLOrder.buildSelsSeed(worstSel, levels, botConfig));
 		}
 		return res;
-	}
-	
-	private String logOrderExplosionError (int levels, BigDecimal worstPrice, BigDecimal margin, List<Entry<Integer, RLOrder>> sorteds){
-	 StringBuilder res = new StringBuilder("Possible Orderbook#generate error, too many generated orders");
-	 res.append("\n");
-	 res.append("levels : ");
-	 res.append(levels);
-	 res.append(" margin : ");
-	 res.append("\n");
-	 res.append(margin.toPlainString());
-	 sorteds.stream().forEach(e -> {
-		 res.append(e.getValue().stringify());
-	 });
-	 res.append("\n");
-	 res.append("--end orderbook#generate error");
-	 return res.toString();		
 	}
 
 	/**
@@ -267,7 +229,8 @@ public class Orderbook extends Base {
 	 * @return negative if orderbook is bigger than config, positive if smaller
 	 */
 	private BigDecimal margin(BigDecimal sum, Direction direction) {
-		BigDecimal configTotalQuantity = direction == Direction.BUY ? botConfig.getTotalBuyQty() : botConfig.getTotalSelQty();
+		BigDecimal configTotalQuantity = direction == Direction.BUY ? botConfig.getTotalBuyQty()
+				: botConfig.getTotalSelQty();
 		return configTotalQuantity.subtract(sum);
 	}
 
@@ -279,7 +242,8 @@ public class Orderbook extends Base {
 			Collections.reverse(sorteds);
 		}
 		for (Entry<Integer, RLOrder> e : sorteds) {
-			BigDecimal newRef = ref.add(direction == Direction.BUY ? e.getValue().getQuantity().value() : e.getValue().getTotalPrice().value());
+			BigDecimal newRef = ref
+					.add(direction == Direction.BUY ? e.getValue().getQuantity().value() : e.getValue().getTotalPrice().value());
 			if (newRef.compareTo(margin) > 0) {
 				break;
 			} else {
@@ -351,11 +315,11 @@ public class Orderbook extends Base {
 	// Because it's map, it's O(1) and idempotent
 	private Boolean remove(int seq) {
 		RLOrder a = buys.remove(seq);
-		if (a != null){
+		if (a != null) {
 			return true;
 		}
 		RLOrder b = sels.remove(seq);
-		if (b != null){
+		if (b != null) {
 			return false;
 		}
 		return null;
@@ -365,9 +329,6 @@ public class Orderbook extends Base {
 		shelve(after, seq.intValue(), isAligned);
 	}
 
-
-
-
 	/**
 	 * @param in
 	 * @return null if not matched, true if aligned, false if reversed
@@ -376,7 +337,8 @@ public class Orderbook extends Base {
 		return in.getCpair().isMatch(this.botConfig.getPair());
 	}
 
-	private String dump(int ledgerClosed, int ledgerValidated, List<Entry<Integer, RLOrder>> sortedSels, List<Entry<Integer, RLOrder>> sortedBuys) {
+	private String dump(int ledgerClosed, int ledgerValidated, List<Entry<Integer, RLOrder>> sortedSels,
+			List<Entry<Integer, RLOrder>> sortedBuys) {
 		StringBuffer sb = new StringBuffer("Orderbook");
 		sb.append(botConfig.getPair());
 		sb.append("\n");
@@ -411,7 +373,7 @@ public class Orderbook extends Base {
 			sb.append(entry.getKey());
 			sb.append("\n");
 		});
-		
+
 		return sb.toString();
 	}
 
@@ -419,10 +381,8 @@ public class Orderbook extends Base {
 		Orderbook res = new Orderbook(config, botConfig);
 		return res;
 	}
-		
-	public static class OnAccOffersDone extends BusBase{}
-	
 
-	
+	public static class OnAccOffersDone extends BusBase {
+	}
 
 }

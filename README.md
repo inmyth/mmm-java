@@ -82,7 +82,8 @@ If false, grid space is absolute rate.
 **Version History**
 
 > v.058
-- amount should be changed by percentage too
+- Seed amount should be changed by percentage too
+- log if one side of orderbook is empty
 
 v.057
 - fixed percentage mode on counters. 

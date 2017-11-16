@@ -7,6 +7,6 @@ public abstract class Base {
 	protected String stringify(Object object) {
 		return GsonUtils.toJson(object);
 	}
-	
+
 	public abstract String stringify();
 }

@@ -33,40 +33,39 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class Dataapi extends Base{
+public class Dataapi extends Base {
 	private CompositeDisposable disposable = new CompositeDisposable();
 	private ApiManager apiManager;
-  private AgBalance  lastAgBalance = new AgBalance();
-  private AtomicInteger ledgerValidated = new AtomicInteger(-1);
-  private ScheduledExecutorService accBalanceMailService = Executors.newSingleThreadScheduledExecutor();
-  private StringBuilder cachedAccBalanceMail = new StringBuilder();
-  private AtomicLong startTs;
-  private SenderSES senderSES;
-	
+	private AgBalance lastAgBalance = new AgBalance();
+	private AtomicInteger ledgerValidated = new AtomicInteger(-1);
+	private ScheduledExecutorService accBalanceMailService = Executors.newSingleThreadScheduledExecutor();
+	private StringBuilder cachedAccBalanceMail = new StringBuilder();
+	private AtomicLong startTs;
+	private SenderSES senderSES;
+
 	public Dataapi(Config config) {
 		super(MyLogger.getLogger(Dataapi.class.getName()), config);
-		senderSES  = new SenderSES(config, LOGGER);
+		senderSES = new SenderSES(config, LOGGER);
 		apiManager = new ApiManager(config);
-		startTs 	 = new AtomicLong(System.currentTimeMillis());
-		disposable.add(
-				bus.toObservable().subscribeOn(Schedulers.newThread())
-				.subscribeWith(new DisposableObserver<Object>() {
+		startTs = new AtomicLong(System.currentTimeMillis());
+		disposable
+				.add(bus.toObservable().subscribeOn(Schedulers.newThread()).subscribeWith(new DisposableObserver<Object>() {
 
 					@Override
 					public void onNext(Object o) {
 						BusBase base = (BusBase) o;
-						try{						
+						try {
 							if (base instanceof Common.OnLedgerClosed) {
 								OnLedgerClosed event = (OnLedgerClosed) base;
-								if (ledgerValidated.get() == -1 
-										|| event.ledgerEvent.getValidated() - ledgerValidated.get() >= config.getIntervals().getAccountBalance()){
+								if (ledgerValidated.get() == -1 || event.ledgerEvent.getValidated() - ledgerValidated.get() >= config
+										.getIntervals().getAccountBalance()) {
 									ledgerValidated.set(event.ledgerEvent.getValidated());
 									callBalances();
 								}
 							}
-						}catch (Exception e) {
-							MyLogger.exception(LOGGER, base.toString(), e);		
-							throw e;		
+						} catch (Exception e) {
+							MyLogger.exception(LOGGER, base.toString(), e);
+							throw e;
 						}
 					}
 
@@ -76,70 +75,71 @@ public class Dataapi extends Base{
 					}
 
 					@Override
-					public void onComplete() {}
-					
+					public void onComplete() {
+					}
+
 				})
-				
-				);
-		
+
+		);
+
 		accBalanceMailService.schedule(new Runnable() {
-			
+
 			@Override
 			public void run() {
-				if (cachedAccBalanceMail.length() > 0){
+				if (cachedAccBalanceMail.length() > 0) {
 					senderSES.sendAccBalance(cachedAccBalanceMail.toString());
 					cachedAccBalanceMail.setLength(0);
-				}	
+				}
 			}
 		}, Config.HOUR_ACCOUNT_BALANCER_EMAILER, TimeUnit.HOURS);
-		
-		
+
 	}
-	
-	private void callBalances(){	
-  	ZonedDateTime now = ZonedDateTime.now( ZoneOffset.UTC );
-  	final long nowTs 	= now.toEpochSecond();  	
-    Call<AccountBalance> callBalances = apiManager.getService().getBalances(config.getCredentials().getAddress(), now.toString());
+
+	private void callBalances() {
+		ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
+		final long nowTs = now.toEpochSecond();
+		Call<AccountBalance> callBalances = apiManager.getService().getBalances(config.getCredentials().getAddress(),
+				now.toString());
 		callBalances.enqueue(new Callback<AccountBalance>() {
-			
+
 			@Override
 			public void onResponse(Call<AccountBalance> arg0, Response<AccountBalance> response) {
 				AccountBalance ab = response.body();
-				if (ab == null){
+				if (ab == null) {
 					return;
 				}
-				AgBalance newAgBalance 		= AgBalance.from(ab, nowTs);
+				AgBalance newAgBalance = AgBalance.from(ab, nowTs);
 				StringBuilder agBalanceString = buildAccBalance(newAgBalance);
 				log(agBalanceString.toString(), Level.FINE);
 				cachedAccBalanceMail.append(agBalanceString);
 				lastAgBalance = newAgBalance;
 			}
-			
+
 			@Override
 			public void onFailure(Call<AccountBalance> arg0, Throwable arg1) {
 				// TODO Auto-generated method stub
-				
+
 			}
 		});
-		
+
 	}
-	
-	private Map<NameIssuer, BigDecimal> deltaBalance(AgBalance newAg){
+
+	private Map<NameIssuer, BigDecimal> deltaBalance(AgBalance newAg) {
 		final Map<NameIssuer, BigDecimal> res = new HashMap<>();
 		Map<NameIssuer, Balance> lastData = lastAgBalance.getData();
-		
+
 		newAg.getData().entrySet().stream().forEach(e -> {
 			BigDecimal newValue = new BigDecimal(e.getValue().getValue());
 			Balance lastBalance = lastData.get(e.getKey());
-			if (lastBalance != null){
+			if (lastBalance != null) {
 				BigDecimal oldValue = new BigDecimal(lastBalance.getValue());
-				BigDecimal d 				= newValue.subtract(oldValue, MathContext.DECIMAL32);
+				BigDecimal d = newValue.subtract(oldValue, MathContext.DECIMAL32);
 				res.put(e.getKey(), d);
-			}			
+			}
 		});
-		return res;	
+		return res;
 	}
-	
+
 	private StringBuilder buildAccBalance(AgBalance newAg) {
 		Map<NameIssuer, BigDecimal> deltas = deltaBalance(newAg);
 		StringBuilder t = new StringBuilder("\n");
@@ -161,11 +161,10 @@ public class Dataapi extends Base{
 		t.append("\n");
 		return t;
 	}
-	
-	public static Dataapi newInstance(Config config){
+
+	public static Dataapi newInstance(Config config) {
 		Dataapi res = new Dataapi(config);
 		return res;
 	}
-
 
 }

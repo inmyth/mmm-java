@@ -6,7 +6,7 @@ import com.ripple.core.coretypes.AccountID;
 
 @Parcel
 public class Credentials {
-	String address;	
+	String address;
 	String secret;
 
 	public Credentials(String address, String secret) {
@@ -31,7 +31,7 @@ public class Credentials {
 		this.secret = secret;
 	}
 
-	public boolean addressEquals(AccountID accountID){
+	public boolean addressEquals(AccountID accountID) {
 		return accountID.address.equals(this.address);
 	}
 

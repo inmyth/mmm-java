@@ -3,7 +3,7 @@ package com.mbcu.mmm.sequences.state;
 import com.mbcu.mmm.models.internal.Config;
 
 public class StateProvider {
-	
+
 	private static State STATE = null;
 
 	private StateProvider() {

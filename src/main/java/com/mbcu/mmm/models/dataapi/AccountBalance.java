@@ -10,7 +10,7 @@ public class AccountBalance {
 	String result;
 	int ledger_index;
 	int limit;
-	List<Balance> balances 		= new ArrayList<Balance>();
+	List<Balance> balances = new ArrayList<Balance>();
 
 	public String getResult() {
 		return result;
@@ -45,6 +45,5 @@ public class AccountBalance {
 			this.balances.addAll(balances);
 		}
 	}
-	
 
 }

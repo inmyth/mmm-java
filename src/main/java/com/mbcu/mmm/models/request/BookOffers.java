@@ -12,7 +12,7 @@ public class BookOffers extends Request {
 	Integer limit;
 	NameIssuer taker_gets;
 	NameIssuer taker_pays;
-	
+
 	private BookOffers() {
 		super(Command.BOOK_OFFERS);
 	}
@@ -21,15 +21,14 @@ public class BookOffers extends Request {
 	public String stringify() {
 		return super.stringify(this);
 	}
-	
-	
-	public static List<String> buildRequest(String taker, BotConfig botConfig){
+
+	public static List<String> buildRequest(String taker, BotConfig botConfig) {
 		List<String> res = new ArrayList<String>();
 		BookOffers one = new BookOffers();
 		one.taker_gets = NameIssuer.from(botConfig.getBase());
 		one.taker_pays = NameIssuer.from(botConfig.getQuote());
 		one.taker = taker;
-		
+
 		BookOffers two = new BookOffers();
 		two.taker_gets = one.taker_pays;
 		two.taker_pays = one.taker_gets;
@@ -38,5 +37,5 @@ public class BookOffers extends Request {
 		res.add(two.stringify());
 		return res;
 	}
-	
+
 }

@@ -19,7 +19,7 @@ public class Config {
 	private static final int DEFAULT_INTERVAL_ACCOUNT_BALANCE = 2;
 	public static final int HOUR_ACCOUNT_BALANCER_EMAILER = 6;
 	private static final String DEFAULT_FEE_XRP = "0.000012";
-	
+
 	private String net;
 	private String datanet;
 	private BigDecimal feeXRP;
@@ -48,15 +48,15 @@ public class Config {
 	public BigDecimal getFeeXRP() {
 		return feeXRP;
 	}
-	
+
 	public void setDatanet(String datanet) {
 		this.datanet = datanet;
 	}
-	
+
 	public String getDatanet() {
 		return datanet;
 	}
-	
+
 	public String getNet() {
 		return net;
 	}
@@ -64,77 +64,72 @@ public class Config {
 	public void setNet(String net) {
 		this.net = net;
 	}
-	
+
 	public Intervals getIntervals() {
 		return intervals;
 	}
-	
+
 	public void setIntervals(Intervals intervals) {
 		this.intervals = intervals;
 	}
-	
-	
-	
+
 	public ArrayList<BotConfig> getBots() {
 		return bots;
 	}
-	
+
 	public void setBots(ArrayList<BotConfig> bots) {
 		this.bots = bots;
 	}
-	
+
 	public ArrayList<String> getEmails() {
 		return emails;
 	}
 
-	public static Config build(String fileName) throws IOException{
+	public static Config build(String fileName) throws IOException {
 		String raw = MyUtils.readFile(fileName);
-		
+
 		Config res = GsonUtils.toBean(raw, Config.class);
-		if (res == null){
+		if (res == null) {
 			throw new IOException("Failed to parse config");
 		}
-		
-		if (res.bots.isEmpty()){
+
+		if (res.bots.isEmpty()) {
 			throw new IOException("Bots are empty");
 		}
-		
-		if (res.feeXRP == null){
+
+		if (res.feeXRP == null) {
 			res.feeXRP = new BigDecimal(DEFAULT_FEE_XRP);
 		}
-		
-		if (res.intervals == null){
+
+		if (res.intervals == null) {
 			Intervals intervals = new Intervals();
 			intervals.accountBalance = DEFAULT_INTERVAL_ACCOUNT_BALANCE;
-			intervals.balancer 			 = DEFAULT_INTERVAL_BALANCER;
+			intervals.balancer = DEFAULT_INTERVAL_BALANCER;
 			res.setIntervals(intervals);
 		} else {
-			if (res.intervals.accountBalance < DEFAULT_INTERVAL_ACCOUNT_BALANCE){
+			if (res.intervals.accountBalance < DEFAULT_INTERVAL_ACCOUNT_BALANCE) {
 				res.intervals.accountBalance = DEFAULT_INTERVAL_ACCOUNT_BALANCE;
 			}
-			if (res.intervals.balancer < DEFAULT_INTERVAL_BALANCER){
+			if (res.intervals.balancer < DEFAULT_INTERVAL_BALANCER) {
 				res.intervals.balancer = DEFAULT_INTERVAL_BALANCER;
-			}			
+			}
 		}
-		
-		int s = res.emails.stream()
-		.filter(MyUtils::isEmail)
-		.collect(Collectors.toList())
-		.size();
-		
-		if (s != res.emails.size()){
-			throw new IOException("Wrong email format"); 
+
+		int s = res.emails.stream().filter(MyUtils::isEmail).collect(Collectors.toList()).size();
+
+		if (s != res.emails.size()) {
+			throw new IOException("Wrong email format");
 		}
-		
+
 		res.setBotConfigMap(BotConfig.buildMap(res.getCredentials(), res.getBots()));
 		res.setBots(null);
 		return res;
 	}
-	
+
 	class BigDecimalDeserializer implements JsonDeserializer<BigDecimal> {
 
 		@Override
-		public BigDecimal deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext c) 
+		public BigDecimal deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext c)
 				throws JsonParseException {
 
 			return json.getAsBigDecimal();

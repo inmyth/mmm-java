@@ -9,15 +9,15 @@ import com.neovisionaries.ws.client.WebSocketException;
 
 public class Main {
 
-	public static void main(String[] args) throws IOException, WebSocketException, InterruptedException{
+	public static void main(String[] args) throws IOException, WebSocketException, InterruptedException {
 		start(args);
 	}
 
-	private static void start(String[] args) throws IOException, WebSocketException, InterruptedException{	
+	private static void start(String[] args) throws IOException, WebSocketException, InterruptedException {
 		Config config = Config.build(args[0]);
 		MyLogger.setup(config);
 		Starter manager = Starter.newInstance(config);
-		manager.start();			
+		manager.start();
 	}
 
 }

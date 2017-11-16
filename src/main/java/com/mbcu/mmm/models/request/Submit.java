@@ -31,8 +31,8 @@ public class Submit extends Request {
 	}
 
 	@Override
-	public String stringify(){
-		return super.stringify(this);	
+	public String stringify() {
+		return super.stringify(this);
 	}
-	
+
 }

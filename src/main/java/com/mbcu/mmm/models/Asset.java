@@ -15,5 +15,5 @@ public class Asset {
 			return text;
 		}
 	}
-	
+
 }
