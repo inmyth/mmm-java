@@ -37,26 +37,33 @@ import io.reactivex.Observable;
 public class Mock {
 
 	public static void main(String[] args) {
-   Amount a = new Amount(new BigDecimal(-20));
-   Amount b = new Amount(new BigDecimal(-10));
-   
-   Amount p = new Amount(new BigDecimal(3));
-   Amount q = new Amount(new BigDecimal(-3));
-   
-   RLOrder m = RLOrder.rateUnneeded(Direction.BUY, a, b);		
-   RLOrder n = RLOrder.rateUnneeded(Direction.BUY, p, q);		
-   
-   List<RLOrder> t = new ArrayList<>();
-   t.add(m);
-   t.add(n);
-   List<RLOrder> res = t
-   .stream()
-   .filter(e -> e.getQuantity().value().compareTo(BigDecimal.ONE) > 0)
-   .filter(e -> e.getTotalPrice().value().compareTo(BigDecimal.ONE) > 0)
-   .collect(Collectors.toList());
-//   res.forEach(System.out::println);
-   System.out.println(res.isEmpty());
-   
+		BigDecimal a = new BigDecimal("0.99");
+		
+	  a = Collections.nCopies(3, a).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();
+	  System.out.println(a);
+		
+		
+//   Amount a = new Amount(new BigDecimal(-20));
+//   Amount b = new Amount(new BigDecimal(-10));
+//   
+//   Amount p = new Amount(new BigDecimal(3));
+//   Amount q = new Amount(new BigDecimal(-3));
+//   
+//   RLOrder m = RLOrder.rateUnneeded(Direction.BUY, a, b);		
+//   RLOrder n = RLOrder.rateUnneeded(Direction.BUY, p, q);		
+//   
+//   
+//   List<RLOrder> t = new ArrayList<>();
+//   t.add(m);
+//   t.add(n);
+//   List<RLOrder> res = t
+//   .stream()
+//   .filter(e -> e.getQuantity().value().compareTo(BigDecimal.ONE) > 0)
+//   .filter(e -> e.getTotalPrice().value().compareTo(BigDecimal.ONE) > 0)
+//   .collect(Collectors.toList());
+////   res.forEach(System.out::println);
+//   System.out.println(res.isEmpty());
+//   
 ;
    
 

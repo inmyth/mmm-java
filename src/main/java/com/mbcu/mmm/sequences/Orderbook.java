@@ -151,6 +151,7 @@ public class Orderbook extends Base {
 										List<Entry<Integer, RLOrder>> sortedSels, sortedBuys;
 										sortedSels = RLOrder.sortSels(sels, false);
 										sortedBuys = RLOrder.sortBuys(buys, false);
+										warnEmptyOrderbook(sortedSels, sortedBuys);
 										printOrderbook(sortedSels, sortedBuys);
 										balancer(sortedSels, sortedBuys);
 									}
@@ -180,6 +181,16 @@ public class Orderbook extends Base {
 		// MyUtils.toFile(ob, path);
 		log(ob, Level.FINER);
 	}
+	
+	private void warnEmptyOrderbook(List<Entry<Integer, RLOrder>> sortedSels, List<Entry<Integer, RLOrder>> sortedBuys){
+		String warning = sortedSels.isEmpty() ? "Warning. Orderbook empty : sell " : null;
+		warning = sortedBuys.isEmpty() ? "Warning. Orderbook empty : buy" : null;
+		warning = sortedBuys.isEmpty() && sortedSels.isEmpty() ? "Warning. Orderbook empty : both" : null;
+		if (warning != null){
+			log(warning + botConfig.getPair(), Level.WARNING);
+			bus.send(new Notifier.RequestEmailNotice(warning, botConfig.getPair(), System.currentTimeMillis()));
+		}
+	}
 
 	private void requestPendings() {
 		bus.send(new Balancer.OnRequestNonOrderbookRLOrder(botConfig.getPair()));
@@ -208,8 +219,7 @@ public class Orderbook extends Base {
 		List<RLOrder> res = new ArrayList<>();
 		margin = margin.abs();
 		int levels = margin
-				.divide(direction == Direction.BUY ? botConfig.getBuyOrderQuantity() : botConfig.getSellOrderQuantity(),
-						MathContext.DECIMAL32)
+				.divide(direction == Direction.BUY ? botConfig.getBuyOrderQuantity() : botConfig.getSellOrderQuantity(), MathContext.DECIMAL32)
 				.intValue();
 		if (direction == Direction.SELL) {
 			Collections.reverse(sorteds);
@@ -229,8 +239,7 @@ public class Orderbook extends Base {
 	 * @return negative if orderbook is bigger than config, positive if smaller
 	 */
 	private BigDecimal margin(BigDecimal sum, Direction direction) {
-		BigDecimal configTotalQuantity = direction == Direction.BUY ? botConfig.getTotalBuyQty()
-				: botConfig.getTotalSelQty();
+		BigDecimal configTotalQuantity = direction == Direction.BUY ? botConfig.getTotalBuyQty() : botConfig.getTotalSelQty();
 		return configTotalQuantity.subtract(sum);
 	}
 
