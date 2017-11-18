@@ -1,6 +1,9 @@
 # Java Ripple Market Maker
 
-An automated program to market make on Ripple network.
+An automated program to market make on Ripple network with grid trading strategy. 
+
+Requires [ripple-lib-java](https://github.com/ripple/ripple-lib-java ) to build. 
+
 
 Consists of:
 
@@ -12,9 +15,6 @@ Consists of:
 
 **State**   : keeps track of account sequence number which is used to send orders 
 
-
-For the balancer to work you need to cancel all existing orders prior to running the bot.
-The bot only tracks orders it creates during its lifetime.  
 
 How to use:
 ```
@@ -81,9 +81,15 @@ If false, grid space is absolute rate.
 
 **Version History**
 
-> v.058
+>v.059
+- all trade settings should be customizable in botconfig
+- describe them in README
+
+
+v.058
 - Seed amount should be changed by percentage too
-- log if one side of orderbook is empty
+- log if one side or both sides of orderbook are empty
+- streamed pctseed
 
 v.057
 - fixed percentage mode on counters. 

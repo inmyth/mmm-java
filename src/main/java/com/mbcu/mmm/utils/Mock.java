@@ -39,7 +39,7 @@ public class Mock {
 	public static void main(String[] args) {
 		BigDecimal a = new BigDecimal("0.99");
 		
-	  a = Collections.nCopies(3, a).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();
+	  a = Collections.nCopies(1, a).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();
 	  System.out.println(a);
 		
 		

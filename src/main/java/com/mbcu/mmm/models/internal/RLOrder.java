@@ -336,15 +336,15 @@ public final class RLOrder extends Base {
 	}
 
 	public static List<RLOrder> buildBuysSeedPct(BigDecimal startPrice, int levels, BotConfig bot, Logger log) {				
-		BigDecimal pcHi = BigDecimal.ONE.subtract(bot.getGridSpace().divide(new BigDecimal(100), MathContext.DECIMAL64));
-		BigDecimal pcLo = BigDecimal.ONE.add(bot.getGridSpace().divide(new BigDecimal(100), MathContext.DECIMAL64));
+		BigDecimal pcHi = BigDecimal.ONE.add(bot.getGridSpace(), MathContext.DECIMAL64);
+		BigDecimal pcLo = BigDecimal.ONE.subtract(bot.getGridSpace(), MathContext.DECIMAL64);
 		
 		BigDecimal botQuantity = bot.getBuyOrderQuantity();
 		List<RLOrder> res = IntStream
 				.range(1, levels + 1)
-				.mapToObj(l -> {
-					BigDecimal rateHi = Collections.nCopies(l, pcHi).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();
-					BigDecimal rateLo = Collections.nCopies(l, pcLo).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();		
+				.mapToObj(n -> {
+					BigDecimal rateHi = Collections.nCopies(n, pcHi).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();
+					BigDecimal rateLo = Collections.nCopies(n, pcLo).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();		
 					BigDecimal newPri = startPrice.multiply(rateLo, MathContext.DECIMAL64);
 					BigDecimal newQty = bot.isPctAmount() ? botQuantity.multiply(rateHi, MathContext.DECIMAL64) : botQuantity;
 					if (newPri.compareTo(BigDecimal.ZERO) <= 0) {
@@ -356,8 +356,8 @@ public final class RLOrder extends Base {
 					RLOrder buy = RLOrder.rateUnneeded(Direction.BUY, newAmt, totalPrice);		
 					return buy;
 			})
-	   .filter(o -> o.getQuantity().value().compareTo(BigDecimal.ONE) > 0)
-	   .filter(o -> o.getTotalPrice().value().compareTo(BigDecimal.ONE) > 0)
+	   .filter(o -> o.getQuantity().value().compareTo(BigDecimal.ZERO) > 0)
+	   .filter(o -> o.getTotalPrice().value().compareTo(BigDecimal.ZERO) > 0)
 	   .collect(Collectors.toList());
 		
 //		BigDecimal pct = bot.getGridSpace();
@@ -406,26 +406,26 @@ public final class RLOrder extends Base {
 	}
 
 	public static List<RLOrder> buildSelsSeedPct(BigDecimal startPrice, int levels, BotConfig bot) {		
-		BigDecimal pcHi = BigDecimal.ONE.subtract(bot.getGridSpace().divide(new BigDecimal(100), MathContext.DECIMAL64));
-		BigDecimal pcLo = BigDecimal.ONE.add(bot.getGridSpace().divide(new BigDecimal(100), MathContext.DECIMAL64));
+		BigDecimal pcLo = BigDecimal.ONE.subtract(bot.getGridSpace(), MathContext.DECIMAL64);
+		BigDecimal pcHi = BigDecimal.ONE.add(bot.getGridSpace(), MathContext.DECIMAL64);
 		
 		BigDecimal botQuantity = bot.getSellOrderQuantity();
 		List<RLOrder> res = IntStream
 				.range(1, levels + 1)
-				.mapToObj(l -> {
-					BigDecimal rateHi = Collections.nCopies(l, pcHi).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();
-					BigDecimal rateLo = Collections.nCopies(l, pcLo).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();		
+				.mapToObj(n -> {
+					BigDecimal rateHi = Collections.nCopies(n, pcHi).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();
+					BigDecimal rateLo = Collections.nCopies(n, pcLo).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();		
 					BigDecimal newPri = startPrice.multiply(rateHi, MathContext.DECIMAL64);
 					BigDecimal newQty = bot.isPctAmount() ? botQuantity.multiply(rateLo, MathContext.DECIMAL64) : botQuantity;
-	
+
 					Amount newAmt		  = bot.base.add(newQty);
 					BigDecimal totalPriceValue = newAmt.value().multiply(newPri, MathContext.DECIMAL64);
 					Amount totalPrice = RLOrder.amount(totalPriceValue, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
 					RLOrder buy = RLOrder.rateUnneeded(Direction.SELL, newAmt, totalPrice);		
 					return buy;
 			})
-	   .filter(o -> o.getQuantity().value().compareTo(BigDecimal.ONE) > 0)
-	   .filter(o -> o.getTotalPrice().value().compareTo(BigDecimal.ONE) > 0)
+	   .filter(o -> o.getQuantity().value().compareTo(BigDecimal.ZERO) > 0)
+	   .filter(o -> o.getTotalPrice().value().compareTo(BigDecimal.ZERO) > 0)
 	   .collect(Collectors.toList());
 		
 		

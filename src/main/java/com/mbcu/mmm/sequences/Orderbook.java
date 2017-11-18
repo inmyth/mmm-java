@@ -188,7 +188,7 @@ public class Orderbook extends Base {
 		warning = sortedBuys.isEmpty() && sortedSels.isEmpty() ? "Warning. Orderbook empty : both" : null;
 		if (warning != null){
 			log(warning + botConfig.getPair(), Level.WARNING);
-			bus.send(new Notifier.RequestEmailNotice(warning, botConfig.getPair(), System.currentTimeMillis()));
+//			bus.send(new Notifier.RequestEmailNotice(warning, botConfig.getPair(), System.currentTimeMillis()));
 		}
 	}
 
