@@ -27,22 +27,26 @@ java -jar mmm.jar <path_to_config_file>
 
 `feeXRP` : base fee in XRP (default 0.000012)
 
-`datanet` : DataAPI url. 
+`datanet` : Historical Data API url. 
 
-`emails` : contact emails the bot will send error report to. 
+`emails` : contact emails the bot will send reports to. 
 
 *ATTENTION*
 Emails are sent from AWS SES. To use this feature you need to :
 - Register the emails in SES Sandbox Mode. These emails will be used as both recipient and sender.
-- Set up the SES credentials in your environment. You can put the credentials in ~/.aws/credentials or export them.
+- Set up the SES credentials in your environment. You can put the credentials in ~/.aws/credentials or export them to environment variables.
 
 *Intervals configuration (optional)*
 
 Intervals are the numbers of elapsed ledger validated events which will trigger following actions.
 
-`balancer` : balancer checks our orders and seeds missing orders according to bot configuration (default = 4)
+`balancer` : int
 
-`accountBalance` : checks how much IOU the account has (default = 10)
+Balancer checks our orders and seeds missing orders according to bot configuration (default = 4)
+
+`accountBalance` : int
+
+Checks how much IOU the account has (default = 10)
 
 *Bot configuration*
 

@@ -1,38 +1,47 @@
 package com.mbcu.mmm.models.internal;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import org.parceler.Parcel;
-
 import com.mbcu.mmm.models.Asset;
 import com.mbcu.mmm.models.request.BookOffers;
+import com.mbcu.mmm.utils.MyUtils;
 import com.ripple.core.coretypes.AccountID;
 import com.ripple.core.coretypes.Amount;
 import com.ripple.core.coretypes.Currency;
 
-@Parcel
+
 public class BotConfig {
 
-	String pair;
-	String startMiddlePrice;
-	String gridSpace;
-	int buyGridLevels;
-	int sellGridLevels;
-	String buyOrderQuantity;
-	String sellOrderQuantity;
-	boolean isPartialCounter;
-	boolean isGridSpacePercentage;
-
+	private String pair;
+	private String startMiddlePrice;
+	private String gridSpace;
+	private int buyGridLevels;
+	private int sellGridLevels;
+	private String buyOrderQuantity;
+	private String sellOrderQuantity;
+//	private boolean isPartialCounter;
+//	private boolean isGridSpacePercentage;
+	private String strategy;
+	
 	transient Amount base;
 	transient Amount quote;
 	transient BigDecimal totalBuyQty, totalSelQty;
 	transient List<String> orderbookReqs;
+	
+	
+	public enum Strategy {
+		PARTIAL,	
+		FULLFIXED,	
+		FULLPCTRATE,	
+		FULLPCTALL;	
+	}
 
-	public static HashMap<String, BotConfig> buildMap(Credentials credentials, ArrayList<BotConfig> bots) {
+	public static HashMap<String, BotConfig> buildMap(Credentials credentials, ArrayList<BotConfig> bots) throws IOException {
 		HashMap<String, BotConfig> res = new HashMap<>();
 		for (BotConfig bot : bots) {
 			String[] pair = buildBaseAndQuote(bot.getPair());
@@ -41,16 +50,22 @@ public class BotConfig {
 			bot.orderbookReqs = BookOffers.buildRequest(credentials.address, bot);
 			bot.totalBuyQty = buildTotalQuantity(bot.buyGridLevels, bot.buyOrderQuantity);
 			bot.totalSelQty = buildTotalQuantity(bot.sellGridLevels, bot.sellOrderQuantity);
-			if (bot.isPctGridSpace()) {
+
+			res.put(bot.getPair(), bot);
+			if (!MyUtils.isInEnum(bot.strategy, Strategy.class)){
+				throw new IOException(String.format("Strategy \"%s\" is not recognized", bot.strategy));
+			}
+			
+			if (bot.getStrategy().equals(BotConfig.Strategy.FULLPCTRATE) || bot.getStrategy().equals(BotConfig.Strategy.FULLPCTALL)) {
 				BigDecimal pct = new BigDecimal(bot.gridSpace);
 				pct = pct.divide(new BigDecimal("100"), MathContext.DECIMAL64);
 				bot.gridSpace = pct.toPlainString();
 			}
-			res.put(bot.getPair(), bot);
+			System.out.println(bot.getStrategy());
 		}
 		return res;
 	}
-
+	
 	private static BigDecimal buildTotalQuantity(int gridLevels, String orderQuantity) {
 		BigDecimal a = new BigDecimal(gridLevels);
 		BigDecimal b = new BigDecimal(orderQuantity);
@@ -133,9 +148,9 @@ public class BotConfig {
 		return orderbookReqs;
 	}
 
-	public boolean isPartialCounter() {
-		return isPartialCounter;
-	}
+//	public boolean isPartialCounter() {
+//		return isPartialCounter;
+//	}
 
 	public Amount getBase() {
 		return base;
@@ -153,12 +168,16 @@ public class BotConfig {
 		return totalSelQty;
 	}
 
-	public boolean isPctGridSpace() {
-		return isGridSpacePercentage;
-	}
+//	public boolean isPctGridSpace() {
+//		return isGridSpacePercentage;
+//	}
 
 	public boolean isPctAmount() {
 		return true;
+	}
+	
+	public Strategy getStrategy() {
+		return Strategy.valueOf(strategy.toUpperCase());
 	}
 
 }

@@ -310,7 +310,7 @@ public final class RLOrder extends Base {
 			return buildBuysSeedPct(startRate, levels, bot, log);
 		}
 		ArrayList<RLOrder> res = new ArrayList<>();
-		BigDecimal margin = new BigDecimal(bot.gridSpace);
+		BigDecimal margin = bot.getGridSpace();
 		Queue<Integer> buyLevels = getLevels(levels);
 
 		while (true) {
@@ -384,8 +384,8 @@ public final class RLOrder extends Base {
 		if (bot.isPctGridSpace()) {
 			return buildSelsSeedPct(startRate, levels, bot);
 		}
-		ArrayList<RLOrder> res = new ArrayList<>();
-		BigDecimal margin = new BigDecimal(bot.gridSpace);
+		ArrayList<RLOrder> res 		= new ArrayList<>();
+		BigDecimal margin 				= bot.getGridSpace();
 		Queue<Integer> sellLevels = getLevels(levels);
 
 		while (true) {

@@ -3,6 +3,7 @@ package com.mbcu.mmm.sequences.counters;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -49,12 +50,16 @@ public class Yuki extends Base implements Counter {
 					if (o instanceof Common.OnOfferExecuted) {
 						OnOfferExecuted event = (OnOfferExecuted) o;
 						counterOE(event.oes);
-					} else if (o instanceof Common.OnDifference) {
+					} 
+					else if (o instanceof Common.OnDifference) {
 						Common.OnDifference event = (Common.OnDifference) o;
-						List<BefAf> fullyConsumeds = event.bas.stream().filter(ba -> {
-							return ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0
-									&& ba.after.getTotalPrice().value().compareTo(BigDecimal.ZERO) == 0;
-						}).collect(Collectors.toList());
+						List<BefAf> fullyConsumeds = event
+								.bas.stream()
+								.filter(ba -> {
+									return ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0 && ba.after.getTotalPrice().value().compareTo(BigDecimal.ZERO) == 0;
+								})
+								.collect(Collectors.toList());
+						
 						counterOR(fullyConsumeds);
 					}
 				} catch (Exception e) {
@@ -73,6 +78,11 @@ public class Yuki extends Base implements Counter {
 		});
 
 	}
+	
+	private void matchStrategy(){
+		fsd
+	}
+	
 
 	public static Yuki newInstance(Config config) {
 		Yuki counter = new Yuki(config);
@@ -177,12 +187,19 @@ public class Yuki extends Base implements Counter {
 	}
 
 	public void counterOE(List<RLOrder> oes) {
+		
+		
 		oes.forEach(oe -> {
 			RLOrder counter = buildOECounter(oe);
 			if (counter != null) {
 				onCounterReady(counter);
 			}
 		});
+		
+		oes.stream()
+		.map(this::buildBotDirection)
+		.filter(Optional::isPresent)
+		
 	}
 
 	private static class BotConfigDirection {
@@ -196,6 +213,14 @@ public class Yuki extends Base implements Counter {
 				isDirectionMatch = false;
 			}
 		}
+	}
+	
+	private Optional<BotConfigDirection> buildBotDirection(RLOrder origin){
+		BotConfigDirection res = new BotConfigDirection(config, origin);
+		if (res.botConfig == null) {
+			return Optional.empty();
+		}
+		return Optional.of(res);
 	}
 
 	@Nullable

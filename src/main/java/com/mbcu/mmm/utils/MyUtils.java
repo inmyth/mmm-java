@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -51,4 +52,7 @@ public class MyUtils {
 		return matcher.matches();
 	}
 
+	public static <E extends Enum<E>> boolean isInEnum(String value, Class<E> enumClass) {
+    return Arrays.stream(enumClass.getEnumConstants()).anyMatch(e -> e.name().equalsIgnoreCase(value));
+	}
 }

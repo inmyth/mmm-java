@@ -15,9 +15,9 @@ public class Main {
 
 	private static void start(String[] args) throws IOException, WebSocketException, InterruptedException {
 		Config config = Config.build(args[0]);
-		MyLogger.setup(config);
-		Starter manager = Starter.newInstance(config);
-		manager.start();
+//		MyLogger.setup(config);
+//		Starter manager = Starter.newInstance(config);
+//		manager.start();
 	}
 
 }
