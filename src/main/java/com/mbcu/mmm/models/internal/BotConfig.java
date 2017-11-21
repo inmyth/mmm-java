@@ -37,8 +37,8 @@ public class BotConfig {
 	public enum Strategy {
 		PARTIAL,	
 		FULLFIXED,	
-		FULLPCTRATE,	
-		FULLPCTALL;	
+		FULLRATEPCT,	
+		FULLRATESEEDPCT;	
 	}
 
 	public static HashMap<String, BotConfig> buildMap(Credentials credentials, ArrayList<BotConfig> bots) throws IOException {
@@ -54,14 +54,12 @@ public class BotConfig {
 			res.put(bot.getPair(), bot);
 			if (!MyUtils.isInEnum(bot.strategy, Strategy.class)){
 				throw new IOException(String.format("Strategy \"%s\" is not recognized", bot.strategy));
-			}
-			
-			if (bot.getStrategy().equals(BotConfig.Strategy.FULLPCTRATE) || bot.getStrategy().equals(BotConfig.Strategy.FULLPCTALL)) {
+			}		
+			if (bot.getStrategy().equals(BotConfig.Strategy.FULLRATEPCT) || bot.getStrategy().equals(BotConfig.Strategy.FULLRATESEEDPCT)) {
 				BigDecimal pct = new BigDecimal(bot.gridSpace);
 				pct = pct.divide(new BigDecimal("100"), MathContext.DECIMAL64);
 				bot.gridSpace = pct.toPlainString();
 			}
-			System.out.println(bot.getStrategy());
 		}
 		return res;
 	}

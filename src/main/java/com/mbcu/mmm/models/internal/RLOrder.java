@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import com.mbcu.mmm.models.Base;
+import com.mbcu.mmm.models.internal.BotConfig.Strategy;
 import com.ripple.core.coretypes.AccountID;
 import com.ripple.core.coretypes.Amount;
 import com.ripple.core.coretypes.Currency;
@@ -306,9 +307,6 @@ public final class RLOrder extends Base {
 	}
 
 	public static List<RLOrder> buildBuysSeed(BigDecimal startRate, int levels, BotConfig bot, Logger log) {
-		if (bot.isPctGridSpace()) {
-			return buildBuysSeedPct(startRate, levels, bot, log);
-		}
 		ArrayList<RLOrder> res = new ArrayList<>();
 		BigDecimal margin = bot.getGridSpace();
 		Queue<Integer> buyLevels = getLevels(levels);
@@ -359,31 +357,10 @@ public final class RLOrder extends Base {
 	   .filter(o -> o.getQuantity().value().compareTo(BigDecimal.ZERO) > 0)
 	   .filter(o -> o.getTotalPrice().value().compareTo(BigDecimal.ZERO) > 0)
 	   .collect(Collectors.toList());
-		
-//		BigDecimal pct = bot.getGridSpace();
-//		List<RLOrder> res = new ArrayList<>();
-//		for (int i = 1; i <= levels; i++) {
-//		  
-//			Amount quantity = bot.base.add(bot.getBuyOrderQuantity());
-//			BigDecimal newPrice = startPrice.subtract(pct.multiply(startPrice, MathContext.DECIMAL64));
-//			if (newPrice.compareTo(BigDecimal.ZERO) <= 0) {
-//				log.severe("RLOrder.buildBuySeedPct rate below zero. Check config for the pair " + bot.getPair());
-//				break;
-//			}
-//			BigDecimal totalPriceValue = quantity.value().multiply(newPrice, MathContext.DECIMAL64);
-//			Amount totalPrice = RLOrder.amount(totalPriceValue, Currency.fromString(bot.quote.currencyString()),
-//					AccountID.fromAddress(bot.quote.issuerString()));
-//			RLOrder buy = RLOrder.rateUnneeded(Direction.BUY, quantity, totalPrice);
-//			res.add(buy);
-//			startPrice = newPrice;
-//		}
 		return res;
 	}
 
 	public static List<RLOrder> buildSelsSeed(BigDecimal startRate, int levels, BotConfig bot) {
-		if (bot.isPctGridSpace()) {
-			return buildSelsSeedPct(startRate, levels, bot);
-		}
 		ArrayList<RLOrder> res 		= new ArrayList<>();
 		BigDecimal margin 				= bot.getGridSpace();
 		Queue<Integer> sellLevels = getLevels(levels);
@@ -427,19 +404,6 @@ public final class RLOrder extends Base {
 	   .filter(o -> o.getQuantity().value().compareTo(BigDecimal.ZERO) > 0)
 	   .filter(o -> o.getTotalPrice().value().compareTo(BigDecimal.ZERO) > 0)
 	   .collect(Collectors.toList());
-		
-		
-//		ArrayList<RLOrder> res = new ArrayList<>();
-//		BigDecimal pct = bot.getGridSpace();
-//		for (int i = 1; i <= levels; i++) {
-//			Amount quantity = bot.base.add(bot.getSellOrderQuantity());
-//			BigDecimal newPrice = startPrice.add(pct.multiply(startPrice, MathContext.DECIMAL64));
-//			BigDecimal totalPriceValue = quantity.value().multiply(newPrice, MathContext.DECIMAL64);
-//			Amount totalPrice = RLOrder.amount(totalPriceValue, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
-//			RLOrder sell = RLOrder.rateUnneeded(Direction.SELL, quantity, totalPrice);
-//			res.add(sell);
-//			startPrice = newPrice;
-//		}
 		return res;
 	}
 
@@ -447,7 +411,7 @@ public final class RLOrder extends Base {
 			ConcurrentHashMap<Integer, RLOrder> sels, BigDecimal worstBuy, BigDecimal worstSel, BotConfig botConfig) {
 		BuySellRateTuple res = new BuySellRateTuple();
 		if (buys.isEmpty() && sels.isEmpty()) {
-			if (botConfig.isPctGridSpace()) {
+			if (botConfig.getStrategy() == Strategy.FULLRATEPCT || botConfig.getStrategy() == Strategy.FULLRATESEEDPCT ) {
 				res.setBuyRate(worstBuy.subtract(worstBuy.multiply(botConfig.getGridSpace(), MathContext.DECIMAL64)));			
 				res.setSelRate(worstSel.add(worstSel.multiply(botConfig.getGridSpace(), MathContext.DECIMAL64)));
 			} else {
@@ -459,7 +423,7 @@ public final class RLOrder extends Base {
 		List<Entry<Integer, RLOrder>> sorted = new ArrayList<>();
 		if (buys.isEmpty()) {
 			worstBuy = BigDecimal.ONE.divide(sortSels(sels, true).get(0).getValue().getRate(), MathContext.DECIMAL64);
-			worstBuy = botConfig.isPctGridSpace()
+			worstBuy = botConfig.getStrategy() == Strategy.FULLRATEPCT || botConfig.getStrategy() == Strategy.FULLRATESEEDPCT
 					? worstBuy = worstBuy.subtract(worstBuy.multiply(botConfig.getGridSpace(), MathContext.DECIMAL64))
 					: worstBuy.subtract(botConfig.getGridSpace());
 		} else {
@@ -470,7 +434,7 @@ public final class RLOrder extends Base {
 		sorted.clear();
 		if (sels.isEmpty()) {
 			worstSel = sortBuys(buys, false).get(0).getValue().getRate();
-			worstSel = botConfig.isPctGridSpace()
+			worstSel = botConfig.getStrategy() == Strategy.FULLRATEPCT || botConfig.getStrategy() == Strategy.FULLRATESEEDPCT
 					? worstSel = worstSel.add(worstSel.multiply(botConfig.getGridSpace(), MathContext.DECIMAL64))
 					: worstSel.add(botConfig.getGridSpace());
 		} else {

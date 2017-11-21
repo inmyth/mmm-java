@@ -21,6 +21,30 @@ How to use:
 java -jar mmm.jar <path_to_config_file>
 ```
 
+**Strategies**
+
+In general the principle of grid spacing is simple. Seed orderbook with orders spaced by price ("seed"). If an order is consumed, place a new order with a new rate calculated from the consumed rate ("counter"). Every a few ledgers, the bot will check the orderbook and add missing orders on either side. 
+
+As we want profit, when a buy order is consumed, sell it at higher price, when a sell order is consumed, buy it back at lower price. The IOU to trade, number of orders, grid space, amount, etc are defined in the config. 
+
+
+***Partial*** `partial`
+
+Any order consumed will be immediately countered with new order equals to the amount that consumed it. The new rate is spaced by gridSpace. 
+
+***Full Fixed Rate*** `fullfixed`
+
+The bot will counter only if the order is fully consumed. The new rate is spaced by gridSpace. The counter amount will obey sellOrderQuantity and buyOrderQuantity in config.
+
+***Full Percentage Rate*** `fullratepct`
+
+The same as Full Fixed Rate but any newly seeded order or counter order will space gradually. Any new buy order's price will be the previous (100% - gridSpace/100) and any new sell order's price will be the previous (100% + gridSpace/100). 
+
+***Full Percentage Rate And Seed Amount*** `fullrateseedpct`
+ 
+The same as Full Percentage Rate but during seed period, newly created orders' amount will also be spaces gradually according to gridSpace. Buy order amount will be (100% + gridSpace / 100) of previous order and sell order amount will be (100% - gridSpace / 100) of previous order. 
+
+
 **Config**
 
 *General configuration*
@@ -70,6 +94,10 @@ Number of seed orders for each side.
 
 Amount of seed or counter order.
 
+`strategy` : String
+
+Strategy name to be used. Refer to strategy section for valid names. 
+
 `isPartialCounter` : boolean
 
 If true, the bot will counter any order that fully or partially consumes our order. 
@@ -85,9 +113,11 @@ If false, grid space is absolute rate.
 
 **Version History**
 
->v.059
+v.059
 - all trade settings should be customizable in botconfig
 - describe them in README
+- fixed partial counter
+- change of config
 
 
 v.058

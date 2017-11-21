@@ -18,6 +18,7 @@ import com.mbcu.mmm.models.internal.BotConfig;
 import com.mbcu.mmm.models.internal.BuySellRateTuple;
 import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.models.internal.RLOrder;
+import com.mbcu.mmm.models.internal.BotConfig.Strategy;
 import com.mbcu.mmm.models.internal.RLOrder.Direction;
 import com.mbcu.mmm.rx.BusBase;
 import com.mbcu.mmm.rx.RxBus;
@@ -226,8 +227,14 @@ public class Orderbook extends Base {
 		}
 
 		if (levels > 0) {
-			res.addAll(direction == Direction.BUY ? RLOrder.buildBuysSeed(worstBuy, levels, botConfig, super.LOGGER)
-					: RLOrder.buildSelsSeed(worstSel, levels, botConfig));
+			if (botConfig.getStrategy() == Strategy.FULLRATEPCT || botConfig.getStrategy() == Strategy.FULLRATESEEDPCT ) {
+				res.addAll(direction == Direction.BUY ? RLOrder.buildBuysSeedPct(worstBuy, levels, botConfig, super.LOGGER)
+						: RLOrder.buildSelsSeedPct(worstSel, levels, botConfig));				
+			} 
+			else {
+				res.addAll(direction == Direction.BUY ? RLOrder.buildBuysSeed(worstBuy, levels, botConfig, super.LOGGER)
+						: RLOrder.buildSelsSeed(worstSel, levels, botConfig));
+			}
 		}
 		return res;
 	}

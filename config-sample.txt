@@ -23,8 +23,7 @@
             "sellGridLevels": 2,
             "buyOrderQuantity": 2,
             "sellOrderQuantity": 1,
-            "isPartialCounter" : false,
-			"isGridSpacePercentage" : false          
+            "strategy" : "fullrateseedpct"
         },
         {
             "pair": "XRP/USD.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
@@ -34,8 +33,19 @@
             "sellGridLevels": 2,
             "buyOrderQuantity": 2,
             "sellOrderQuantity": 1,
-            "isPartialCounter" : false,
-			"isGridSpacePercentage" : true          
+            "strategy" : "partial"
+        
+        },
+        {
+            "pair": "USD.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS/JPY.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
+            "startMiddlePrice": 112,
+            "gridSpace": 1,
+            "buyGridLevels": 3,
+            "sellGridLevels": 3,
+            "buyOrderQuantity": 2,
+            "sellOrderQuantity": 1,
+            "strategy" : "fullrateseedpct"
+       
         },
         {
             "pair": "XRP/ETH.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
@@ -45,8 +55,8 @@
             "sellGridLevels": 2,
             "buyOrderQuantity": 2,
             "sellOrderQuantity": 1.5,
-            "isPartialCounter" : false,
-			"isGridSpacePercentage" : true          
+            "strategy" : "fullratepct"
+        
         },
     	{
             "pair": "XRP/ETC.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
@@ -56,8 +66,7 @@
             "sellGridLevels": 2,
             "buyOrderQuantity": 2,
             "sellOrderQuantity": 1,
-            "isPartialCounter" : false,
-			"isGridSpacePercentage" : true          
+            "strategy" : "fullrateseedpct"      
         },
         {
             "pair": "XRP/BTC.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
@@ -67,8 +76,8 @@
             "sellGridLevels": 2,
             "buyOrderQuantity": 2,
             "sellOrderQuantity": 1,
-            "isPartialCounter" : false,
-			"isGridSpacePercentage" : true          
+            "strategy" : "fullrateseedpct"
+       
         }       
 	]
 }

@@ -5,10 +5,10 @@ import java.math.MathContext;
 import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 import com.mbcu.mmm.models.internal.BefAf;
 import com.mbcu.mmm.models.internal.BotConfig;
+import com.mbcu.mmm.models.internal.BotConfig.Strategy;
 import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.models.internal.RLOrder;
 import com.mbcu.mmm.models.internal.RLOrder.Direction;
@@ -24,7 +24,6 @@ import com.mbcu.mmm.utils.MyLogger;
 import com.ripple.core.coretypes.Amount;
 
 import io.reactivex.Observer;
-import io.reactivex.annotations.Nullable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
@@ -49,18 +48,11 @@ public class Yuki extends Base implements Counter {
 				try {
 					if (o instanceof Common.OnOfferExecuted) {
 						OnOfferExecuted event = (OnOfferExecuted) o;
-						counterOE(event.oes);
+						counterPartial(event.oes);
 					} 
 					else if (o instanceof Common.OnDifference) {
-						Common.OnDifference event = (Common.OnDifference) o;
-						List<BefAf> fullyConsumeds = event
-								.bas.stream()
-								.filter(ba -> {
-									return ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0 && ba.after.getTotalPrice().value().compareTo(BigDecimal.ZERO) == 0;
-								})
-								.collect(Collectors.toList());
-						
-						counterOR(fullyConsumeds);
+						Common.OnDifference event = (Common.OnDifference) o;		
+						counterFull(event.bas);
 					}
 				} catch (Exception e) {
 					MyLogger.exception(LOGGER, base.toString(), e);
@@ -79,39 +71,33 @@ public class Yuki extends Base implements Counter {
 
 	}
 	
-	private void matchStrategy(){
-		fsd
-	}
-	
-
 	public static Yuki newInstance(Config config) {
 		Yuki counter = new Yuki(config);
 		return counter;
 	}
 
-	public void counterOR(List<BefAf> bas) {
-		bas.forEach(ba -> {
-			log("Full Counter");
-			RLOrder counter = buildWholeCounter(ba);
-			if (counter != null) {
-				onCounterReady(counter);
-			}
-		});
+	public void counterFull(List<BefAf> bas) {
+		bas.stream()
+		.filter(ba -> ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0)
+		.filter(ba -> ba.after.getTotalPrice().value().compareTo(BigDecimal.ZERO) == 0)
+		.map(this::buildFullCounter)
+		.filter(Optional::isPresent)
+		.map(Optional::get)
+		.forEach(this::onCounterReady);
 	}
 
 	/*
 	 * This part can be configured so instead of countering, the bot will replace
 	 * taken order.
 	 */
-	@Nullable
-	public RLOrder buildWholeCounter(BefAf ba) {
+	public Optional<RLOrder> buildFullCounter(BefAf ba) {
 		RLOrder res = null;
 		BotConfigDirection bcd = new BotConfigDirection(config, ba.before);
-		if (bcd.botConfig == null || bcd.botConfig.isPartialCounter()) {
-			return null;
+		if (bcd.botConfig == null || !bcd.botConfig.getStrategy().name().contains("FULL")) {
+			return Optional.empty();
 		}
 
-		if (bcd.botConfig.isPctGridSpace()) {
+		if (bcd.botConfig.getStrategy() == Strategy.FULLRATEPCT) {
 			BigDecimal rate = ba.before.getRate();
 			RLOrder origin;
 			if (bcd.isDirectionMatch) {
@@ -119,32 +105,36 @@ public class Yuki extends Base implements Counter {
 				// subtract is used to conveniently preserve Amount issuer and currency
 				Amount quantity = ba.after.getQuantity().subtract(botQuantity);
 				origin = RLOrder.fromWholeConsumed(Direction.BUY, quantity, ba.after.getTotalPrice(), rate);
-			} else {
+			} 
+			else {
 				BigDecimal botQuantity = bcd.botConfig.getBuyOrderQuantity();
 				Amount totalPrice = ba.after.getTotalPrice().subtract(botQuantity);
 				origin = RLOrder.fromWholeConsumed(Direction.BUY, ba.before.getQuantity().multiply(new BigDecimal("-1")),
 						totalPrice, rate);
 			}
 			res = yukiPct(origin, bcd.botConfig, bcd.isDirectionMatch);
-		} else {
+		} 
+		else {
 			BigDecimal rate = ba.before.getRate();
 			RLOrder origin;
 			if (bcd.isDirectionMatch) {
 				BigDecimal botQuantity = bcd.botConfig.getSellOrderQuantity();
 				Amount quantity = ba.after.getQuantity().subtract(botQuantity);
 				origin = RLOrder.fromWholeConsumed(Direction.BUY, quantity, ba.after.getTotalPrice(), rate);
-			} else {
+			} 
+			else {
 				BigDecimal botQuantity = bcd.botConfig.getBuyOrderQuantity();
 				Amount totalPrice = ba.after.getTotalPrice().subtract(botQuantity);
 				origin = RLOrder.fromWholeConsumed(Direction.BUY, ba.after.getQuantity(), totalPrice, rate);
 			}
-			res = yuki(origin, bcd.botConfig, bcd.isDirectionMatch);
+			bcd.rlOrder = origin;
+			res = yuki(bcd);
 		}
-		if (res.getQuantity().value().compareTo(BigDecimal.ZERO) <= 0
-				|| res.getTotalPrice().value().compareTo(BigDecimal.ZERO) <= 0) {
+		if (res.getQuantity().value().compareTo(BigDecimal.ZERO) <= 0 || res.getTotalPrice().value().compareTo(BigDecimal.ZERO) <= 0) {
 			log("Counter anomaly\n" + res.stringify());
 		}
-		return res;
+		log("Full Counter");
+		return Optional.of(res);
 	}
 
 	/**
@@ -186,32 +176,27 @@ public class Yuki extends Base implements Counter {
 		return res;
 	}
 
-	public void counterOE(List<RLOrder> oes) {
-		
-		
-		oes.forEach(oe -> {
-			RLOrder counter = buildOECounter(oe);
-			if (counter != null) {
-				onCounterReady(counter);
-			}
-		});
-		
+	public void counterPartial(List<RLOrder> oes) {
 		oes.stream()
 		.map(this::buildBotDirection)
 		.filter(Optional::isPresent)
-		
+		.filter(optBcd  -> optBcd.get().botConfig.getStrategy() == Strategy.PARTIAL)
+		.map(optBcd -> yuki(optBcd.get()))
+		.forEach(this::onCounterReady);
 	}
 
 	private static class BotConfigDirection {
 		boolean isDirectionMatch = true;
 		BotConfig botConfig;
+		RLOrder rlOrder;
 
 		BotConfigDirection(Config config, RLOrder offer) {
+			this.rlOrder = offer;
 			botConfig = config.getBotConfigMap().get(offer.getCpair().getFw());
 			if (botConfig == null) {
 				botConfig = config.getBotConfigMap().get(offer.getCpair().getRv());
 				isDirectionMatch = false;
-			}
+			}		
 		}
 	}
 	
@@ -223,40 +208,25 @@ public class Yuki extends Base implements Counter {
 		return Optional.of(res);
 	}
 
-	@Nullable
-	public RLOrder buildOECounter(RLOrder origin) {
-
-		BotConfigDirection bcd = new BotConfigDirection(config, origin);
-		if (bcd.botConfig == null || !bcd.botConfig.isPartialCounter()) {
-			return null;
-		}
-		boolean isDirectionMatch = bcd.isDirectionMatch;
-		BotConfig botConfig = bcd.botConfig;
-
-		return yuki(origin, botConfig, isDirectionMatch);
-	}
-
-	private RLOrder yuki(RLOrder origin, BotConfig botConfig, boolean isDirectionMatch) {
-		Amount oldQuantity = origin.getQuantity();
-		Amount oldTotalPrice = origin.getTotalPrice();
-		Amount newQuantity = origin.getTotalPrice().multiply(new BigDecimal("-1"));
+	private RLOrder yuki(BotConfigDirection bcd) {
+		RLOrder origin 	 	 		= bcd.rlOrder;
+		BotConfig botConfig 	= bcd.botConfig;
+		Amount oldQuantity 		= origin.getQuantity().multiply(new BigDecimal("-1"));
+		Amount oldTotalPrice 	= origin.getTotalPrice().multiply(new BigDecimal("-1"));
 
 		RLOrder res = null;
-		if (isDirectionMatch) {
+		if (bcd.isDirectionMatch) {
 			BigDecimal newRate = origin.getRate().add(botConfig.getGridSpace());
-			Amount newTotalPrice = RLOrder.amount(newQuantity.value().multiply(newRate), oldTotalPrice.currency(),
-					oldTotalPrice.issuer());
-			res = RLOrder.rateUnneeded(Direction.SELL, newQuantity, newTotalPrice);
+			Amount newTotalPrice = RLOrder.amount(oldQuantity.value().multiply(newRate), oldTotalPrice.currency(), oldTotalPrice.issuer());
+			res = RLOrder.rateUnneeded(Direction.SELL, oldQuantity, newTotalPrice);
 		} else {
-			BigDecimal newRate = BigDecimal.ONE.divide(origin.getRate(), MathContext.DECIMAL128)
-					.subtract(botConfig.getGridSpace());
+			BigDecimal newRate = BigDecimal.ONE.divide(origin.getRate(), MathContext.DECIMAL32).subtract(botConfig.getGridSpace());
 			if (newRate.compareTo(BigDecimal.ZERO) <= 0) {
 				log("counter rate below zero " + newRate + " " + origin.getCpair(), Level.SEVERE);
 				return null;
 			}
-			Amount newTotalPrice = RLOrder.amount(newQuantity.value().multiply(newRate), oldQuantity.currency(),
-					oldQuantity.issuer());
-			res = RLOrder.rateUnneeded(Direction.BUY, newQuantity, newTotalPrice);
+			Amount newTotalPrice = RLOrder.amount(oldTotalPrice.value().multiply(newRate), oldQuantity.currency(), oldQuantity.issuer());
+			res = RLOrder.rateUnneeded(Direction.BUY, oldTotalPrice, newTotalPrice);
 		}
 		return res;
 	}
