@@ -99,19 +99,6 @@ Amount of seed or counter order.
 
 Strategy name to be used. Refer to strategy section for valid names. 
 
-`isPartialCounter` : boolean
-
-If true, the bot will counter any order that fully or partially consumes our order. 
-
-If false, the bot will only counter any order that fully consumes our order. 
-
-`isGridSpacePercentage` : boolean
-
-If true, grid space of seed is percentage of rate. The next order on the ladder will be the previous order's rate (added or subtracted depending on direction) gridSpace / 100 * previous order's rate.  
-
-If false, grid space is absolute rate. 
-
-
 **Version History**
 
 v.059

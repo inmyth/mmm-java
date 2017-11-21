@@ -24,8 +24,6 @@ public class BotConfig {
 	private int sellGridLevels;
 	private String buyOrderQuantity;
 	private String sellOrderQuantity;
-//	private boolean isPartialCounter;
-//	private boolean isGridSpacePercentage;
 	private String strategy;
 	
 	transient Amount base;
@@ -146,10 +144,6 @@ public class BotConfig {
 		return orderbookReqs;
 	}
 
-//	public boolean isPartialCounter() {
-//		return isPartialCounter;
-//	}
-
 	public Amount getBase() {
 		return base;
 	}
@@ -166,13 +160,6 @@ public class BotConfig {
 		return totalSelQty;
 	}
 
-//	public boolean isPctGridSpace() {
-//		return isGridSpacePercentage;
-//	}
-
-	public boolean isPctAmount() {
-		return true;
-	}
 	
 	public Strategy getStrategy() {
 		return Strategy.valueOf(strategy.toUpperCase());

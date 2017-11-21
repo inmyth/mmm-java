@@ -344,7 +344,7 @@ public final class RLOrder extends Base {
 					BigDecimal rateHi = Collections.nCopies(n, pcHi).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();
 					BigDecimal rateLo = Collections.nCopies(n, pcLo).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();		
 					BigDecimal newPri = startPrice.multiply(rateLo, MathContext.DECIMAL64);
-					BigDecimal newQty = bot.isPctAmount() ? botQuantity.multiply(rateHi, MathContext.DECIMAL64) : botQuantity;
+					BigDecimal newQty = bot.getStrategy() == Strategy.FULLRATESEEDPCT ? botQuantity.multiply(rateHi, MathContext.DECIMAL64) : botQuantity;
 					if (newPri.compareTo(BigDecimal.ZERO) <= 0) {
 						log.severe("RLOrder.buildBuySeedPct rate below zero. Check config for the pair " + bot.getPair());
 					}			
@@ -393,7 +393,7 @@ public final class RLOrder extends Base {
 					BigDecimal rateHi = Collections.nCopies(n, pcHi).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();
 					BigDecimal rateLo = Collections.nCopies(n, pcLo).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();		
 					BigDecimal newPri = startPrice.multiply(rateHi, MathContext.DECIMAL64);
-					BigDecimal newQty = bot.isPctAmount() ? botQuantity.multiply(rateLo, MathContext.DECIMAL64) : botQuantity;
+					BigDecimal newQty = bot.getStrategy() == Strategy.FULLRATESEEDPCT ? botQuantity.multiply(rateLo, MathContext.DECIMAL64) : botQuantity;
 
 					Amount newAmt		  = bot.base.add(newQty);
 					BigDecimal totalPriceValue = newAmt.value().multiply(newPri, MathContext.DECIMAL64);
