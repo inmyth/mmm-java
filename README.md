@@ -56,6 +56,7 @@ The same as Full Percentage Rate but during seed period, newly created orders' a
 `emails` : contact emails the bot will send reports to. 
 
 *ATTENTION*
+
 Emails are sent from AWS SES. To use this feature you need to :
 - Register the emails in SES Sandbox Mode. These emails will be used as both recipient and sender.
 - Set up the SES credentials in your environment. You can put the credentials in ~/.aws/credentials or export them to environment variables.
