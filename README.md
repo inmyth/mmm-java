@@ -101,6 +101,9 @@ Strategy name to be used. Refer to strategy section for valid names.
 
 **Version History**
 
+v.060
+- XRP/ETC tracking direction wrong
+
 v.059
 - all trade settings should be customizable in botconfig
 - describe them in README
@@ -500,5 +503,15 @@ java.lang.NumberFormatException: For input string: "419709,419711"
 	at com.mbcu.mmm.sequences.Common.reroute(Common.java:90)
 	at com.mbcu.mmm.sequences.Common.access$0(Common.java:82)
 	at com.mbcu.mmm.sequences.Common$1.onNext(Common.java:59)
-
-
+06001
+Problem with XRP/ETC.MRR: too many orders
+    	{
+            "pair": "XRP/ETC.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
+            "startMiddlePrice": 0.0127,
+            "gridSpace": 1,
+            "buyGridLevels": 2,
+            "sellGridLevels": 2,
+            "buyOrderQuantity": 2,
+            "sellOrderQuantity": 1,
+            "strategy" : "fullrateseedpct"      
+        }
