@@ -59,7 +59,7 @@ where previous order is a order generated closer to *startMiddlePrice* during se
 
 `feeXRP` : *String*
 
-Base fee in XRP (default 0.000012)
+Base fee in XRP (default "0.000012")
 
 `datanet` : *String*
 
