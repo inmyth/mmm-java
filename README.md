@@ -21,88 +21,93 @@ How to use:
 java -jar mmm.jar <path_to_config_file>
 ```
 
-**Strategies**
+##Strategies##
 
 In general the principle of grid spacing is simple. Seed orderbook with orders spaced by price ("seed"). If an order is consumed, place a new order with a new rate calculated from the consumed rate ("counter"). Every a few ledgers, the bot will check the orderbook and add missing orders on either side. 
 
 As we want profit, when a buy order is consumed, sell it at higher price, when a sell order is consumed, buy it back at lower price. The IOU to trade, number of orders, grid space, amount, etc are defined in the config. 
 
 
-***Partial*** `partial`
+###Partial### `partial`
 
 Any order consumed will be immediately countered with new order equals to the amount that consumed it. The new rate is spaced by gridSpace. 
 
-***Full Fixed Rate*** `fullfixed`
+###Full Fixed Rate### `fullfixed`
 
 The bot will counter only if the order is fully consumed. The new rate is spaced by gridSpace. The counter amount will obey sellOrderQuantity and buyOrderQuantity in config.
 
-***Full Percentage Rate*** `fullratepct`
+###Full Percentage Rate### `fullratepct`
 
 The same as Full Fixed Rate but any newly seeded order or counter order will space gradually. Any new buy order's price will be the previous (100% - gridSpace/100) and any new sell order's price will be the previous (100% + gridSpace/100). 
 
-***Full Percentage Rate And Seed Amount*** `fullrateseedpct`
+###Full Percentage Rate And Seed Amount### `fullrateseedpct`
  
 The same as Full Percentage Rate but during seed period, newly created orders' amount will also be spaces gradually according to gridSpace. Buy order amount will be (100% + gridSpace / 100) of previous order and sell order amount will be (100% - gridSpace / 100) of previous order. 
 
 
-**Config**
+##Config##
 
-*General configuration*
+###General configuration###
 
-`feeXRP` : base fee in XRP (default 0.000012)
+`feeXRP` : *String*
 
-`datanet` : Historical Data API url. 
+Base fee in XRP (default 0.000012)
 
-`emails` : contact emails the bot will send reports to. 
+`datanet` : *String*
 
-*ATTENTION*
+Historical Data API url. 
+
+`emails` : *String*
+
+Contact emails the bot will send reports to. 
 
 Emails are sent from AWS SES. To use this feature you need to :
 - Register the emails in SES Sandbox Mode. These emails will be used as both recipient and sender.
 - Set up the SES credentials in your environment. You can put the credentials in ~/.aws/credentials or export them to environment variables.
 
-*Intervals configuration (optional)*
+###Intervals configuration (optional)###
 
 Intervals are the numbers of elapsed ledger validated events which will trigger following actions.
 
-`balancer` : int
+`balancer` : *int*
 
 Balancer checks our orders and seeds missing orders according to bot configuration (default = 4)
 
-`accountBalance` : int
+`accountBalance` : *int*
 
 Checks how much IOU the account has (default = 10)
 
-*Bot configuration*
+###Bot configuration###
 
-`pair` : String 
+`pair` : *String* 
 
 Currency or IOU with base.baseIssuer/quote.quoteIssuer format.
 
-`startMiddlePrice` : float
+`startMiddlePrice` : *float*
 
 Starting rate for seeder.
 
-`gridSpace` : float
+`gridSpace` : *float*
 
 Margin between seed and counter orders. 
 
-`buyGridLevels` and `sellGridLevels` : int
+`buyGridLevels` and `sellGridLevels` : *int*
 
 Number of seed orders for each side. 
 
-`buyOrderQuantity` and `sellOrderQuantity` : float
+`buyOrderQuantity` and `sellOrderQuantity` : *float*
 
 Amount of seed or counter order.
 
-`strategy` : String
+`strategy` : *String*
 
 Strategy name to be used. Refer to strategy section for valid names. 
 
-**Version History**
+####Version History####
 
 v.060
-- XRP/ETC tracking direction wrong
+- (06001) fixed fullrateseedpct counter
+- streamed counter
 
 v.059
 - all trade settings should be customizable in botconfig
@@ -340,7 +345,7 @@ TODOS
 - [x] partial remainder counter is not logical. If the partial amount is countered with the same rate then the previous order will be canceled. 
 - (canceled) continue Txc so it disposes old disposable and turn it into orderbook item
 - [x] get Amount from account_offers result
-- [] bus for account_offers should also have currency pair
+- [x] bus for account_offers should also have currency pair
 - [x] intercept pairs on orderbook or balancer level
 - [x] sort RLOrder by rate
 - [x] write orderbook to files
@@ -367,7 +372,7 @@ TODOS
 - [x] turn off seed on balancer
 - [x] save worst rates for every orderbook
 - [x] any reseed should start from these prices
-- [] (bug) some canceled txs are resubmitted in infinity.
+- [x] (bug) some canceled txs are resubmitted in infinity.
 - [x] (bug) worst rate calculation must be done separately for buys and sells otherwise the rate will clock up when one of them is empty.
 - [x] (bug) see 03701 sequence wasn't set in Common@271
 - [x] find a way to unwrap exception
@@ -384,19 +389,19 @@ TODOS
 - [x] log files should be named per start ts
 - [x] 05001 ledger number contains holes
 - [x] need to know if offerCreate comes from seed or counter
-- [] get reference market price 
+- ~~[] get reference market price~~ 
 - [x] balancer seeder skips a rate if all order consumed. If the gap = 2*levels then it's correct. 
 - [x] double orders on same price. when restarted, orders will start from startMiddle when empty. This will cause double orders on the other side
-- [] need maxFee.
+- ~~[] need maxFee.~~
 - [x] move fee to config
 - [x] test email sender with credentials in env. 
-- [] fix division by zero
-- [] capture txnId for BefAf
+- [x] fix division by zero
+- [x] capture txnId for BefAf
 - [x] fix XRP too small
 - [x] fix account_offers for more than 200 orders
-- [] add percentage counter 
+- [x] add percentage counter 
  
-## NOTES
+### NOTES
 RESPONSE
 - (FALSE !) websocket offers high abstraction. tx sent is guaranteed to be tesSUCCESS and validated=true. This is because I set the fees at 12 XRP not 12 drops !!!
 - response contains hash so it can be used as key. This hash should be stored in "deleted" node. 
