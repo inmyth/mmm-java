@@ -16,9 +16,9 @@ Consists of:
 **State**   : keeps track of account sequence number which is used to send orders 
 
 
-How to use:
+To use:
 ```
-java -jar mmm.jar <path_to_config_file>
+java -jar <the_build>.jar <path_to_config_file>
 ```
 
 ### Strategies
