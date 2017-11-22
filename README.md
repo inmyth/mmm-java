@@ -21,33 +21,33 @@ How to use:
 java -jar mmm.jar <path_to_config_file>
 ```
 
-##Strategies##
+## Strategies
 
 In general the principle of grid spacing is simple. Seed orderbook with orders spaced by price ("seed"). If an order is consumed, place a new order with a new rate calculated from the consumed rate ("counter"). Every a few ledgers, the bot will check the orderbook and add missing orders on either side. 
 
 As we want profit, when a buy order is consumed, sell it at higher price, when a sell order is consumed, buy it back at lower price. The IOU to trade, number of orders, grid space, amount, etc are defined in the config. 
 
 
-###Partial### `partial`
+### Partial `partial`
 
 Any order consumed will be immediately countered with new order equals to the amount that consumed it. The new rate is spaced by gridSpace. 
 
-###Full Fixed Rate### `fullfixed`
+### Full Fixed Rate `fullfixed`
 
 The bot will counter only if the order is fully consumed. The new rate is spaced by gridSpace. The counter amount will obey sellOrderQuantity and buyOrderQuantity in config.
 
-###Full Percentage Rate### `fullratepct`
+### Full Percentage Rate `fullratepct`
 
 The same as Full Fixed Rate but any newly seeded order or counter order will space gradually. Any new buy order's price will be the previous (100% - gridSpace/100) and any new sell order's price will be the previous (100% + gridSpace/100). 
 
-###Full Percentage Rate And Seed Amount### `fullrateseedpct`
+### Full Percentage Rate And Seed Amount `fullrateseedpct`
  
 The same as Full Percentage Rate but during seed period, newly created orders' amount will also be spaces gradually according to gridSpace. Buy order amount will be (100% + gridSpace / 100) of previous order and sell order amount will be (100% - gridSpace / 100) of previous order. 
 
 
-##Config##
+## Config
 
-###General configuration###
+### General configuration
 
 `feeXRP` : *String*
 
@@ -65,7 +65,7 @@ Emails are sent from AWS SES. To use this feature you need to :
 - Register the emails in SES Sandbox Mode. These emails will be used as both recipient and sender.
 - Set up the SES credentials in your environment. You can put the credentials in ~/.aws/credentials or export them to environment variables.
 
-###Intervals configuration (optional)###
+### Intervals configuration (optional)
 
 Intervals are the numbers of elapsed ledger validated events which will trigger following actions.
 
@@ -77,7 +77,7 @@ Balancer checks our orders and seeds missing orders according to bot configurati
 
 Checks how much IOU the account has (default = 10)
 
-###Bot configuration###
+### Bot configuration
 
 `pair` : *String* 
 
@@ -103,7 +103,7 @@ Amount of seed or counter order.
 
 Strategy name to be used. Refer to strategy section for valid names. 
 
-####Version History####
+#### Version History
 
 v.060
 - (06001) fixed fullrateseedpct counter
@@ -319,7 +319,7 @@ v.001
 
 
 
-TODOS
+### TODOS
 - [x]  (done cancel-order.txt) see delete offer response 
 - (offer-executed-bridged.txt) see executed offer response
 - [x] get response for autobridge
