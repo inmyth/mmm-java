@@ -39,14 +39,16 @@ The bot will counter only if the order is fully consumed. The new rate is spaced
 #### Full Percentage Rate `fullratepct`
 
 The same as Full Fixed Rate but any newly seeded order or counter order will have the price expand or shrink gradually. 
--New buy order's price will be (100% - gridSpace / 100%) of previous order's price. 
--New sell order's price will be (100% + gridSpace / 100%) of previous order's price. 
+- New buy order's price will be (100% - gridSpace / 100%) of previous order's price. 
+- New sell order's price will be (100% + gridSpace / 100%) of previous order's price. 
 where previous order can be a consumed order or order generated closer to *startMiddlePrice* during seeding. 
+
 
 #### Full Percentage Rate And Seed Amount `fullrateseedpct`
 The same as Full Percentage Rate but during seed period, newly created orders' amount will also be spaces gradually according to gridSpace. 
 - New buy order's amount will be (100% + gridSpace / 100) of previous order's amount
 - New sell order's amount will be (100% - gridSpace / 100) of previous order's amount
+
 where previous order is a order generated closer to *startMiddlePrice* during seeding. 
 
 
