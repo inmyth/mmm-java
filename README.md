@@ -400,7 +400,7 @@ v.001
 - ~~[] get reference market price~~ 
 - [x] balancer seeder skips a rate if all order consumed. If the gap = 2*levels then it's correct. 
 - [x] double orders on same price. when restarted, orders will start from startMiddle when empty. This will cause double orders on the other side
-- [] ~~need maxFee.~~
+- ~~[] need maxFee.~~
 - [x] move fee to config
 - [x] test email sender with credentials in env. 
 - [x] fix division by zero
