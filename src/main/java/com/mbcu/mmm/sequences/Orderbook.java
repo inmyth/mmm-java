@@ -17,9 +17,11 @@ import com.mbcu.mmm.models.internal.BefAf;
 import com.mbcu.mmm.models.internal.BotConfig;
 import com.mbcu.mmm.models.internal.BuySellRateTuple;
 import com.mbcu.mmm.models.internal.Config;
+import com.mbcu.mmm.models.internal.PartialOrder;
 import com.mbcu.mmm.models.internal.RLOrder;
 import com.mbcu.mmm.models.internal.BotConfig.Strategy;
 import com.mbcu.mmm.models.internal.RLOrder.Direction;
+import com.mbcu.mmm.models.internal.TRLOrder;
 import com.mbcu.mmm.rx.BusBase;
 import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
@@ -37,8 +39,9 @@ public class Orderbook extends Base {
 	// private final int seedMidThreshold = 8;
 
 	private final BotConfig botConfig;
-	private final ConcurrentHashMap<Integer, RLOrder> buys = new ConcurrentHashMap<>();
-	private final ConcurrentHashMap<Integer, RLOrder> sels = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<Integer, TRLOrder> buys = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<Integer, TRLOrder> sels = new ConcurrentHashMap<>();
+
 	private final RxBus bus = RxBusProvider.getInstance();
 	private final CompositeDisposable disposables = new CompositeDisposable();
 	private final CompositeDisposable accountOffersDispo = new CompositeDisposable();
@@ -76,7 +79,7 @@ public class Orderbook extends Base {
 								}
 							}
 							if (buyMatched || selMatched) {
-								BuySellRateTuple worstBuySel = RLOrder.worstRates(buys, sels, worstBuy, worstSel, botConfig);
+								BuySellRateTuple worstBuySel = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
 								worstBuy = worstBuySel.getBuyRate();
 								worstSel = worstBuySel.getSelRate();
 							}
@@ -122,7 +125,7 @@ public class Orderbook extends Base {
 									}
 								}
 								if (buyMatched || selMatched) {
-									BuySellRateTuple worstBuySel = RLOrder.worstRates(buys, sels, worstBuy, worstSel, botConfig);
+									BuySellRateTuple worstBuySel = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
 									worstBuy = worstBuySel.getBuyRate();
 									worstSel = worstBuySel.getSelRate();
 								}
@@ -131,7 +134,7 @@ public class Orderbook extends Base {
 								Boolean pairMatched = pairMatched(event.ba.after);
 								if (pairMatched != null) {
 									edit(event.ba, event.newSeq, pairMatched);
-									BuySellRateTuple worstBuySel = RLOrder.worstRates(buys, sels, worstBuy, worstSel, botConfig);
+									BuySellRateTuple worstBuySel = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
 									worstBuy = worstBuySel.getBuyRate();
 									worstSel = worstBuySel.getSelRate();
 								}
@@ -139,7 +142,7 @@ public class Orderbook extends Base {
 								Common.OnOfferCanceled event = (Common.OnOfferCanceled) o;
 								Boolean pairMatched = remove(event.prevSeq.intValue());
 								if (pairMatched != null) {
-									BuySellRateTuple worstBuySel = RLOrder.worstRates(buys, sels, worstBuy, worstSel, botConfig);
+									BuySellRateTuple worstBuySel = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
 									worstBuy = worstBuySel.getBuyRate();
 									worstSel = worstBuySel.getSelRate();
 								}
@@ -150,8 +153,8 @@ public class Orderbook extends Base {
 											&& lastBalanced.get() >= config.getIntervals().getBalancer()) {
 										lastBalanced.set(0);
 										List<Entry<Integer, RLOrder>> sortedSels, sortedBuys;
-										sortedSels = RLOrder.sortSels(sels, false);
-										sortedBuys = RLOrder.sortBuys(buys, false);
+										sortedSels = RLOrder.sortTSels(sels, false);
+										sortedBuys = RLOrder.sortTBuys(buys, false);
 										warnEmptyOrderbook(sortedSels, sortedBuys);
 										printOrderbook(sortedSels, sortedBuys);
 										balancer(sortedSels, sortedBuys);
@@ -293,14 +296,14 @@ public class Orderbook extends Base {
 	}
 
 	private BigDecimal sum(Direction direction) {
-		Stream<RLOrder> orderbook;
-		Function<RLOrder, BigDecimal> fun;
+		Stream<TRLOrder> orderbook;
+		Function<TRLOrder, BigDecimal> fun;
 		if (direction == Direction.BUY) {
 			orderbook = buys.values().stream();
-			fun = rlOrder -> rlOrder.getQuantity().value();
+			fun = tRlOrder -> tRlOrder.getNow().getQuantity().value();
 		} else {
 			orderbook = sels.values().stream();
-			fun = rlOrder -> rlOrder.getTotalPrice().value();
+			fun = rlOrder -> rlOrder.getNow().getTotalPrice().value();
 		}
 		return orderbook.map(fun).reduce(BigDecimal.ZERO, BigDecimal::add);
 	}

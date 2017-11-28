@@ -13,6 +13,7 @@ import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -407,8 +408,11 @@ public final class RLOrder extends Base {
 		return res;
 	}
 
-	public static BuySellRateTuple worstRates(ConcurrentHashMap<Integer, RLOrder> buys,
-			ConcurrentHashMap<Integer, RLOrder> sels, BigDecimal worstBuy, BigDecimal worstSel, BotConfig botConfig) {
+	public static BuySellRateTuple worstTRates(ConcurrentMap<Integer, TRLOrder> buys, ConcurrentMap<Integer, TRLOrder> sels, BigDecimal worstBuy, BigDecimal worstSel, BotConfig botConfig) {
+		return worstRates(TRLOrder.origins(buys), TRLOrder.origins(sels), worstBuy, worstSel, botConfig);
+	}
+	
+	public static BuySellRateTuple worstRates(ConcurrentMap<Integer, RLOrder> buys, ConcurrentMap<Integer, RLOrder> sels, BigDecimal worstBuy, BigDecimal worstSel, BotConfig botConfig) {
 		BuySellRateTuple res = new BuySellRateTuple();
 		if (buys.isEmpty() && sels.isEmpty()) {
 			if (botConfig.getStrategy() == Strategy.FULLRATEPCT || botConfig.getStrategy() == Strategy.FULLRATESEEDPCT ) {
@@ -447,14 +451,22 @@ public final class RLOrder extends Base {
 		return res;
 	}
 
-	public static List<Entry<Integer, RLOrder>> sortBuys(ConcurrentHashMap<Integer, RLOrder> buys, boolean isReversed) {
+	public static List<Entry<Integer, RLOrder>> sortTBuys(ConcurrentMap<Integer, TRLOrder> buys, boolean isReversed) {
+		return sortBuys(TRLOrder.origins(buys), isReversed);
+	}
+	
+	private static List<Entry<Integer, RLOrder>> sortBuys(ConcurrentMap<Integer, RLOrder> buys, boolean isReversed) {
 		Set<Entry<Integer, RLOrder>> entries = buys.entrySet();
 		List<Entry<Integer, RLOrder>> res = new ArrayList<Entry<Integer, RLOrder>>(entries);
 		Collections.sort(res, !isReversed ? Collections.reverseOrder(obMapComparator) : obMapComparator);
 		return res;
 	}
-
-	public static List<Entry<Integer, RLOrder>> sortSels(ConcurrentHashMap<Integer, RLOrder> sels, boolean isReversed) {
+	
+	public static List<Entry<Integer, RLOrder>> sortTSels(ConcurrentMap<Integer, TRLOrder> sels, boolean isReversed) {
+		return sortSels(TRLOrder.origins(sels), isReversed);
+	}
+	
+	private static List<Entry<Integer, RLOrder>> sortSels(ConcurrentMap<Integer, RLOrder> sels, boolean isReversed) {
 		Set<Entry<Integer, RLOrder>> entries = sels.entrySet();
 		List<Entry<Integer, RLOrder>> res = new ArrayList<Entry<Integer, RLOrder>>(entries);
 		Collections.sort(res, !isReversed ? obMapComparator : Collections.reverseOrder(obMapComparator));
