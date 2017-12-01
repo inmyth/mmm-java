@@ -325,19 +325,27 @@ public class Orderbook extends Base {
 
 	private void insert(RLOrder after, int seq, Boolean isAligned) {
 		if (isAligned) {
-			buys.put(seq, after);
+			if (buys.contains(seq)){
+				buys.put(seq, TRLOrder.changedFrom(buys.get(seq), after));
+			} else {
+				buys.put(seq, new TRLOrder(after));
+			}
 		} else {
-			sels.put(seq, after);
+			if (sels.contains(seq)){
+				sels.put(seq, TRLOrder.changedFrom(sels.get(seq), after));
+			} else {
+				sels.put(seq, new TRLOrder(after));
+			}
 		}
 	}
 
 	// Because it's map, it's O(1) and idempotent
 	private Boolean remove(int seq) {
-		RLOrder a = buys.remove(seq);
+		TRLOrder a = buys.remove(seq);
 		if (a != null) {
 			return true;
 		}
-		RLOrder b = sels.remove(seq);
+		TRLOrder b = sels.remove(seq);
 		if (b != null) {
 			return false;
 		}

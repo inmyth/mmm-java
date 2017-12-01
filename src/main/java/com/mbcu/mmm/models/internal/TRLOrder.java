@@ -6,20 +6,22 @@ import java.util.stream.Collectors;
 public class TRLOrder {
 	
 	private final RLOrder origin;
-	private RLOrder now;
+	private final RLOrder now;
 	
 	public TRLOrder(RLOrder origin) {
 		this.origin = origin;
 		this.now    = origin;
+	}
+	
+	private TRLOrder(RLOrder origin, RLOrder now){
+		this.origin = origin;
+		this.now 		= now;
 	}
 
 	public RLOrder getNow() {
 		return now;
 	}
 
-	public void setNow(RLOrder now) {
-		this.now = now;
-	}
 
   public RLOrder getOrigin() {
 		return origin;
@@ -31,6 +33,10 @@ public class TRLOrder {
         e -> e.getKey(),
         e -> e.getValue().getOrigin()
     ));
+	}
+	
+	public static TRLOrder changedFrom(TRLOrder oldTrl, RLOrder now){
+		return new TRLOrder(oldTrl.origin, now);
 	}
 
 }
