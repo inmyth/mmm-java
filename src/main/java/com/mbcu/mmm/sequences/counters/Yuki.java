@@ -73,7 +73,9 @@ public class Yuki extends Base implements Counter {
 		Yuki counter = new Yuki(config);
 		return counter;
 	}
-
+	
+	
+  change this to List<RLOrder> for incoming original orders
 	public void counterFull(List<BefAf> bas) {
 		bas.stream()
 		.filter(ba -> ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0)

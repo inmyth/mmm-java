@@ -1,5 +1,7 @@
 package com.mbcu.mmm.models.internal;
 
+import java.util.Optional;
+
 import com.ripple.core.coretypes.Amount;
 import com.ripple.core.coretypes.Currency;
 import com.ripple.core.coretypes.STObject;
@@ -24,13 +26,13 @@ public class Cpair {
 		return res.toString();
 	}
 
-	public Boolean isMatch(String test) {
+	public Optional<Boolean> isMatch(String test) {
 		if (test.equals(fw)) {
-			return true;
+			return Optional.of(true);
 		} else if (test.equals(rv)) {
-			return false;
+			return Optional.of(false);
 		}
-		return null;
+		return Optional.empty();
 	}
 
 	public String getFw() {

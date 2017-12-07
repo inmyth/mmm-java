@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -66,16 +67,17 @@ public class Orderbook extends Base {
 							Common.OnAccountOffers event = (Common.OnAccountOffers) o;
 							boolean buyMatched = false;
 							boolean selMatched = false;
-							Boolean pairMatched = null;
+							Optional<Boolean> pairMatched = null;
+							
 							for (TAccountOffer t : event.accOffs) {
 								pairMatched = pairMatched(t.getOrder());
-								if (pairMatched != null) {
-									if (pairMatched) {
+								if (pairMatched.isPresent()) {
+									if (pairMatched.get()) {
 										buyMatched = true;
 									} else {
 										selMatched = true;
 									}
-									shelve(t.getOrder(), t.getSeq(), pairMatched);
+									insert(t.getOrder(), t.getSeq(), pairMatched.get());
 								}
 							}
 							if (buyMatched || selMatched) {
@@ -111,29 +113,42 @@ public class Orderbook extends Base {
 								requestPendings();
 							} else if (base instanceof Common.OnDifference) {
 								Common.OnDifference event = (Common.OnDifference) o;
-								boolean buyMatched = false;
-								boolean selMatched = false;
+								boolean isBelongToThisOrderbook = false;
+								
+								List<RLOrder> preFullCounters = new ArrayList<>();
+								
 								for (BefAf ba : event.bas) {
-									Boolean pairMatched = pairMatched(ba.after);
-									if (pairMatched != null) {
-										if (pairMatched) {
-											buyMatched = true;
-										} else {
-											selMatched = true;
+									Optional<Boolean> pairMatched = pairMatched(ba.after);
+									if (pairMatched.isPresent()) {
+										isBelongToThisOrderbook = true;
+										if (ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0) {
+											TRLOrder origin;											
+											if (pairMatched.get()){
+												origin = buys.get(ba.befSeq);
+												buys.remove(ba.befSeq);
+											}
+											else {
+												origin = sels.get(ba.befSeq);
+												sels.remove(ba.befSeq);
+											}										
+											preFullCounters.add(origin.getOrigin());
+										} 
+										else {
+											insert(ba.after, ba.befSeq.intValue(), pairMatched.get());
+//										shelve(ba.after, ba.befSeq, pairMatched.get());
 										}
-										shelve(ba.after, ba.befSeq, pairMatched);
 									}
 								}
-								if (buyMatched || selMatched) {
+								if (isBelongToThisOrderbook) {
 									BuySellRateTuple worstBuySel = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
 									worstBuy = worstBuySel.getBuyRate();
 									worstSel = worstBuySel.getSelRate();
-								}
+								}	
 							} else if (base instanceof Common.OnOfferEdited) {
 								Common.OnOfferEdited event = (Common.OnOfferEdited) o;
-								Boolean pairMatched = pairMatched(event.ba.after);
-								if (pairMatched != null) {
-									edit(event.ba, event.newSeq, pairMatched);
+								Optional<Boolean> pairMatched = pairMatched(event.ba.after);
+								if (pairMatched.isPresent()) {
+									edit(event.ba, event.newSeq, pairMatched.get());
 									BuySellRateTuple worstBuySel = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
 									worstBuy = worstBuySel.getBuyRate();
 									worstSel = worstBuySel.getSelRate();
@@ -314,14 +329,14 @@ public class Orderbook extends Base {
 		return true;
 	}
 
-	private boolean shelve(RLOrder after, int seq, boolean isAligned) {
-		if (after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0) {
-			remove(seq);
-		} else {
-			insert(after, seq, isAligned);
-		}
-		return true;
-	}
+//	private boolean shelve(RLOrder after, int seq, boolean isAligned) {
+//		if (after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0) {
+//			remove(seq);
+//		} else {
+//			insert(after, seq, isAligned);
+//		}
+//		return true;
+//	}
 
 	private void insert(RLOrder after, int seq, Boolean isAligned) {
 		if (isAligned) {
@@ -352,15 +367,15 @@ public class Orderbook extends Base {
 		return null;
 	}
 
-	private void shelve(RLOrder after, UInt32 seq, boolean isAligned) {
-		shelve(after, seq.intValue(), isAligned);
-	}
+//	private void shelve(RLOrder after, UInt32 seq, boolean isAligned) {
+//		shelve(after, seq.intValue(), isAligned);
+//	}
 
 	/**
 	 * @param in
 	 * @return null if not matched, true if aligned, false if reversed
 	 */
-	private Boolean pairMatched(RLOrder in) {
+	private Optional<Boolean> pairMatched(RLOrder in) {
 		return in.getCpair().isMatch(this.botConfig.getPair());
 	}
 
@@ -404,6 +419,14 @@ public class Orderbook extends Base {
 		return sb.toString();
 	}
 
+	public static class OnOrderFullConsumed extends BusBase {
+		public final List<RLOrder> origins;
+
+		public OnOrderFullConsumed(List<RLOrder> origins) {
+			this.origins = origins;
+		}
+	}
+	
 	public static Orderbook newInstance(BotConfig botConfig, Config config) {
 		Orderbook res = new Orderbook(config, botConfig);
 		return res;
