@@ -225,29 +225,27 @@ public class Common extends Base {
 			}
 			return;
 		}
+		RLOrder ourOfferCreate = null;
 		if (txType.equals("OfferCreate")) {
 			RLOrder offerCreate = RLOrder.fromOfferCreate(txn);
-			log("OFFER CREATE Account: " + txnAccId + " Hash " + txnHash + " Sequence " + txnSequence + "\n"
-					+ offerCreate.stringify());
+			log("OFFER CREATE Account: " + txnAccId + " Hash " + txnHash + " Sequence " + txnSequence + "\n" + offerCreate.stringify());
 			// OnOfferCreate event is only needed to increment sequence.
 			if (txn.account().address.equals(this.config.getCredentials().getAddress())) {
+				ourOfferCreate = offerCreate;
 				bus.send(new OnOfferCreate(txnAccId, txnHash, txnSequence));
 			}
 
 			if (offerCreated != null) {
 				AccountID ocAccId = offerCreated.account();
 				if (previousTxnId == null) {
-					log("OFFER CREATED OCAccID " + ocAccId + " TxnID " + txnAccId + " OCPrevTxnId " + previousTxnId + " \n"
-							+ offerCreated.prettyJSON());
 					if (ocAccId.address.equals(this.config.getCredentials().getAddress())) {
-						bus.send(new OnOfferCreated(txnAccId, ocAccId, offerCreated.previousTxnID(),
-								RLOrder.fromOfferCreated(offerCreated)));
+						log("OFFER CREATED OCAccID " + ocAccId + " TxnID " + txnAccId + " OCPrevTxnId " + previousTxnId + " \n"	+ offerCreated.prettyJSON());
+						bus.send(new OnOfferCreated(txnAccId, ocAccId, offerCreated.previousTxnID(), RLOrder.fromOfferCreated(offerCreated)));
 					}
 				} else {
-					log("OFFER EDITED " + previousTxnId + " to " + txn.hash());
 					if (ocAccId.address.equals(this.config.getCredentials().getAddress())) {
-						BefAf ba = RLOrder.toBA(offerCreated.takerPays(), offerCreated.takerGets(), txn.get(Amount.TakerPays),
-								txn.get(Amount.TakerGets), previousSeq, txnHash);
+						log("OFFER EDITED " + previousTxnId + " to " + txn.hash());
+						BefAf ba = RLOrder.toBA(offerCreated.takerPays(), offerCreated.takerGets(), txn.get(Amount.TakerPays), txn.get(Amount.TakerGets), previousSeq, txnHash, ourOfferCreate);
 						bus.send(new OnOfferEdited(ocAccId, txnHash, previousTxnId, previousSeq, txn.sequence(), ba));
 					}
 				}
@@ -261,24 +259,22 @@ public class Common extends Base {
 					}
 				}
 				oes.addAll(fa.process());
-				if (offerCreated == null) {
-					ors.add(RLOrder.toBA(txn.get(Amount.TakerPays), txn.get(Amount.TakerGets), null, null, txnSequence, txnHash));
+				if (offerCreated == null) { // fully consumed
+					ors.add(RLOrder.toBA(txn.get(Amount.TakerPays), txn.get(Amount.TakerGets), null, null, txnSequence, txnHash, null));
 				} else {
-					ors.add(RLOrder.toBA(txn.get(Amount.TakerPays), txn.get(Amount.TakerGets), offerCreated.takerPays(),
-							offerCreated.takerGets(), txnSequence, txnHash));
+					
+					ors.add(RLOrder.toBA(txn.get(Amount.TakerPays), txn.get(Amount.TakerGets), offerCreated.takerPays(), offerCreated.takerGets(), txnSequence, txnHash, ourOfferCreate));
 				}
 			} else {
 				for (Offer offer : offersExecuteds) {
 					STObject finalFields = offer.get(STObject.FinalFields);
 					UInt32 affectedSeq = offer.get(UInt32.Sequence);
-					if (finalFields != null && isTakersExist(finalFields)
-							&& offer.account().address.equals(this.config.getCredentials().getAddress())) {
+					if (finalFields != null && isTakersExist(finalFields)	&& offer.account().address.equals(this.config.getCredentials().getAddress())) {
 						oes.add(RLOrder.fromOfferExecuted(offer, true));
-						ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), finalFields.get(Amount.TakerPays),
-								finalFields.get(Amount.TakerGets), affectedSeq, txnHash));
+						ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), finalFields.get(Amount.TakerPays), finalFields.get(Amount.TakerGets), affectedSeq, txnHash, ourOfferCreate));
 					}
 					if (finalFields == null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
-						ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), null, null, offer.sequence(), txnHash));
+						ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), null, null, offer.sequence(), txnHash, ourOfferCreate));
 					}
 				}
 			}
@@ -293,11 +289,11 @@ public class Common extends Base {
 					oes.add(RLOrder.fromOfferExecuted(offer, true));
 					if (offer.get(STObject.FinalFields).get(Amount.TakerGets).value().compareTo(BigDecimal.ZERO) == 0) {
 						ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), finalFields.get(Amount.TakerPays),
-								finalFields.get(Amount.TakerGets), affectedSeq, txnHash));
+								finalFields.get(Amount.TakerGets), affectedSeq, txnHash, ourOfferCreate));
 					}
 				}
 				if (finalFields == null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
-					ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), null, null, affectedSeq, txnHash));
+					ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), null, null, affectedSeq, txnHash, ourOfferCreate));
 				}
 			}
 		}

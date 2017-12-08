@@ -121,7 +121,15 @@ public class Orderbook extends Base {
 									Optional<Boolean> pairMatched = pairMatched(ba.after);
 									if (pairMatched.isPresent()) {
 										isBelongToThisOrderbook = true;
-										if (ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0) {
+										if (ba.source != null && ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) != 0){
+											insert(ba.after, ba.befSeq.intValue(), pairMatched.get());
+
+											
+										}
+										else if (ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0) {
+											
+										}
+										else {
 											TRLOrder origin;											
 											if (pairMatched.get()){
 												origin = buys.get(ba.befSeq);
@@ -132,6 +140,10 @@ public class Orderbook extends Base {
 												sels.remove(ba.befSeq);
 											}										
 											preFullCounters.add(origin.getOrigin());
+										}
+										
+										if (ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0) {
+
 										} 
 										else {
 											insert(ba.after, ba.befSeq.intValue(), pairMatched.get());
@@ -338,7 +350,10 @@ public class Orderbook extends Base {
 //		return true;
 //	}
 
-	private void insert(RLOrder after, int seq, Boolean isAligned) {
+	private void insert(RLOrder source, RLOrder now, int seq, Boolean isAligned) {
+		
+		TRLOrder trlOrder = new TRLOrder(source, now);
+		
 		if (isAligned) {
 			if (buys.contains(seq)){
 				buys.put(seq, TRLOrder.changedFrom(buys.get(seq), after));

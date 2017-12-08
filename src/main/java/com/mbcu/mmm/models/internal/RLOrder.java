@@ -186,7 +186,7 @@ public final class RLOrder extends Base {
 	}
 
 	public static BefAf toBA(Amount bTakerPays, Amount bTakerGets, Amount aTakerPays, Amount aTakerGets, UInt32 seq,
-			Hash256 txnId) {
+			Hash256 txnId, RLOrder source) {
 		Cpair bPair = Cpair.newInstance(bTakerGets, bTakerPays);
 		BigDecimal bAsk = bTakerGets.value().divide(bTakerPays.value(), MathContext.DECIMAL64);
 		RLOrder before = new RLOrder(Direction.BUY, bTakerPays, bTakerGets, bAsk, bPair);
@@ -195,7 +195,7 @@ public final class RLOrder extends Base {
 			aTakerGets = new Amount(new BigDecimal("0"), bTakerGets.currency(), bTakerGets.issuer());
 		}
 		RLOrder after = RLOrder.rateUnneeded(Direction.BUY, aTakerPays, aTakerGets);
-		return new BefAf(before, after, seq, txnId);
+		return new BefAf(before, after, seq, txnId, source);
 	}
 
 	public static List<RLOrder> fromAutobridge(Map<String, ArrayList<Offer>> map) {

@@ -8,12 +8,13 @@ public class TRLOrder {
 	private final RLOrder origin;
 	private final RLOrder now;
 	
-	public TRLOrder(RLOrder origin) {
-		this.origin = origin;
-		this.now    = origin;
-	}
+//	public TRLOrder(RLOrder origin) {
+//		this.origin = origin;
+//		this.now    = origin;
+//	}
 	
-	private TRLOrder(RLOrder origin, RLOrder now){
+	
+	public TRLOrder(RLOrder origin, RLOrder now){
 		this.origin = origin;
 		this.now 		= now;
 	}

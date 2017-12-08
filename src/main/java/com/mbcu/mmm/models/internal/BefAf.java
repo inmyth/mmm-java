@@ -9,13 +9,15 @@ public class BefAf extends Base {
 	public final RLOrder before;
 	public final RLOrder after;
 	public final UInt32 befSeq;
-
-	public BefAf(RLOrder before, RLOrder after, UInt32 befSeq, Hash256 txnId) {
+	public final RLOrder source;
+	
+	public BefAf(RLOrder before, RLOrder after, UInt32 befSeq, Hash256 txnId, RLOrder source) {
 		super();
 		this.before = before;
 		this.after = after;
 		this.befSeq = befSeq;
 		this.txnId = txnId;
+		this.source = source;
 	}
 
 	@Override
