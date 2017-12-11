@@ -155,9 +155,9 @@ public class Common extends Base {
 			return;
 		}
 
-		ArrayList<RLOrder> oes = new ArrayList<>();
-		ArrayList<BefAf> ors = new ArrayList<>();
-		Offer offerCreated = null;
+		ArrayList<RLOrder>  oes = new ArrayList<>(); // Offer Executeds
+		ArrayList<BefAf> 		ors = new ArrayList<>(); // Before and After
+		Offer offerCreated 			= null;
 		JSONObject transaction = new JSONObject(raw);
 
 		JSONObject metaJSON = (JSONObject) transaction.remove("meta");
@@ -259,13 +259,11 @@ public class Common extends Base {
 					}
 				}
 				oes.addAll(fa.process());
-				if (offerCreated == null) { // fully consumed
-					ors.add(RLOrder.toBA(txn.get(Amount.TakerPays), txn.get(Amount.TakerGets), null, null, txnSequence, txnHash, null));
-				} else {
-					
-					ors.add(RLOrder.toBA(txn.get(Amount.TakerPays), txn.get(Amount.TakerGets), offerCreated.takerPays(), offerCreated.takerGets(), txnSequence, txnHash, ourOfferCreate));
-				}
-			} else {
+				Amount takerPays = offerCreated != null ? offerCreated.takerPays() : null;
+				Amount takerGets = offerCreated != null ? offerCreated.takerGets() : null;
+				ors.add(RLOrder.toBA(txn.get(Amount.TakerPays), txn.get(Amount.TakerGets), takerPays, takerGets, txnSequence, txnHash, ourOfferCreate));
+			} 
+			else {
 				for (Offer offer : offersExecuteds) {
 					STObject finalFields = offer.get(STObject.FinalFields);
 					UInt32 affectedSeq = offer.get(UInt32.Sequence);
@@ -278,19 +276,16 @@ public class Common extends Base {
 					}
 				}
 			}
-		} else if (txType.equals("Payment") && !txn.account().address.equals(config.getCredentials().getAddress())) {
+		} 
+		else if (txType.equals("Payment") && !txn.account().address.equals(config.getCredentials().getAddress())) {
 			// we only care about payment not from ours.
 			for (Offer offer : offersExecuteds) {
 				STObject finalFields = offer.get(STObject.FinalFields);
 				UInt32 affectedSeq = offer.get(UInt32.Sequence);
 
-				if (finalFields != null && isTakersExist(finalFields)
-						&& offer.account().address.equals(this.config.getCredentials().getAddress())) {
+				if (finalFields != null && isTakersExist(finalFields) && offer.account().address.equals(this.config.getCredentials().getAddress())) {
 					oes.add(RLOrder.fromOfferExecuted(offer, true));
-					if (offer.get(STObject.FinalFields).get(Amount.TakerGets).value().compareTo(BigDecimal.ZERO) == 0) {
-						ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), finalFields.get(Amount.TakerPays),
-								finalFields.get(Amount.TakerGets), affectedSeq, txnHash, ourOfferCreate));
-					}
+					ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), finalFields.get(Amount.TakerPays), finalFields.get(Amount.TakerGets), affectedSeq, txnHash, ourOfferCreate));
 				}
 				if (finalFields == null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
 					ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), null, null, affectedSeq, txnHash, ourOfferCreate));

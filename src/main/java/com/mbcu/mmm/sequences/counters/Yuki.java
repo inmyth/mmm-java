@@ -17,6 +17,8 @@ import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.sequences.Base;
 import com.mbcu.mmm.sequences.Common;
+import com.mbcu.mmm.sequences.Orderbook;
+import com.mbcu.mmm.sequences.Orderbook.OnOrderFullConsumed;
 import com.mbcu.mmm.sequences.Common.OnOfferExecuted;
 import com.mbcu.mmm.sequences.state.State;
 import com.mbcu.mmm.sequences.state.State.OnOrderReady.Source;
@@ -46,14 +48,20 @@ public class Yuki extends Base implements Counter {
 			public void onNext(Object o) {
 				BusBase base = (BusBase) o;
 				try {
-					if (o instanceof Common.OnOfferExecuted) {
-						OnOfferExecuted event = (OnOfferExecuted) o;
-						counterPartial(event.oes);
-					} 
-					else if (o instanceof Common.OnDifference) {
-						Common.OnDifference event = (Common.OnDifference) o;		
-						counterFull(event.bas);
+					if (o instanceof Orderbook.OnOrderFullConsumed){
+						OnOrderFullConsumed event = (OnOrderFullConsumed) o;
+						counterFull(event.origins);
 					}
+					
+					
+//					if (o instanceof Common.OnOfferExecuted) {
+//						OnOfferExecuted event = (OnOfferExecuted) o;
+//						counterPartial(event.oes);
+//					} 
+//					else if (o instanceof Common.OnDifference) {
+//						Common.OnDifference event = (Common.OnDifference) o;		
+//						counterFull(event.bas);
+//					}
 				} catch (Exception e) {
 					MyLogger.exception(LOGGER, base.toString(), e);
 					throw e;
@@ -76,11 +84,9 @@ public class Yuki extends Base implements Counter {
 	
 	
 //  change this to List<RLOrder> for incoming original orders
-	public void counterFull(List<BefAf> bas) {
-		bas.stream()
-		.filter(ba -> ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0)
-		.filter(ba -> ba.after.getTotalPrice().value().compareTo(BigDecimal.ZERO) == 0)
-		.map(ba -> {return new FullCounterWrap(ba, config);})
+	public void counterFull(List<RLOrder> origins) {
+		origins.stream()
+		.map(o -> {return new FullCounterWrap(o, config);})
 		.filter(wrap -> wrap.bcd.botConfig != null)
 		.filter(wrap -> wrap.bcd.botConfig.getStrategy() 		== Strategy.FULLFIXED 
 										|| wrap.bcd.botConfig.getStrategy() == Strategy.FULLRATEPCT 
@@ -98,41 +104,44 @@ public class Yuki extends Base implements Counter {
 	public Optional<RLOrder> buildFullCounter(FullCounterWrap wrap) {
 		RLOrder						 res = null;
 		BotConfigDirection bcd = wrap.bcd;
-		BefAf 						 ba  = wrap.ba;
+		RLOrder 			 	   src = wrap.origin;
+//		BefAf 						 ba  = wrap.ba;
 		
 		switch (bcd.botConfig.getStrategy()){
 			case FULLRATEPCT : 
 			case FULLRATESEEDPCT : 
-				BigDecimal rate = ba.before.getRate();
+//				BigDecimal rate = ba.before.getRate();
+				BigDecimal oldRate = src.getRate();
 				RLOrder origin;
-				if (bcd.isDirectionMatch) {
-					BigDecimal botQuantity = bcd.botConfig.getSellOrderQuantity();
-					// subtract is used to conveniently preserve Amount issuer and currency
-					Amount quantity = ba.after.getQuantity().subtract(botQuantity);
-					origin = RLOrder.fromWholeConsumed(Direction.BUY, quantity, ba.after.getTotalPrice(), rate);
-				} 
-				else {
-					BigDecimal botQuantity = bcd.botConfig.getBuyOrderQuantity();
-					Amount totalPrice = ba.after.getTotalPrice().subtract(botQuantity);
-					origin = RLOrder.fromWholeConsumed(Direction.BUY, ba.before.getQuantity().multiply(new BigDecimal("-1")), totalPrice, rate);
-				}
-				res = yukiPct(origin, bcd.botConfig, bcd.isDirectionMatch);
+//				if (bcd.isDirectionMatch) {
+//					BigDecimal botQuantity = bcd.botConfig.getSellOrderQuantity();
+//					// subtract is used to conveniently preserve Amount issuer and currency
+////					Amount quantity = ba.after.getQuantity().subtract(botQuantity);
+//					Amount quantity  	= src.
+//					origin = RLOrder.fromWholeConsumed(Direction.BUY, quantity, ba.after.getTotalPrice(), rate);
+//				} 
+//				else {
+//					BigDecimal botQuantity = bcd.botConfig.getBuyOrderQuantity();
+//					Amount totalPrice = ba.after.getTotalPrice().subtract(botQuantity);
+//					origin = RLOrder.fromWholeConsumed(Direction.BUY, ba.before.getQuantity().multiply(new BigDecimal("-1")), totalPrice, rate);
+//				}
+				res = yukiPct(src, bcd.botConfig, bcd.isDirectionMatch);
 				break;
-			case FULLFIXED :
-				rate = ba.before.getRate();
-				if (bcd.isDirectionMatch) {
-					BigDecimal botQuantity = bcd.botConfig.getSellOrderQuantity();
-					Amount quantity = ba.after.getQuantity().subtract(botQuantity);
-					origin = RLOrder.fromWholeConsumed(Direction.BUY, quantity, ba.after.getTotalPrice(), rate);
-				} 
-				else {
-					BigDecimal botQuantity = bcd.botConfig.getBuyOrderQuantity();
-					Amount totalPrice = ba.after.getTotalPrice().subtract(botQuantity);
-					origin = RLOrder.fromWholeConsumed(Direction.BUY, ba.after.getQuantity(), totalPrice, rate);
-				}
-				bcd.rlOrder = origin;
-				res = yuki(bcd);
-				break;
+//			case FULLFIXED :
+//				rate = ba.before.getRate();
+//				if (bcd.isDirectionMatch) {
+//					BigDecimal botQuantity = bcd.botConfig.getSellOrderQuantity();
+//					Amount quantity = ba.after.getQuantity().subtract(botQuantity);
+//					origin = RLOrder.fromWholeConsumed(Direction.BUY, quantity, ba.after.getTotalPrice(), rate);
+//				} 
+//				else {
+//					BigDecimal botQuantity = bcd.botConfig.getBuyOrderQuantity();
+//					Amount totalPrice = ba.after.getTotalPrice().subtract(botQuantity);
+//					origin = RLOrder.fromWholeConsumed(Direction.BUY, ba.after.getQuantity(), totalPrice, rate);
+//				}
+//				bcd.rlOrder = origin;
+//				res = yuki(bcd);
+//				break;
 			default : 
 		}	
 		if (res != null && (res.getQuantity().value().compareTo(BigDecimal.ZERO) <= 0 || res.getTotalPrice().value().compareTo(BigDecimal.ZERO) <= 0)) {
@@ -143,12 +152,12 @@ public class Yuki extends Base implements Counter {
 	}
 	
 	private static class FullCounterWrap {
-		BefAf ba;
+		RLOrder origin;
 		BotConfigDirection bcd;
 		
-		public FullCounterWrap(BefAf ba, Config config) {
-			this.ba = ba;
-			this.bcd = new BotConfigDirection(config, ba.before);
+		public FullCounterWrap(RLOrder origin, Config config) {
+			this.origin = origin;
+			this.bcd = new BotConfigDirection(config, origin);
 		}
 	}
 

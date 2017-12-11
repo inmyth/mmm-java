@@ -36,8 +36,8 @@ public class TRLOrder {
     ));
 	}
 	
-	public static TRLOrder changedFrom(TRLOrder oldTrl, RLOrder now){
-		return new TRLOrder(oldTrl.origin, now);
+	public TRLOrder updatedWith(RLOrder now){
+		return new TRLOrder(origin, now);
 	}
 
 }

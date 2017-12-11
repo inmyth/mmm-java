@@ -16,11 +16,10 @@ import java.util.stream.Stream;
 import com.mbcu.mmm.helpers.TAccountOffer;
 import com.mbcu.mmm.models.internal.BefAf;
 import com.mbcu.mmm.models.internal.BotConfig;
+import com.mbcu.mmm.models.internal.BotConfig.Strategy;
 import com.mbcu.mmm.models.internal.BuySellRateTuple;
 import com.mbcu.mmm.models.internal.Config;
-import com.mbcu.mmm.models.internal.PartialOrder;
 import com.mbcu.mmm.models.internal.RLOrder;
-import com.mbcu.mmm.models.internal.BotConfig.Strategy;
 import com.mbcu.mmm.models.internal.RLOrder.Direction;
 import com.mbcu.mmm.models.internal.TRLOrder;
 import com.mbcu.mmm.rx.BusBase;
@@ -30,7 +29,6 @@ import com.mbcu.mmm.sequences.state.State;
 import com.mbcu.mmm.sequences.state.State.BroadcastPendings;
 import com.mbcu.mmm.sequences.state.State.OnOrderReady;
 import com.mbcu.mmm.utils.MyLogger;
-import com.ripple.core.coretypes.uint.UInt32;
 
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.observers.DisposableObserver;
@@ -77,7 +75,7 @@ public class Orderbook extends Base {
 									} else {
 										selMatched = true;
 									}
-									insert(t.getOrder(), t.getSeq(), pairMatched.get());
+									insert(t.getOrder(), t.getOrder(), t.getSeq(), pairMatched.get());
 								}
 							}
 							if (buyMatched || selMatched) {
@@ -115,39 +113,25 @@ public class Orderbook extends Base {
 								Common.OnDifference event = (Common.OnDifference) o;
 								boolean isBelongToThisOrderbook = false;
 								
-								List<RLOrder> preFullCounters = new ArrayList<>();
-								
+								List<RLOrder> preFullCounters 	 = new ArrayList<>();
+								List<RLOrder> prePartialCounters = new ArrayList<>();
 								for (BefAf ba : event.bas) {
 									Optional<Boolean> pairMatched = pairMatched(ba.after);
 									if (pairMatched.isPresent()) {
 										isBelongToThisOrderbook = true;
-										if (ba.source != null && ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) != 0){
-											insert(ba.after, ba.befSeq.intValue(), pairMatched.get());
-
-											
+										if (ba.source != null && ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) != 0){ // new order
+											insert(ba.before, ba.after, ba.befSeq.intValue(), pairMatched.get());
 										}
-										else if (ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0) {
-											
-										}
-										else {
-											TRLOrder origin;											
-											if (pairMatched.get()){
-												origin = buys.get(ba.befSeq);
-												buys.remove(ba.befSeq);
+										else if (ba.source == null){
+											if(ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0) { // fully consumed
+												TRLOrder entry = pairMatched.get() ? buys.get(ba.befSeq) : sels.get(ba.befSeq);
+												preFullCounters.add(entry.getOrigin());
+												remove(ba.befSeq.intValue());
 											}
 											else {
-												origin = sels.get(ba.befSeq);
-												sels.remove(ba.befSeq);
-											}										
-											preFullCounters.add(origin.getOrigin());
-										}
-										
-										if (ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0) {
-
-										} 
-										else {
-											insert(ba.after, ba.befSeq.intValue(), pairMatched.get());
-//										shelve(ba.after, ba.befSeq, pairMatched.get());
+												prePartialCounters.add(ba.after);
+												update(ba.after, ba.befSeq.intValue(), ba.befSeq.intValue(), pairMatched.get()); // partially consumed
+											}
 										}
 									}
 								}
@@ -160,7 +144,7 @@ public class Orderbook extends Base {
 								Common.OnOfferEdited event = (Common.OnOfferEdited) o;
 								Optional<Boolean> pairMatched = pairMatched(event.ba.after);
 								if (pairMatched.isPresent()) {
-									edit(event.ba, event.newSeq, pairMatched.get());
+									update(event.ba.after, event.ba.befSeq.intValue(), event.newSeq.intValue(), pairMatched.get());
 									BuySellRateTuple worstBuySel = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
 									worstBuy = worstBuySel.getBuyRate();
 									worstSel = worstBuySel.getSelRate();
@@ -335,11 +319,6 @@ public class Orderbook extends Base {
 		return orderbook.map(fun).reduce(BigDecimal.ZERO, BigDecimal::add);
 	}
 
-	private boolean edit(BefAf ba, UInt32 newSeq, boolean pairMatched) {
-		remove(ba.befSeq.intValue());
-		insert(ba.after, newSeq.intValue(), pairMatched);
-		return true;
-	}
 
 //	private boolean shelve(RLOrder after, int seq, boolean isAligned) {
 //		if (after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0) {
@@ -349,23 +328,26 @@ public class Orderbook extends Base {
 //		}
 //		return true;
 //	}
+	
+	private void update(RLOrder now, int oldSeq, int newSeq, Boolean isAligned){
+		ConcurrentHashMap<Integer, TRLOrder> orders = isAligned ? buys : sels;
+		if (orders.containsKey(oldSeq)){
+			orders.put(newSeq, orders.get(oldSeq).updatedWith(now));
+			remove(oldSeq);
+		}
+		else {
+			log("Update orderbook " + botConfig.getPair() + " failed, seq " + oldSeq +  " not found" , Level.WARNING);
+		}
+			
+	}
 
-	private void insert(RLOrder source, RLOrder now, int seq, Boolean isAligned) {
-		
-		TRLOrder trlOrder = new TRLOrder(source, now);
-		
-		if (isAligned) {
-			if (buys.contains(seq)){
-				buys.put(seq, TRLOrder.changedFrom(buys.get(seq), after));
-			} else {
-				buys.put(seq, new TRLOrder(after));
-			}
-		} else {
-			if (sels.contains(seq)){
-				sels.put(seq, TRLOrder.changedFrom(sels.get(seq), after));
-			} else {
-				sels.put(seq, new TRLOrder(after));
-			}
+	private void insert(RLOrder source, RLOrder now, int seq, Boolean isAligned) {	
+		ConcurrentHashMap<Integer, TRLOrder> orders = isAligned ? buys : sels;
+		if (orders.contains(seq)){
+			orders.put(seq, orders.get(seq).updatedWith(now));
+		}
+		else{
+			orders.put(seq, new TRLOrder(source, now));
 		}
 	}
 
@@ -439,6 +421,14 @@ public class Orderbook extends Base {
 
 		public OnOrderFullConsumed(List<RLOrder> origins) {
 			this.origins = origins;
+		}
+	}
+	
+	public static class OnOrderPartialConsumed extends BusBase {
+		public final List<RLOrder> orders;
+
+		public OnOrderPartialConsumed(List<RLOrder> orders) {
+			this.orders = orders;
 		}
 	}
 	
