@@ -172,29 +172,50 @@ public class Yuki extends Base implements Counter {
 	 *          direction)
 	 * @return
 	 */
-	private RLOrder yukiPct(RLOrder base, BotConfig botConfig, boolean isDirectionMatch) {
-		BigDecimal minOne = new BigDecimal("-1");
-		Amount baseTotalPrice = base.getTotalPrice().multiply(minOne);
-		BigDecimal pct = botConfig.getGridSpace();
-		BigDecimal baseRate = base.getRate();
+	private RLOrder yukiPct(RLOrder source, BotConfig botConfig, boolean isSellCounter) {
+		BigDecimal mtp 	 		 = BigDecimal.ONE.add(botConfig.getGridSpace());
+    Amount srcQuantity 	 = source.getQuantity();
+    Amount srcTotalPrice = source.getTotalPrice();
 		BigDecimal newRate = null;
-		Amount baseQuantity = base.getQuantity().multiply(minOne);
+		RLOrder res 			 = null;
 
-		RLOrder res = null;
-		if (isDirectionMatch) {
-			newRate = baseRate.multiply(BigDecimal.ONE.add(pct), MathContext.DECIMAL64);
-			Amount newTotalPrice = RLOrder.amount(baseQuantity.value().multiply(newRate), baseTotalPrice.currency(), baseTotalPrice.issuer());
-			res = RLOrder.rateUnneeded(Direction.SELL, baseQuantity, newTotalPrice);
-		} else {
-			newRate = BigDecimal.ONE.divide(baseRate, MathContext.DECIMAL128);
-			newRate = newRate.multiply(BigDecimal.ONE.subtract(pct));
-			if (newRate.compareTo(BigDecimal.ZERO) <= 0) {
-				log("counter rate below zero " + newRate + " " + base.getCpair(), Level.SEVERE);
-				return null;
-			}
-			Amount newTotalPrice = RLOrder.amount(baseTotalPrice.value().multiply(newRate), baseQuantity.currency(), baseQuantity.issuer());
-			res = RLOrder.rateUnneeded(Direction.BUY, baseTotalPrice, newTotalPrice);
+		if (isSellCounter){
+			System.out.println(source.getRate().toPlainString());
+			newRate = source.getRate().multiply(mtp, MathContext.DECIMAL64);
+			Amount totalPrice = RLOrder.amount(srcQuantity.value().multiply(newRate), srcTotalPrice.currency(), srcTotalPrice.issuer());
+//			Amount quantity   = srcQuantity.divide(mtp);
+			res  = RLOrder.rateUnneeded(Direction.SELL, srcQuantity, totalPrice);
+		} 
+		else {
+			newRate = source.getRate().divide(mtp, MathContext.DECIMAL64);
+			Amount quantity 	= srcTotalPrice;
+//			Amount totalPrice = srcQuantity.divide(mtp);
+			Amount totalPrice = RLOrder.amount(srcTotalPrice.value().multiply(newRate), srcQuantity.currency(), srcQuantity.issuer());
+			res  = RLOrder.rateUnneeded(Direction.BUY, quantity, totalPrice);
 		}
+		
+//		BigDecimal minOne = new BigDecimal("-1");
+//		Amount baseTotalPrice = base.getTotalPrice().multiply(minOne);
+//		BigDecimal pct = botConfig.getGridSpace();
+//		BigDecimal baseRate = base.getRate();
+//		BigDecimal newRate = null;
+//		Amount baseQuantity = base.getQuantity().multiply(minOne);
+//
+//		RLOrder res = null;
+//		if (isSellCounter) {
+//			newRate = baseRate.multiply(BigDecimal.ONE.add(pct), MathContext.DECIMAL64);
+//			Amount newTotalPrice = RLOrder.amount(baseQuantity.value().multiply(newRate), baseTotalPrice.currency(), baseTotalPrice.issuer());
+//			res = RLOrder.rateUnneeded(Direction.SELL, baseQuantity, newTotalPrice);
+//		} else {
+//			newRate = BigDecimal.ONE.divide(baseRate, MathContext.DECIMAL128);
+//			newRate = newRate.multiply(BigDecimal.ONE.subtract(pct));
+//			if (newRate.compareTo(BigDecimal.ZERO) <= 0) {
+//				log("counter rate below zero " + newRate + " " + base.getCpair(), Level.SEVERE);
+//				return null;
+//			}
+//			Amount newTotalPrice = RLOrder.amount(baseTotalPrice.value().multiply(newRate), baseQuantity.currency(), baseQuantity.issuer());
+//			res = RLOrder.rateUnneeded(Direction.BUY, baseTotalPrice, newTotalPrice);
+//		}
 		return res;
 	}
 

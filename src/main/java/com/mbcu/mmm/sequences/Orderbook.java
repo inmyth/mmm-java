@@ -119,8 +119,13 @@ public class Orderbook extends Base {
 									Optional<Boolean> pairMatched = pairMatched(ba.after);
 									if (pairMatched.isPresent()) {
 										isBelongToThisOrderbook = true;
-										if (ba.source != null && ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) != 0){ // new order
-											insert(ba.before, ba.after, ba.befSeq.intValue(), pairMatched.get());
+										if (ba.source != null){											
+											if (ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) != 0){ 
+												insert(ba.before, ba.after, ba.befSeq.intValue(), pairMatched.get());
+											} 
+											else {
+												preFullCounters.add(ba.source);
+											}
 										}
 										else if (ba.source == null){
 											if(ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0) { // fully consumed
@@ -135,11 +140,15 @@ public class Orderbook extends Base {
 										}
 									}
 								}
+								if (!preFullCounters.isEmpty()){
+									bus.send(new OnOrderFullConsumed(preFullCounters));
+								}
 								if (isBelongToThisOrderbook) {
 									BuySellRateTuple worstBuySel = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
 									worstBuy = worstBuySel.getBuyRate();
 									worstSel = worstBuySel.getSelRate();
 								}	
+								
 							} else if (base instanceof Common.OnOfferEdited) {
 								Common.OnOfferEdited event = (Common.OnOfferEdited) o;
 								Optional<Boolean> pairMatched = pairMatched(event.ba.after);
@@ -160,8 +169,7 @@ public class Orderbook extends Base {
 							} else if (base instanceof State.BroadcastPendings) {
 								BroadcastPendings event = (BroadcastPendings) o;
 								if (event.pair.equals(botConfig.getPair())) {
-									if (event.creates.isEmpty() && event.cancels.isEmpty()
-											&& lastBalanced.get() >= config.getIntervals().getBalancer()) {
+									if (event.creates.isEmpty() && event.cancels.isEmpty() && lastBalanced.get() >= config.getIntervals().getBalancer()) {
 										lastBalanced.set(0);
 										List<Entry<Integer, RLOrder>> sortedSels, sortedBuys;
 										sortedSels = RLOrder.sortTSels(sels, false);
