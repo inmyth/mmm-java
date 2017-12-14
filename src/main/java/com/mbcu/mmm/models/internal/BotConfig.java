@@ -55,7 +55,7 @@ public class BotConfig {
 			}		
 			if (bot.getStrategy().equals(BotConfig.Strategy.FULLRATEPCT) || bot.getStrategy().equals(BotConfig.Strategy.FULLRATESEEDPCT)) {
 				BigDecimal pct = new BigDecimal(bot.gridSpace);
-				pct = pct.divide(new BigDecimal("100"), MathContext.DECIMAL64);
+				pct = BigDecimal.ONE.add(pct.divide(new BigDecimal("100"), MathContext.DECIMAL64));
 				bot.gridSpace = pct.toPlainString();
 			}
 		}

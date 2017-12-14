@@ -335,17 +335,17 @@ public final class RLOrder extends Base {
 	}
 
 	public static List<RLOrder> buildBuysSeedPct(BigDecimal startPrice, int levels, BotConfig bot, Logger log) {				
-		BigDecimal mtp = BigDecimal.ONE.add(bot.getGridSpace(), MathContext.DECIMAL64);
+		BigDecimal mtp = bot.getGridSpace();
 		
 		BigDecimal botQuantity = bot.getBuyOrderQuantity();
 		List<RLOrder> res = IntStream
 				.range(1, levels + 1)
 				.mapToObj(n -> {
-//					BigDecimal rateHi = Collections.nCopies(n, pcHi).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();
-//					BigDecimal rateLo = Collections.nCopies(n, pcLo).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();
+					BigDecimal rateHi = Collections.nCopies(n, mtp).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();
+					BigDecimal rateLo = Collections.nCopies(n, mtp).stream().reduce((x, y) -> x.divide(y, MathContext.DECIMAL64)).get();
 					
-					BigDecimal newPri = startPrice.divide(mtp, MathContext.DECIMAL64);
-					BigDecimal newQty = bot.getStrategy() == Strategy.FULLRATESEEDPCT ? botQuantity.multiply(rateHi, MathContext.DECIMAL64) : botQuantity;
+					BigDecimal newPri = startPrice.divide(rateHi, MathContext.DECIMAL64);
+					BigDecimal newQty = bot.getStrategy() == Strategy.FULLRATESEEDPCT ? botQuantity.multiply(rateLo, MathContext.DECIMAL64) : botQuantity;
 					if (newPri.compareTo(BigDecimal.ZERO) <= 0) {
 						log.severe("RLOrder.buildBuySeedPct rate below zero. Check config for the pair " + bot.getPair());
 					}			
@@ -383,16 +383,14 @@ public final class RLOrder extends Base {
 		return res;
 	}
 
-	public static List<RLOrder> buildSelsSeedPct(BigDecimal startPrice, int levels, BotConfig bot) {		
-		BigDecimal pcLo = BigDecimal.ONE.subtract(bot.getGridSpace(), MathContext.DECIMAL64);
-		BigDecimal pcHi = BigDecimal.ONE.add(bot.getGridSpace(), MathContext.DECIMAL64);
-		
+	public static List<RLOrder> buildSelsSeedPct(BigDecimal startPrice, int levels, BotConfig bot) {				
+		BigDecimal mtp = bot.getGridSpace();
 		BigDecimal botQuantity = bot.getSellOrderQuantity();
 		List<RLOrder> res = IntStream
 				.range(1, levels + 1)
 				.mapToObj(n -> {
-					BigDecimal rateHi = Collections.nCopies(n, pcHi).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();
-					BigDecimal rateLo = Collections.nCopies(n, pcLo).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();		
+					BigDecimal rateHi = Collections.nCopies(n, mtp).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();
+					BigDecimal rateLo = Collections.nCopies(n, mtp).stream().reduce((x, y) -> x.divide(y, MathContext.DECIMAL64)).get();		
 					BigDecimal newPri = startPrice.multiply(rateHi, MathContext.DECIMAL64);
 					BigDecimal newQty = bot.getStrategy() == Strategy.FULLRATESEEDPCT ? botQuantity.multiply(rateLo, MathContext.DECIMAL64) : botQuantity;
 
