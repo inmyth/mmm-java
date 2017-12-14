@@ -48,10 +48,10 @@ public class Yuki extends Base implements Counter {
 			public void onNext(Object o) {
 				BusBase base = (BusBase) o;
 				try {
-					if (o instanceof Orderbook.OnOrderFullConsumed){
-						OnOrderFullConsumed event = (OnOrderFullConsumed) o;
-						counterFull(event.origins);
-					}
+//					if (o instanceof Orderbook.OnOrderFullConsumed){
+//						OnOrderFullConsumed event = (OnOrderFullConsumed) o;
+//						counterFull(event.origins);
+//					}
 					
 					
 //					if (o instanceof Common.OnOfferExecuted) {
@@ -172,22 +172,21 @@ public class Yuki extends Base implements Counter {
 	 *          direction)
 	 * @return
 	 */
-	private RLOrder yukiPct(RLOrder source, BotConfig botConfig, boolean isSellCounter) {
+	private RLOrder yukiPct(RLOrder source, BotConfig botConfig, boolean isCounteringSell) {
 		BigDecimal mtp 	 		 = BigDecimal.ONE.add(botConfig.getGridSpace());
     Amount srcQuantity 	 = source.getQuantity();
     Amount srcTotalPrice = source.getTotalPrice();
 		BigDecimal newRate = null;
 		RLOrder res 			 = null;
 
-		if (isSellCounter){
-			System.out.println(source.getRate().toPlainString());
+		if (isCounteringSell){
 			newRate = source.getRate().multiply(mtp, MathContext.DECIMAL64);
 			Amount totalPrice = RLOrder.amount(srcQuantity.value().multiply(newRate), srcTotalPrice.currency(), srcTotalPrice.issuer());
 //			Amount quantity   = srcQuantity.divide(mtp);
 			res  = RLOrder.rateUnneeded(Direction.SELL, srcQuantity, totalPrice);
 		} 
 		else {
-			newRate = source.getRate().divide(mtp, MathContext.DECIMAL64);
+			newRate = BigDecimal.ONE.divide(source.getRate(), MathContext.DECIMAL64).divide(mtp, MathContext.DECIMAL64);
 			Amount quantity 	= srcTotalPrice;
 //			Amount totalPrice = srcQuantity.divide(mtp);
 			Amount totalPrice = RLOrder.amount(srcTotalPrice.value().multiply(newRate), srcQuantity.currency(), srcQuantity.issuer());
