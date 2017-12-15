@@ -37,10 +37,14 @@ import io.reactivex.Observable;
 public class Mock {
 
 	public static void main(String[] args) {
-		BigDecimal a = new BigDecimal("0.99");
+		BigDecimal a = new BigDecimal("1.01");
 		
-	  a = Collections.nCopies(1, a).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();
-	  System.out.println(a);
+	  BigDecimal b = Collections.nCopies(4, BigDecimal.ONE).stream().reduce((x, y) -> x.divide(a, MathContext.DECIMAL32)).get();
+	  System.out.println(b);
+	  
+	  BigDecimal c = Collections.nCopies(4, BigDecimal.ONE).stream().reduce((x, y) -> x.multiply(a, MathContext.DECIMAL32)).get();
+	  System.out.println(c);
+	  
 		
 		
 //   Amount a = new Amount(new BigDecimal(-20));

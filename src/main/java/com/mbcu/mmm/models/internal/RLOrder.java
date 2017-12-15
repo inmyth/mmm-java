@@ -341,8 +341,8 @@ public final class RLOrder extends Base {
 		List<RLOrder> res = IntStream
 				.range(1, levels + 1)
 				.mapToObj(n -> {
-					BigDecimal rateHi = Collections.nCopies(n, mtp).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();
-					BigDecimal rateLo = Collections.nCopies(n, mtp).stream().reduce((x, y) -> x.divide(y, MathContext.DECIMAL64)).get();
+					BigDecimal rateHi = Collections.nCopies(n, BigDecimal.ONE).stream().reduce((x, y) -> x.multiply(mtp, MathContext.DECIMAL64)).get();
+					BigDecimal rateLo = Collections.nCopies(n, BigDecimal.ONE).stream().reduce((x, y) -> x.divide(mtp, MathContext.DECIMAL64)).get();
 					
 					BigDecimal newPri = startPrice.divide(rateHi, MathContext.DECIMAL64);
 					BigDecimal newQty = bot.getStrategy() == Strategy.FULLRATESEEDPCT ? botQuantity.multiply(rateLo, MathContext.DECIMAL64) : botQuantity;
@@ -389,8 +389,8 @@ public final class RLOrder extends Base {
 		List<RLOrder> res = IntStream
 				.range(1, levels + 1)
 				.mapToObj(n -> {
-					BigDecimal rateHi = Collections.nCopies(n, mtp).stream().reduce((x, y) -> x.multiply(y, MathContext.DECIMAL64)).get();
-					BigDecimal rateLo = Collections.nCopies(n, mtp).stream().reduce((x, y) -> x.divide(y, MathContext.DECIMAL64)).get();		
+					BigDecimal rateHi = Collections.nCopies(n, BigDecimal.ONE).stream().reduce((x, y) -> x.multiply(mtp, MathContext.DECIMAL64)).get();
+					BigDecimal rateLo = Collections.nCopies(n, BigDecimal.ONE).stream().reduce((x, y) -> x.divide(mtp, MathContext.DECIMAL64)).get();	
 					BigDecimal newPri = startPrice.multiply(rateHi, MathContext.DECIMAL64);
 					BigDecimal newQty = bot.getStrategy() == Strategy.FULLRATESEEDPCT ? botQuantity.multiply(rateLo, MathContext.DECIMAL64) : botQuantity;
 
@@ -414,8 +414,8 @@ public final class RLOrder extends Base {
 		BuySellRateTuple res = new BuySellRateTuple();
 		if (buys.isEmpty() && sels.isEmpty()) {
 			if (botConfig.getStrategy() == Strategy.FULLRATEPCT || botConfig.getStrategy() == Strategy.FULLRATESEEDPCT ) {
-				res.setBuyRate(worstBuy.subtract(worstBuy.multiply(botConfig.getGridSpace(), MathContext.DECIMAL64)));			
-				res.setSelRate(worstSel.add(worstSel.multiply(botConfig.getGridSpace(), MathContext.DECIMAL64)));
+				res.setBuyRate(worstBuy.divide(botConfig.getGridSpace(), MathContext.DECIMAL64));			
+				res.setSelRate(worstSel.multiply(botConfig.getGridSpace(), MathContext.DECIMAL64));
 			} else {
 				res.setBuyRate(worstBuy.subtract(botConfig.getGridSpace()));
 				res.setBuyRate(worstSel.add(botConfig.getGridSpace()));
@@ -425,8 +425,9 @@ public final class RLOrder extends Base {
 		List<Entry<Integer, RLOrder>> sorted = new ArrayList<>();
 		if (buys.isEmpty()) {
 			worstBuy = BigDecimal.ONE.divide(sortSels(sels, true).get(0).getValue().getRate(), MathContext.DECIMAL64);
-			worstBuy = botConfig.getStrategy() == Strategy.FULLRATEPCT || botConfig.getStrategy() == Strategy.FULLRATESEEDPCT
-					? worstBuy = worstBuy.subtract(worstBuy.multiply(botConfig.getGridSpace(), MathContext.DECIMAL64))
+			worstBuy = 
+					botConfig.getStrategy() == Strategy.FULLRATEPCT || botConfig.getStrategy() == Strategy.FULLRATESEEDPCT
+					? worstBuy = worstBuy.divide(botConfig.getGridSpace(), MathContext.DECIMAL64)
 					: worstBuy.subtract(botConfig.getGridSpace());
 		} else {
 			sorted.addAll(sortBuys(buys, false));
@@ -437,7 +438,7 @@ public final class RLOrder extends Base {
 		if (sels.isEmpty()) {
 			worstSel = sortBuys(buys, false).get(0).getValue().getRate();
 			worstSel = botConfig.getStrategy() == Strategy.FULLRATEPCT || botConfig.getStrategy() == Strategy.FULLRATESEEDPCT
-					? worstSel = worstSel.add(worstSel.multiply(botConfig.getGridSpace(), MathContext.DECIMAL64))
+					? worstSel = worstSel.multiply(botConfig.getGridSpace(), MathContext.DECIMAL64)
 					: worstSel.add(botConfig.getGridSpace());
 		} else {
 			sorted.addAll(sortSels(sels, false));

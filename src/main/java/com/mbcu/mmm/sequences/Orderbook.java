@@ -130,6 +130,7 @@ public class Orderbook extends Base {
 										else if (ba.source == null){
 											if(ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0) { // fully consumed
 												TRLOrder entry = pairMatched.get() ? buys.get(ba.befSeq) : sels.get(ba.befSeq);
+												TRLOrder entry2 = pairMatched.get() ? buys.get(ba.befSeq) : sels.get(ba.befSeq);
 												preFullCounters.add(entry.getOrigin());
 												remove(ba.befSeq.intValue());
 											}
