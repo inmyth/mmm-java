@@ -17,8 +17,8 @@ import com.mbcu.mmm.helpers.TAccountOffer;
 import com.mbcu.mmm.models.internal.BefAf;
 import com.mbcu.mmm.models.internal.BotConfig;
 import com.mbcu.mmm.models.internal.BotConfig.Strategy;
-import com.mbcu.mmm.models.internal.BuySellRateTuple;
 import com.mbcu.mmm.models.internal.Config;
+import com.mbcu.mmm.models.internal.LastBuySellTuple;
 import com.mbcu.mmm.models.internal.RLOrder;
 import com.mbcu.mmm.models.internal.RLOrder.Direction;
 import com.mbcu.mmm.models.internal.TRLOrder;
@@ -47,13 +47,15 @@ public class Orderbook extends Base {
 	private final AtomicInteger lastBalanced = new AtomicInteger(0);
 	private final AtomicInteger ledgerValidated = new AtomicInteger(0);
 	private final AtomicInteger ledgerClosed = new AtomicInteger(0);
-	private BigDecimal worstSel, worstBuy;
+//	private BigDecimal worstSel, worstBuy;
+	private LastBuySellTuple start; 
 
 	private Orderbook(Config config, BotConfig botConfig) {
 		super(MyLogger.getLogger(String.format(Txc.class.getName())), config);
 		this.botConfig = botConfig;
-		this.worstBuy = botConfig.getStartMiddlePrice();
-		this.worstSel = botConfig.getStartMiddlePrice();
+		this.start    = new LastBuySellTuple(botConfig.getStartMiddlePrice(), botConfig.getBuyOrderQuantity(), botConfig.getStartMiddlePrice(), botConfig.getSellOrderQuantity());
+//		this.worstBuy = botConfig.getStartMiddlePrice();
+//		this.worstSel = botConfig.getStartMiddlePrice();
 
 		accountOffersDispo
 				.add(bus.toObservable().subscribeOn(Schedulers.newThread()).subscribeWith(new DisposableObserver<Object>() {
@@ -79,9 +81,11 @@ public class Orderbook extends Base {
 								}
 							}
 							if (buyMatched || selMatched) {
-								BuySellRateTuple worstBuySel = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
-								worstBuy = worstBuySel.getBuyRate();
-								worstSel = worstBuySel.getSelRate();
+								LastBuySellTuple worstRates = RLOrder.worstTRates(buys, sels, start.buy.rate, start.sel.rate, botConfig);
+								start = worstRates;
+//								BuySellRateTuple worstRates = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
+//								worstBuy = worstRates.getBuyRate();
+//								worstSel = worstRates.getSelRate();
 							}
 						}
 					}
@@ -96,8 +100,7 @@ public class Orderbook extends Base {
 					}
 				}));
 
-		disposables
-				.add(bus.toObservable().subscribeOn(Schedulers.newThread()).subscribeWith(new DisposableObserver<Object>() {
+		disposables.add(bus.toObservable().subscribeOn(Schedulers.newThread()).subscribeWith(new DisposableObserver<Object>() {
 
 					@Override
 					public void onNext(Object o) {
@@ -129,8 +132,7 @@ public class Orderbook extends Base {
 										}
 										else if (ba.source == null){
 											if(ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0) { // fully consumed
-												TRLOrder entry = pairMatched.get() ? buys.get(ba.befSeq) : sels.get(ba.befSeq);
-												TRLOrder entry2 = pairMatched.get() ? buys.get(ba.befSeq) : sels.get(ba.befSeq);
+												TRLOrder entry = pairMatched.get() ? buys.get(ba.befSeq.intValue()) : sels.get(ba.befSeq.intValue());
 												preFullCounters.add(entry.getOrigin());
 												remove(ba.befSeq.intValue());
 											}
@@ -141,31 +143,39 @@ public class Orderbook extends Base {
 										}
 									}
 								}
+
+								if (isBelongToThisOrderbook) {
+									LastBuySellTuple worstRates = RLOrder.worstTRates(buys, sels, start.buy.rate, start.sel.rate, botConfig);
+									start = worstRates;
+//									BuySellRateTuple worstRates = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
+//									worstBuy = worstRates.getBuyRate();
+//									worstSel = worstRates.getSelRate();
+								}	
+								
 								if (!preFullCounters.isEmpty()){
 									bus.send(new OnOrderFullConsumed(preFullCounters));
 								}
-								if (isBelongToThisOrderbook) {
-									BuySellRateTuple worstBuySel = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
-									worstBuy = worstBuySel.getBuyRate();
-									worstSel = worstBuySel.getSelRate();
-								}	
 								
 							} else if (base instanceof Common.OnOfferEdited) {
 								Common.OnOfferEdited event = (Common.OnOfferEdited) o;
 								Optional<Boolean> pairMatched = pairMatched(event.ba.after);
 								if (pairMatched.isPresent()) {
 									update(event.ba.after, event.ba.befSeq.intValue(), event.newSeq.intValue(), pairMatched.get());
-									BuySellRateTuple worstBuySel = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
-									worstBuy = worstBuySel.getBuyRate();
-									worstSel = worstBuySel.getSelRate();
+									LastBuySellTuple worstRates = RLOrder.worstTRates(buys, sels, start.buy.rate, start.sel.rate, botConfig);
+									start = worstRates;
+//									BuySellRateTuple worstBuySel = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
+//									worstBuy = worstBuySel.getBuyRate();
+//									worstSel = worstBuySel.getSelRate();
 								}
 							} else if (base instanceof Common.OnOfferCanceled) {
 								Common.OnOfferCanceled event = (Common.OnOfferCanceled) o;
 								Boolean pairMatched = remove(event.prevSeq.intValue());
 								if (pairMatched != null) {
-									BuySellRateTuple worstBuySel = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
-									worstBuy = worstBuySel.getBuyRate();
-									worstSel = worstBuySel.getSelRate();
+									LastBuySellTuple worstRates = RLOrder.worstTRates(buys, sels, start.buy.rate, start.sel.rate, botConfig);
+									start = worstRates;
+//									BuySellRateTuple worstBuySel = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
+//									worstBuy = worstBuySel.getBuyRate();
+//									worstSel = worstBuySel.getSelRate();
 								}
 							} else if (base instanceof State.BroadcastPendings) {
 								BroadcastPendings event = (BroadcastPendings) o;
@@ -177,6 +187,7 @@ public class Orderbook extends Base {
 										sortedBuys = RLOrder.sortTBuys(buys, false);
 										warnEmptyOrderbook(sortedSels, sortedBuys);
 										printOrderbook(sortedSels, sortedBuys);
+										seed has same quantities
 										balancer(sortedSels, sortedBuys);
 									}
 								}
@@ -251,12 +262,12 @@ public class Orderbook extends Base {
 
 		if (levels > 0) {
 			if (botConfig.getStrategy() == Strategy.FULLRATEPCT || botConfig.getStrategy() == Strategy.FULLRATESEEDPCT ) {
-				res.addAll(direction == Direction.BUY ? RLOrder.buildBuysSeedPct(worstBuy, levels, botConfig, super.LOGGER)
-						: RLOrder.buildSelsSeedPct(worstSel, levels, botConfig));				
+				res.addAll(direction == Direction.BUY ? RLOrder.buildBuysSeedPct(start.buy, levels, botConfig, super.LOGGER)
+						: RLOrder.buildSelsSeedPct(start.sel, levels, botConfig));				
 			} 
 			else {
-				res.addAll(direction == Direction.BUY ? RLOrder.buildBuysSeed(worstBuy, levels, botConfig, super.LOGGER)
-						: RLOrder.buildSelsSeed(worstSel, levels, botConfig));
+				res.addAll(direction == Direction.BUY ? RLOrder.buildBuysSeed(start.buy.rate, levels, botConfig, super.LOGGER)
+						: RLOrder.buildSelsSeed(start.sel.rate, levels, botConfig));
 			}
 		}
 		return res;

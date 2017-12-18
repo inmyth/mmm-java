@@ -23,9 +23,9 @@ java -jar <the_build>.jar <path_to_config_file>
 
 ### Strategies
 
-In general the principle of grid spacing is simple. Seed orderbook with orders spaced by price ("seed"). If an order is consumed, place a new order with a new rate calculated from the consumed rate ("counter"). Every a few ledgers, the bot will check the orderbook and add missing orders on either side. 
+In general the principle of grid spacing is simple. Seed orderbook with orders spaced by price ("seed"). If an order is consumed, place a new order with a new rate calculated from the consumed rate ("counter"). As we want profit, when a buy order is consumed, sell it back at higher price, when a sell order is consumed, buy it back at lower price. Every a few ledgers, the bot will check the orderbook and add missing orders on either side. 
 
-As we want profit, when a buy order is consumed, sell it at higher price, when a sell order is consumed, buy it back at lower price. The IOU to trade, number of orders, grid space, amount, etc are defined in the config. 
+The IOU to trade, number of orders, grid space, amount, etc are defined in the config. 
 
 
 #### Partial `partial`

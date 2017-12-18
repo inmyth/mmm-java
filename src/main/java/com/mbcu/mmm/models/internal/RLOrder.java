@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -334,10 +333,11 @@ public final class RLOrder extends Base {
 		return res;
 	}
 
-	public static List<RLOrder> buildBuysSeedPct(BigDecimal startPrice, int levels, BotConfig bot, Logger log) {				
+	public static List<RLOrder> buildBuysSeedPct(LastAmount last, int levels, BotConfig bot, Logger log) {				
 		BigDecimal mtp = bot.getGridSpace();
+		BigDecimal startPrice = last.rate;
+		BigDecimal startQuantity = last.quantity;
 		
-		BigDecimal botQuantity = bot.getBuyOrderQuantity();
 		List<RLOrder> res = IntStream
 				.range(1, levels + 1)
 				.mapToObj(n -> {
@@ -345,7 +345,7 @@ public final class RLOrder extends Base {
 					BigDecimal rateLo = Collections.nCopies(n, BigDecimal.ONE).stream().reduce((x, y) -> x.divide(mtp, MathContext.DECIMAL64)).get();
 					
 					BigDecimal newPri = startPrice.divide(rateHi, MathContext.DECIMAL64);
-					BigDecimal newQty = bot.getStrategy() == Strategy.FULLRATESEEDPCT ? botQuantity.multiply(rateLo, MathContext.DECIMAL64) : botQuantity;
+					BigDecimal newQty = startQuantity.multiply(rateLo, MathContext.DECIMAL64);
 					if (newPri.compareTo(BigDecimal.ZERO) <= 0) {
 						log.severe("RLOrder.buildBuySeedPct rate below zero. Check config for the pair " + bot.getPair());
 					}			
@@ -383,16 +383,19 @@ public final class RLOrder extends Base {
 		return res;
 	}
 
-	public static List<RLOrder> buildSelsSeedPct(BigDecimal startPrice, int levels, BotConfig bot) {				
+	public static List<RLOrder> buildSelsSeedPct(LastAmount start, int levels, BotConfig bot) {	
+		
 		BigDecimal mtp = bot.getGridSpace();
-		BigDecimal botQuantity = bot.getSellOrderQuantity();
+//		BigDecimal botQuantity = bot.getSellOrderQuantity();
+		BigDecimal startPrice = start.rate;
+		BigDecimal startQuantity = start.quantity;
 		List<RLOrder> res = IntStream
 				.range(1, levels + 1)
 				.mapToObj(n -> {
 					BigDecimal rateHi = Collections.nCopies(n, BigDecimal.ONE).stream().reduce((x, y) -> x.multiply(mtp, MathContext.DECIMAL64)).get();
 					BigDecimal rateLo = Collections.nCopies(n, BigDecimal.ONE).stream().reduce((x, y) -> x.divide(mtp, MathContext.DECIMAL64)).get();	
 					BigDecimal newPri = startPrice.multiply(rateHi, MathContext.DECIMAL64);
-					BigDecimal newQty = bot.getStrategy() == Strategy.FULLRATESEEDPCT ? botQuantity.multiply(rateLo, MathContext.DECIMAL64) : botQuantity;
+					BigDecimal newQty = startQuantity.multiply(rateLo, MathContext.DECIMAL64);
 
 					Amount newAmt		  = bot.base.add(newQty);
 					BigDecimal totalPriceValue = newAmt.value().multiply(newPri, MathContext.DECIMAL64);
@@ -406,48 +409,65 @@ public final class RLOrder extends Base {
 		return res;
 	}
 
-	public static BuySellRateTuple worstTRates(ConcurrentMap<Integer, TRLOrder> buys, ConcurrentMap<Integer, TRLOrder> sels, BigDecimal worstBuy, BigDecimal worstSel, BotConfig botConfig) {
+	public static LastBuySellTuple worstTRates(ConcurrentMap<Integer, TRLOrder> buys, ConcurrentMap<Integer, TRLOrder> sels, BigDecimal worstBuy, BigDecimal worstSel, BotConfig botConfig) {
 		return worstRates(TRLOrder.origins(buys), TRLOrder.origins(sels), worstBuy, worstSel, botConfig);
 	}
 	
-	public static BuySellRateTuple worstRates(ConcurrentMap<Integer, RLOrder> buys, ConcurrentMap<Integer, RLOrder> sels, BigDecimal worstBuy, BigDecimal worstSel, BotConfig botConfig) {
-		BuySellRateTuple res = new BuySellRateTuple();
+	public static LastBuySellTuple worstRates(ConcurrentMap<Integer, RLOrder> buys, ConcurrentMap<Integer, RLOrder> sels, BigDecimal worstBuy, BigDecimal worstSel, BotConfig botConfig) {
+//		BuySellRateTuple res = new BuySellRateTuple();
+		BigDecimal selAm, buyAm;
 		if (buys.isEmpty() && sels.isEmpty()) {
 			if (botConfig.getStrategy() == Strategy.FULLRATEPCT || botConfig.getStrategy() == Strategy.FULLRATESEEDPCT ) {
-				res.setBuyRate(worstBuy.divide(botConfig.getGridSpace(), MathContext.DECIMAL64));			
-				res.setSelRate(worstSel.multiply(botConfig.getGridSpace(), MathContext.DECIMAL64));
+				worstBuy = worstBuy.divide(botConfig.getGridSpace(), MathContext.DECIMAL64);			
+				worstSel = worstSel.multiply(botConfig.getGridSpace(), MathContext.DECIMAL64);
 			} else {
-				res.setBuyRate(worstBuy.subtract(botConfig.getGridSpace()));
-				res.setBuyRate(worstSel.add(botConfig.getGridSpace()));
+				worstBuy = worstBuy.subtract(botConfig.getGridSpace());
+				worstSel = worstSel.add(botConfig.getGridSpace());
+			}			
+			selAm = botConfig.getSellOrderQuantity();
+			buyAm = botConfig.getBuyOrderQuantity();			
+		}
+		else {			
+			List<Entry<Integer, RLOrder>> sorted = new ArrayList<>();
+			RLOrder last;
+			if (buys.isEmpty()) {
+				last = sortSels(sels, true).get(0).getValue();
+				if (botConfig.getStrategy() == Strategy.FULLRATEPCT || botConfig.getStrategy() == Strategy.FULLRATESEEDPCT){
+					worstBuy = BigDecimal.ONE
+							.divide(last.getRate(), MathContext.DECIMAL64)
+							.divide(botConfig.getGridSpace(), MathContext.DECIMAL64);
+				}
+				else {
+					worstBuy = worstBuy.subtract(botConfig.getGridSpace());
+				}
+			} 
+			else {
+				sorted.addAll(sortBuys(buys, false));
+				Collections.reverse(sorted);
+				last = sorted.get(0).getValue();
+				worstBuy = last.getRate();
 			}
-			return res;
-		}
-		List<Entry<Integer, RLOrder>> sorted = new ArrayList<>();
-		if (buys.isEmpty()) {
-			worstBuy = BigDecimal.ONE.divide(sortSels(sels, true).get(0).getValue().getRate(), MathContext.DECIMAL64);
-			worstBuy = 
-					botConfig.getStrategy() == Strategy.FULLRATEPCT || botConfig.getStrategy() == Strategy.FULLRATESEEDPCT
-					? worstBuy = worstBuy.divide(botConfig.getGridSpace(), MathContext.DECIMAL64)
-					: worstBuy.subtract(botConfig.getGridSpace());
-		} else {
-			sorted.addAll(sortBuys(buys, false));
-			Collections.reverse(sorted);
-			worstBuy = sorted.get(0).getValue().getRate();
-		}
-		sorted.clear();
-		if (sels.isEmpty()) {
-			worstSel = sortBuys(buys, false).get(0).getValue().getRate();
-			worstSel = botConfig.getStrategy() == Strategy.FULLRATEPCT || botConfig.getStrategy() == Strategy.FULLRATESEEDPCT
-					? worstSel = worstSel.multiply(botConfig.getGridSpace(), MathContext.DECIMAL64)
-					: worstSel.add(botConfig.getGridSpace());
-		} else {
-			sorted.addAll(sortSels(sels, false));
-			worstSel = BigDecimal.ONE.divide(sorted.get(0).getValue().getRate(), MathContext.DECIMAL64);
-		}
-
-		res.setBuyRate(worstBuy);
-		res.setSelRate(worstSel);
-		return res;
+			buyAm = last.getQuantity().value();			
+			sorted.clear();
+			if (sels.isEmpty()) {
+				last = sortBuys(buys, false).get(0).getValue();
+				if (botConfig.getStrategy() == Strategy.FULLRATEPCT || botConfig.getStrategy() == Strategy.FULLRATESEEDPCT){
+					worstSel = last.getRate().multiply(botConfig.getGridSpace(), MathContext.DECIMAL64);	
+				}
+				else {
+					worstSel = worstSel.add(botConfig.getGridSpace());
+				}
+			} 
+			else {				
+				sorted.addAll(sortSels(sels, false));
+				last = sorted.get(0).getValue();			
+				worstSel = BigDecimal.ONE.divide(last.getRate(), MathContext.DECIMAL64);
+			}
+			selAm = last.getTotalPrice().value();
+		}	
+		LastAmount lastBuy = new LastAmount(worstBuy, buyAm);
+		LastAmount lastSel = new LastAmount(worstSel, selAm);
+		return new LastBuySellTuple(lastBuy, lastSel);
 	}
 
 	public static List<Entry<Integer, RLOrder>> sortTBuys(ConcurrentMap<Integer, TRLOrder> buys, boolean isReversed) {
