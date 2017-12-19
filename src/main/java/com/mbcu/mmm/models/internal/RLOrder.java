@@ -19,6 +19,7 @@ import java.util.stream.IntStream;
 
 import com.mbcu.mmm.models.Base;
 import com.mbcu.mmm.models.internal.BotConfig.Strategy;
+import com.mbcu.mmm.utils.MyUtils;
 import com.ripple.core.coretypes.AccountID;
 import com.ripple.core.coretypes.Amount;
 import com.ripple.core.coretypes.Currency;
@@ -334,7 +335,7 @@ public final class RLOrder extends Base {
 	}
 
 	public static List<RLOrder> buildBuysSeedPct(LastAmount last, int levels, BotConfig bot, Logger log) {				
-		BigDecimal mtp = bot.getGridSpace();
+		BigDecimal mtp = MyUtils.bigSqrt(bot.getGridSpace());
 		BigDecimal startPrice = last.rate;
 		BigDecimal startQuantity = last.quantity;
 		
