@@ -118,17 +118,20 @@ public class Orderbook extends Base {
 								
 								List<RLOrder> preFullCounters 	 = new ArrayList<>();
 								List<RLOrder> prePartialCounters = new ArrayList<>();
+								boolean shouldGetNewStartRates   = true;
 								for (BefAf ba : event.bas) {
 									Optional<Boolean> pairMatched = pairMatched(ba.after);
 									if (pairMatched.isPresent()) {
 										isBelongToThisOrderbook = true;
 										if (ba.source != null){											
-											if (ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) != 0){ 
 												insert(ba.before, ba.after, ba.befSeq.intValue(), pairMatched.get());
-											} 
-											else {
-												preFullCounters.add(ba.source);
-											}
+												if (ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0){ 
+													LastBuySellTuple worstRates = RLOrder.worstTRates(buys, sels, start.buy.rate, start.sel.rate, botConfig);
+													start = worstRates;
+													remove(ba.befSeq.intValue());
+													preFullCounters.add(ba.source);
+													shouldGetNewStartRates = false;
+												}					
 										}
 										else if (ba.source == null){
 											if(ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0) { // fully consumed
@@ -144,7 +147,7 @@ public class Orderbook extends Base {
 									}
 								}
 
-								if (isBelongToThisOrderbook) {
+								if (isBelongToThisOrderbook && shouldGetNewStartRates) {
 									LastBuySellTuple worstRates = RLOrder.worstTRates(buys, sels, start.buy.rate, start.sel.rate, botConfig);
 									start = worstRates;
 //									BuySellRateTuple worstRates = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
@@ -187,7 +190,6 @@ public class Orderbook extends Base {
 										sortedBuys = RLOrder.sortTBuys(buys, false);
 										warnEmptyOrderbook(sortedSels, sortedBuys);
 										printOrderbook(sortedSels, sortedBuys);
-										seed has same quantities
 										balancer(sortedSels, sortedBuys);
 									}
 								}

@@ -341,17 +341,16 @@ public final class RLOrder extends Base {
 		List<RLOrder> res = IntStream
 				.range(1, levels + 1)
 				.mapToObj(n -> {
-					BigDecimal rateHi = Collections.nCopies(n, BigDecimal.ONE).stream().reduce((x, y) -> x.multiply(mtp, MathContext.DECIMAL64)).get();
-					BigDecimal rateLo = Collections.nCopies(n, BigDecimal.ONE).stream().reduce((x, y) -> x.divide(mtp, MathContext.DECIMAL64)).get();
+					BigDecimal rate = Collections.nCopies(n, BigDecimal.ONE).stream().reduce((x, y) -> x.multiply(mtp, MathContext.DECIMAL64)).get();
+//					BigDecimal rateLo = Collections.nCopies(n, BigDecimal.ONE).stream().reduce((x, y) -> x.divide(mtp, MathContext.DECIMAL64)).get();
 					
-					BigDecimal newPri = startPrice.divide(rateHi, MathContext.DECIMAL64);
-					BigDecimal newQty = startQuantity.multiply(rateLo, MathContext.DECIMAL64);
+					BigDecimal newPri = startPrice.divide(rate, MathContext.DECIMAL64);
+					BigDecimal newQty = startQuantity.multiply(rate, MathContext.DECIMAL64);
 					if (newPri.compareTo(BigDecimal.ZERO) <= 0) {
 						log.severe("RLOrder.buildBuySeedPct rate below zero. Check config for the pair " + bot.getPair());
 					}			
 					Amount newAmt		  = bot.base.add(newQty);
-					BigDecimal totalPriceValue = newAmt.value().multiply(newPri, MathContext.DECIMAL64);
-					Amount totalPrice = RLOrder.amount(totalPriceValue, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
+					Amount totalPrice = RLOrder.amount(newPri, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
 					RLOrder buy = RLOrder.rateUnneeded(Direction.BUY, newAmt, totalPrice);		
 					return buy;
 			})

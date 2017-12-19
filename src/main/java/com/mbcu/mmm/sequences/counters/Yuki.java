@@ -48,10 +48,10 @@ public class Yuki extends Base implements Counter {
 			public void onNext(Object o) {
 				BusBase base = (BusBase) o;
 				try {
-//					if (o instanceof Orderbook.OnOrderFullConsumed){
-//						OnOrderFullConsumed event = (OnOrderFullConsumed) o;
-//						counterFull(event.origins);
-//					}
+					if (o instanceof Orderbook.OnOrderFullConsumed){
+						OnOrderFullConsumed event = (OnOrderFullConsumed) o;
+						counterFull(event.origins);
+					}
 					
 					
 //					if (o instanceof Common.OnOfferExecuted) {
@@ -173,7 +173,7 @@ public class Yuki extends Base implements Counter {
 	 * @return
 	 */
 	private RLOrder yukiPct(RLOrder source, BotConfig botConfig, boolean isCounteringSell) {
-		BigDecimal mtp 	 		 = BigDecimal.ONE.add(botConfig.getGridSpace());
+		BigDecimal mtp 	 		 = botConfig.getGridSpace();
     Amount srcQuantity 	 = source.getQuantity();
     Amount srcTotalPrice = source.getTotalPrice();
 		BigDecimal newRate = null;
@@ -187,7 +187,8 @@ public class Yuki extends Base implements Counter {
 		} 
 		else {
 			newRate = BigDecimal.ONE.divide(source.getRate(), MathContext.DECIMAL64).divide(mtp, MathContext.DECIMAL64);
-			Amount quantity 	= srcTotalPrice;
+//			Amount quantity 	= srcTotalPrice.multiply(mtp);
+			Amount quantity          = srcTotalPrice;
 //			Amount totalPrice = srcQuantity.divide(mtp);
 			Amount totalPrice = RLOrder.amount(srcTotalPrice.value().multiply(newRate), srcQuantity.currency(), srcQuantity.issuer());
 			res  = RLOrder.rateUnneeded(Direction.BUY, quantity, totalPrice);
