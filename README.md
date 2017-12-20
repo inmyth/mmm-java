@@ -113,6 +113,23 @@ Strategy to be used. Refer to strategy section for valid names.
 
 ### Version History
 
+v.0601
+- moving to pure pct strategy
+- buy seed, counter 70% ok, check newrate when buys is not empty
+- test RLOrder 454
+- do the same for sell
+
+	    {
+            "pair": "XRP/JPY.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
+            "startMiddlePrice": 88,
+            "gridSpace": 1,
+            "buyGridLevels": 3,
+            "sellGridLevels": 0,
+            "buyOrderQuantity": 1,
+            "sellOrderQuantity": 1,
+            "strategy" : "fullrateseedpct"
+        }
+
 v.060
 - (06001) fixed fullrateseedpct counter
 - streamed counter

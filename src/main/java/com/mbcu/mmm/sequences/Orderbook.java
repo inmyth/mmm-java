@@ -53,7 +53,7 @@ public class Orderbook extends Base {
 	private Orderbook(Config config, BotConfig botConfig) {
 		super(MyLogger.getLogger(String.format(Txc.class.getName())), config);
 		this.botConfig = botConfig;
-		this.start    = new LastBuySellTuple(botConfig.getStartMiddlePrice(), botConfig.getBuyOrderQuantity(), botConfig.getStartMiddlePrice(), botConfig.getSellOrderQuantity());
+		this.start    = new LastBuySellTuple(botConfig.getStartMiddlePrice(), botConfig.getBuyOrderQuantity(), botConfig.getStartMiddlePrice(), botConfig.getSellOrderQuantity(), true);
 //		this.worstBuy = botConfig.getStartMiddlePrice();
 //		this.worstSel = botConfig.getStartMiddlePrice();
 
@@ -81,7 +81,7 @@ public class Orderbook extends Base {
 								}
 							}
 							if (buyMatched || selMatched) {
-								LastBuySellTuple worstRates = RLOrder.worstTRates(buys, sels, start.buy.rate, start.sel.rate, botConfig);
+								LastBuySellTuple worstRates = RLOrder.nextTRates(buys, sels, start.buy.rate, start.sel.rate, botConfig);
 								start = worstRates;
 //								BuySellRateTuple worstRates = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
 //								worstBuy = worstRates.getBuyRate();
@@ -118,20 +118,17 @@ public class Orderbook extends Base {
 								
 								List<RLOrder> preFullCounters 	 = new ArrayList<>();
 								List<RLOrder> prePartialCounters = new ArrayList<>();
-								boolean shouldGetNewStartRates   = true;
 								for (BefAf ba : event.bas) {
 									Optional<Boolean> pairMatched = pairMatched(ba.after);
 									if (pairMatched.isPresent()) {
 										isBelongToThisOrderbook = true;
 										if (ba.source != null){											
+											if (ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) != 0){ 
 												insert(ba.before, ba.after, ba.befSeq.intValue(), pairMatched.get());
-												if (ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0){ 
-													LastBuySellTuple worstRates = RLOrder.worstTRates(buys, sels, start.buy.rate, start.sel.rate, botConfig);
-													start = worstRates;
-													remove(ba.befSeq.intValue());
-													preFullCounters.add(ba.source);
-													shouldGetNewStartRates = false;
-												}					
+											} 
+											else {
+												preFullCounters.add(ba.source);
+											}				
 										}
 										else if (ba.source == null){
 											if(ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0) { // fully consumed
@@ -147,8 +144,8 @@ public class Orderbook extends Base {
 									}
 								}
 
-								if (isBelongToThisOrderbook && shouldGetNewStartRates) {
-									LastBuySellTuple worstRates = RLOrder.worstTRates(buys, sels, start.buy.rate, start.sel.rate, botConfig);
+								if (isBelongToThisOrderbook) {
+									LastBuySellTuple worstRates = RLOrder.nextTRates(buys, sels, start.buy.rate, start.sel.rate, botConfig);
 									start = worstRates;
 //									BuySellRateTuple worstRates = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
 //									worstBuy = worstRates.getBuyRate();
@@ -164,7 +161,7 @@ public class Orderbook extends Base {
 								Optional<Boolean> pairMatched = pairMatched(event.ba.after);
 								if (pairMatched.isPresent()) {
 									update(event.ba.after, event.ba.befSeq.intValue(), event.newSeq.intValue(), pairMatched.get());
-									LastBuySellTuple worstRates = RLOrder.worstTRates(buys, sels, start.buy.rate, start.sel.rate, botConfig);
+									LastBuySellTuple worstRates = RLOrder.nextTRates(buys, sels, start.buy.rate, start.sel.rate, botConfig);
 									start = worstRates;
 //									BuySellRateTuple worstBuySel = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
 //									worstBuy = worstBuySel.getBuyRate();
@@ -174,7 +171,7 @@ public class Orderbook extends Base {
 								Common.OnOfferCanceled event = (Common.OnOfferCanceled) o;
 								Boolean pairMatched = remove(event.prevSeq.intValue());
 								if (pairMatched != null) {
-									LastBuySellTuple worstRates = RLOrder.worstTRates(buys, sels, start.buy.rate, start.sel.rate, botConfig);
+									LastBuySellTuple worstRates = RLOrder.nextTRates(buys, sels, start.buy.rate, start.sel.rate, botConfig);
 									start = worstRates;
 //									BuySellRateTuple worstBuySel = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
 //									worstBuy = worstBuySel.getBuyRate();
@@ -264,7 +261,7 @@ public class Orderbook extends Base {
 
 		if (levels > 0) {
 			if (botConfig.getStrategy() == Strategy.FULLRATEPCT || botConfig.getStrategy() == Strategy.FULLRATESEEDPCT ) {
-				res.addAll(direction == Direction.BUY ? RLOrder.buildBuysSeedPct(start.buy, levels, botConfig, super.LOGGER)
+				res.addAll(direction == Direction.BUY ? RLOrder.buildBuysSeedPct(start.buy, levels, botConfig, super.LOGGER, start.isBlankStart)
 						: RLOrder.buildSelsSeedPct(start.sel, levels, botConfig));				
 			} 
 			else {
@@ -284,26 +281,6 @@ public class Orderbook extends Base {
 	private BigDecimal margin(BigDecimal sum, Direction direction) {
 		BigDecimal configTotalQuantity = direction == Direction.BUY ? botConfig.getTotalBuyQty() : botConfig.getTotalSelQty();
 		return configTotalQuantity.subtract(sum);
-	}
-
-	private List<Integer> trim(List<Entry<Integer, RLOrder>> sorteds, BigDecimal margin, Direction direction) {
-		List<Integer> res = new ArrayList<>();
-		margin = margin.abs();
-		BigDecimal ref = BigDecimal.ZERO;
-		if (direction == Direction.BUY) {
-			Collections.reverse(sorteds);
-		}
-		for (Entry<Integer, RLOrder> e : sorteds) {
-			BigDecimal newRef = ref
-					.add(direction == Direction.BUY ? e.getValue().getQuantity().value() : e.getValue().getTotalPrice().value());
-			if (newRef.compareTo(margin) > 0) {
-				break;
-			} else {
-				ref = newRef;
-				res.add(e.getKey());
-			}
-		}
-		return res;
 	}
 
 	private String printLog(BigDecimal sumBuys, BigDecimal sumSels, int countBuys, int countSels) {
@@ -341,16 +318,6 @@ public class Orderbook extends Base {
 		return orderbook.map(fun).reduce(BigDecimal.ZERO, BigDecimal::add);
 	}
 
-
-//	private boolean shelve(RLOrder after, int seq, boolean isAligned) {
-//		if (after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0) {
-//			remove(seq);
-//		} else {
-//			insert(after, seq, isAligned);
-//		}
-//		return true;
-//	}
-	
 	private void update(RLOrder now, int oldSeq, int newSeq, Boolean isAligned){
 		ConcurrentHashMap<Integer, TRLOrder> orders = isAligned ? buys : sels;
 		if (orders.containsKey(oldSeq)){
@@ -359,8 +326,7 @@ public class Orderbook extends Base {
 		}
 		else {
 			log("Update orderbook " + botConfig.getPair() + " failed, seq " + oldSeq +  " not found" , Level.WARNING);
-		}
-			
+		}			
 	}
 
 	private void insert(RLOrder source, RLOrder now, int seq, Boolean isAligned) {	

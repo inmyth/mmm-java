@@ -5,17 +5,17 @@ import java.math.BigDecimal;
 public class LastBuySellTuple {
 
 		public LastAmount buy, sel;
+		public boolean isBlankStart; 
 
-		public LastBuySellTuple(LastAmount buy, LastAmount sel) {
-			this.buy = buy;
-			this.sel = sel;
-		}
+
 		
-		public LastBuySellTuple(BigDecimal buyRate, BigDecimal buyQuantity, BigDecimal sellRate, BigDecimal sellQuantity){
+		public LastBuySellTuple(BigDecimal buyRate, BigDecimal buyQuantity, BigDecimal sellRate, BigDecimal sellQuantity, boolean isBlankStart){
 			LastAmount buy = new LastAmount(buyRate, buyQuantity);
 			LastAmount sel = new LastAmount(sellRate, sellQuantity);
 			this.buy       = buy;
 			this.sel       = sel;		
+			this.isBlankStart = isBlankStart;
+			
 		}
 		
 	

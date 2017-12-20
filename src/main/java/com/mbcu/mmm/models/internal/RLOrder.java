@@ -334,16 +334,18 @@ public final class RLOrder extends Base {
 		return res;
 	}
 
-	public static List<RLOrder> buildBuysSeedPct(LastAmount last, int levels, BotConfig bot, Logger log) {				
+	public static List<RLOrder> buildBuysSeedPct(LastAmount last, int levels, BotConfig bot, Logger log, boolean isBlankStart) {				
 		BigDecimal mtp = MyUtils.bigSqrt(bot.getGridSpace());
 		BigDecimal startPrice = last.rate;
 		BigDecimal startQuantity = last.quantity;
+		// 2 : a step, this is only for blank start where orderbook is totally empty
+		// 3 : two steps. seed needs to leave a slot for counter's result otherwise the counter will collide with previous level
+		int range = isBlankStart ? 2 : 3;
 		
 		List<RLOrder> res = IntStream
-				.range(1, levels + 1)
+				.range(range, levels + range)
 				.mapToObj(n -> {
 					BigDecimal rate = Collections.nCopies(n, BigDecimal.ONE).stream().reduce((x, y) -> x.multiply(mtp, MathContext.DECIMAL64)).get();
-//					BigDecimal rateLo = Collections.nCopies(n, BigDecimal.ONE).stream().reduce((x, y) -> x.divide(mtp, MathContext.DECIMAL64)).get();
 					
 					BigDecimal newPri = startPrice.divide(rate, MathContext.DECIMAL64);
 					BigDecimal newQty = startQuantity.multiply(rate, MathContext.DECIMAL64);
@@ -409,65 +411,78 @@ public final class RLOrder extends Base {
 		return res;
 	}
 
-	public static LastBuySellTuple worstTRates(ConcurrentMap<Integer, TRLOrder> buys, ConcurrentMap<Integer, TRLOrder> sels, BigDecimal worstBuy, BigDecimal worstSel, BotConfig botConfig) {
-		return worstRates(TRLOrder.origins(buys), TRLOrder.origins(sels), worstBuy, worstSel, botConfig);
+	public static LastBuySellTuple nextTRates(ConcurrentMap<Integer, TRLOrder> buys, ConcurrentMap<Integer, TRLOrder> sels, BigDecimal worstBuy, BigDecimal worstSel, BotConfig botConfig) {
+		return nextRates(TRLOrder.origins(buys), TRLOrder.origins(sels), worstBuy, worstSel, botConfig);
 	}
 	
-	public static LastBuySellTuple worstRates(ConcurrentMap<Integer, RLOrder> buys, ConcurrentMap<Integer, RLOrder> sels, BigDecimal worstBuy, BigDecimal worstSel, BotConfig botConfig) {
+	public static LastBuySellTuple nextRates(ConcurrentMap<Integer, RLOrder> buys, ConcurrentMap<Integer, RLOrder> sels, BigDecimal lastBuy, BigDecimal lastSel, BotConfig botConfig) {
 //		BuySellRateTuple res = new BuySellRateTuple();
 		BigDecimal selAm, buyAm;
+		boolean isBlankStart = false;
 		if (buys.isEmpty() && sels.isEmpty()) {
-			if (botConfig.getStrategy() == Strategy.FULLRATEPCT || botConfig.getStrategy() == Strategy.FULLRATESEEDPCT ) {
-				worstBuy = worstBuy.divide(botConfig.getGridSpace(), MathContext.DECIMAL64);			
-				worstSel = worstSel.multiply(botConfig.getGridSpace(), MathContext.DECIMAL64);
-			} else {
-				worstBuy = worstBuy.subtract(botConfig.getGridSpace());
-				worstSel = worstSel.add(botConfig.getGridSpace());
-			}			
+//			if (botConfig.getStrategy() == Strategy.FULLRATEPCT || botConfig.getStrategy() == Strategy.FULLRATESEEDPCT ) {
+//				lastBuy = lastBuy.divide(botConfig.getGridSpace(), MathContext.DECIMAL64);			
+//				lastSel = lastSel.multiply(botConfig.getGridSpace(), MathContext.DECIMAL64);
+//			} else {
+//				lastBuy = lastBuy.subtract(botConfig.getGridSpace());
+//				lastSel = lastSel.add(botConfig.getGridSpace());
+//			}			
 			selAm = botConfig.getSellOrderQuantity();
 			buyAm = botConfig.getBuyOrderQuantity();			
+			isBlankStart = true;
 		}
 		else {			
 			List<Entry<Integer, RLOrder>> sorted = new ArrayList<>();
 			RLOrder last;
 			if (buys.isEmpty()) {
+				
 				last = sortSels(sels, true).get(0).getValue();
 				if (botConfig.getStrategy() == Strategy.FULLRATEPCT || botConfig.getStrategy() == Strategy.FULLRATESEEDPCT){
-					worstBuy = BigDecimal.ONE
-							.divide(last.getRate(), MathContext.DECIMAL64)
-							.divide(botConfig.getGridSpace(), MathContext.DECIMAL64);
+					lastBuy = last.quantity.value();
+//					lastBuy = BigDecimal.ONE
+//							.divide(last.getRate(), MathContext.DECIMAL64);
+//							.divide(MyUtils.bigSqrt(botConfig.getGridSpace()), MathContext.DECIMAL64);
 				}
-				else {
-					worstBuy = worstBuy.subtract(botConfig.getGridSpace());
-				}
+//				else {
+//					lastBuy = lastBuy.subtract(botConfig.getGridSpace());
+//				}
 			} 
 			else {
 				sorted.addAll(sortBuys(buys, false));
 				Collections.reverse(sorted);
 				last = sorted.get(0).getValue();
-				worstBuy = last.getRate();
+				lastBuy = last.getRate();
 			}
-			buyAm = last.getQuantity().value();			
+//			if (botConfig.getStrategy() == Strategy.FULLRATEPCT || botConfig.getStrategy() == Strategy.FULLRATESEEDPCT){
+//				buyAm = last.getTotalPrice().value().multiply(MyUtils.bigSqrt(botConfig.getBuyOrderQuantity()));			
+//			}
+//			else {
+				buyAm = last.getTotalPrice().value(); // 
+//			}
+			
 			sorted.clear();
 			if (sels.isEmpty()) {
 				last = sortBuys(buys, false).get(0).getValue();
-				if (botConfig.getStrategy() == Strategy.FULLRATEPCT || botConfig.getStrategy() == Strategy.FULLRATESEEDPCT){
-					worstSel = last.getRate().multiply(botConfig.getGridSpace(), MathContext.DECIMAL64);	
-				}
-				else {
-					worstSel = worstSel.add(botConfig.getGridSpace());
-				}
+//				if (botConfig.getStrategy() == Strategy.FULLRATEPCT || botConfig.getStrategy() == Strategy.FULLRATESEEDPCT){
+//					lastSel = last.getRate().multiply(MyUtils.bigSqrt(botConfig.getGridSpace()), MathContext.DECIMAL64);	
+//				}
+//				else {
+//					lastSel = lastSel.add(botConfig.getGridSpace());
+//				}
 			} 
 			else {				
 				sorted.addAll(sortSels(sels, false));
 				last = sorted.get(0).getValue();			
-				worstSel = BigDecimal.ONE.divide(last.getRate(), MathContext.DECIMAL64);
+				lastSel = BigDecimal.ONE.divide(last.getRate(), MathContext.DECIMAL64);
 			}
-			selAm = last.getTotalPrice().value();
+//			if (botConfig.getStrategy() == Strategy.FULLRATEPCT || botConfig.getStrategy() == Strategy.FULLRATESEEDPCT){
+//				selAm = last.getTotalPrice().value().divide(MyUtils.bigSqrt(botConfig.getBuyOrderQuantity()));			
+//			}
+//			else {
+				selAm = last.getTotalPrice().value();
+//			}			
 		}	
-		LastAmount lastBuy = new LastAmount(worstBuy, buyAm);
-		LastAmount lastSel = new LastAmount(worstSel, selAm);
-		return new LastBuySellTuple(lastBuy, lastSel);
+		return new LastBuySellTuple(lastBuy, buyAm, lastSel, selAm, isBlankStart);
 	}
 
 	public static List<Entry<Integer, RLOrder>> sortTBuys(ConcurrentMap<Integer, TRLOrder> buys, boolean isReversed) {
