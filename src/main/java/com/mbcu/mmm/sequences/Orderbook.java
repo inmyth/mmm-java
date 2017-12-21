@@ -261,8 +261,8 @@ public class Orderbook extends Base {
 
 		if (levels > 0) {
 			if (botConfig.getStrategy() == Strategy.FULLRATEPCT || botConfig.getStrategy() == Strategy.FULLRATESEEDPCT ) {
-				res.addAll(direction == Direction.BUY ? RLOrder.buildBuysSeedPct(start.buy, levels, botConfig, super.LOGGER, start.isBlankStart)
-						: RLOrder.buildSelsSeedPct(start.sel, levels, botConfig));				
+				res.addAll(direction == Direction.BUY ? RLOrder.buildSeedPct(true, start.buy, levels, botConfig, super.LOGGER, start.isBlankStart)
+						: RLOrder.buildSeedPct(false, start.sel, levels, botConfig, super.LOGGER, start.isBlankStart));				
 			} 
 			else {
 				res.addAll(direction == Direction.BUY ? RLOrder.buildBuysSeed(start.buy.rate, levels, botConfig, super.LOGGER)

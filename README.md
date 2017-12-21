@@ -113,6 +113,29 @@ Strategy to be used. Refer to strategy section for valid names.
 
 ### Version History
 
+v.0602
+- sell and buy 80%
+- every sellGridlevels there's a jump in price 
+```
+Sell 	1.0000 	100.00 	
+Sell 	1.0050 	99.010 	
+Sell 	1.0100 	98.030 	
+Sell 	1.0201 	96.577 	
+Buy 	1.0252 	95.147 	
+Buy 	1.0303 	94.206 	
+```
+
+```
+            "pair": "XRP/JPY.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
+            "startMiddlePrice": 100,
+            "gridSpace": 1,
+            "buyGridLevels": 3,
+            "sellGridLevels": 0,
+            "buyOrderQuantity": 1,
+            "sellOrderQuantity": 1,
+            "strategy" : "fullrateseedpct"
+```
+
 v.0601
 - moving to pure pct strategy
 - buy seed, counter 70% ok, check newrate when buys is not empty
