@@ -4,18 +4,18 @@ import java.math.BigDecimal;
 
 public class LastBuySellTuple {
 
-		public LastAmount buy, sel;
-		public boolean isBlankStart; 
-
+		public final LastAmount buy, sel;
+		public final boolean isBuyPulledFromSel;
+		public final boolean isSelPulledFromBuy;
 
 		
-		public LastBuySellTuple(BigDecimal buyRate, BigDecimal buyQuantity, BigDecimal sellRate, BigDecimal sellQuantity, boolean isBlankStart){
+		public LastBuySellTuple(BigDecimal buyRate, BigDecimal buyQuantity, BigDecimal sellRate, BigDecimal sellQuantity, boolean isBuyPulledFromSel, boolean isSelPulledFromBuy){
 			LastAmount buy = new LastAmount(buyRate, buyQuantity);
 			LastAmount sel = new LastAmount(sellRate, sellQuantity);
 			this.buy       = buy;
 			this.sel       = sel;		
-			this.isBlankStart = isBlankStart;
-			
+			this.isBuyPulledFromSel = isBuyPulledFromSel;
+			this.isSelPulledFromBuy = isSelPulledFromBuy;
 		}
 		
 	

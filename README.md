@@ -113,6 +113,11 @@ Strategy to be used. Refer to strategy section for valid names.
 
 ### Version History
 
+v.0603
+- buy is correct
+- sell not correct
+- both active not correct
+
 v.0602
 - sell and buy 80%
 - every sellGridlevels there's a jump in price 

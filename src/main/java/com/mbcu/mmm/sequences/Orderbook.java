@@ -53,7 +53,7 @@ public class Orderbook extends Base {
 	private Orderbook(Config config, BotConfig botConfig) {
 		super(MyLogger.getLogger(String.format(Txc.class.getName())), config);
 		this.botConfig = botConfig;
-		this.start    = new LastBuySellTuple(botConfig.getStartMiddlePrice(), botConfig.getBuyOrderQuantity(), botConfig.getStartMiddlePrice(), botConfig.getSellOrderQuantity(), true);
+		this.start    = new LastBuySellTuple(botConfig.getStartMiddlePrice(), botConfig.getBuyOrderQuantity(), botConfig.getStartMiddlePrice(), botConfig.getSellOrderQuantity(), false, false);
 //		this.worstBuy = botConfig.getStartMiddlePrice();
 //		this.worstSel = botConfig.getStartMiddlePrice();
 
@@ -261,8 +261,7 @@ public class Orderbook extends Base {
 
 		if (levels > 0) {
 			if (botConfig.getStrategy() == Strategy.FULLRATEPCT || botConfig.getStrategy() == Strategy.FULLRATESEEDPCT ) {
-				res.addAll(direction == Direction.BUY ? RLOrder.buildSeedPct(true, start.buy, levels, botConfig, super.LOGGER, start.isBlankStart)
-						: RLOrder.buildSeedPct(false, start.sel, levels, botConfig, super.LOGGER, start.isBlankStart));				
+				res.addAll(RLOrder.buildSeedPct(direction == Direction.BUY, start, levels, botConfig, LOGGER));			
 			} 
 			else {
 				res.addAll(direction == Direction.BUY ? RLOrder.buildBuysSeed(start.buy.rate, levels, botConfig, super.LOGGER)

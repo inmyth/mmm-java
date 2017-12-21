@@ -334,13 +334,11 @@ public final class RLOrder extends Base {
 		return res;
 	}
 
-	public static List<RLOrder> buildSeedPct(boolean isBuySeed, LastAmount last, int levels, BotConfig bot, Logger log, boolean isBlankStart) {				
+	public static List<RLOrder> buildSeedPct(boolean isBuySeed, LastBuySellTuple last, int levels, BotConfig bot, Logger log) {				
 		BigDecimal mtp = MyUtils.bigSqrt(bot.getGridSpace());
-		BigDecimal startPrice = last.rate;
-		BigDecimal startQuantity = last.quantity;
-		// 2 : a step, this is only for blank start where orderbook is totally empty
-		// 3 : two steps. seed needs to leave a slot for counter's result otherwise the counter will collide with previous level
-		int range = isBlankStart ? 2 : 3;
+		BigDecimal startPrice		 = isBuySeed ? last.buy.rate : last.sel.rate;
+		BigDecimal startQuantity = isBuySeed ? last.buy.quantity : last.sel.rate;
+		int range = isBuySeed ? last.isBuyPulledFromSel ? 3 : 2 : last.isSelPulledFromBuy ? 3 : 2;
 		MathContext D64 = MathContext.DECIMAL64;
 		List<RLOrder> res = IntStream
 				.range(range, levels + range)
@@ -416,11 +414,11 @@ public final class RLOrder extends Base {
 	
 	public static LastBuySellTuple nextRates(ConcurrentMap<Integer, RLOrder> buys, ConcurrentMap<Integer, RLOrder> sels, BigDecimal lastBuy, BigDecimal lastSel, BotConfig botConfig) {
 		BigDecimal selAm, buyAm;
-		boolean isBlankStart = false;
+		boolean isBuyPulledFromSel = false;
+		boolean isSelPulledFromBuy = false;
 		if (buys.isEmpty() && sels.isEmpty()) {		
 			selAm = botConfig.getSellOrderQuantity();
 			buyAm = botConfig.getBuyOrderQuantity();			
-			isBlankStart = true;
 		}
 		else {			
 			List<Entry<Integer, RLOrder>> sorted = new ArrayList<>();
@@ -429,6 +427,7 @@ public final class RLOrder extends Base {
 				last = sortSels(sels, true).get(0).getValue();
 					lastBuy = last.quantity.value();
 					buyAm = last.getTotalPrice().value(); 
+					isBuyPulledFromSel = true;
 			} 
 			else {
 				sorted.addAll(sortBuys(buys, false));
@@ -442,6 +441,7 @@ public final class RLOrder extends Base {
 				last = sortBuys(buys, false).get(0).getValue();
 				lastSel = last.totalPrice.value();
 				selAm   = last.quantity.value();
+				isSelPulledFromBuy = true;
 			} 
 			else {				
 				sorted.addAll(sortSels(sels, true));
@@ -450,7 +450,7 @@ public final class RLOrder extends Base {
 				selAm   = last.getTotalPrice().value();
 			}		
 		}	
-		return new LastBuySellTuple(lastBuy, buyAm, lastSel, selAm, isBlankStart);
+		return new LastBuySellTuple(lastBuy, buyAm, lastSel, selAm, isBuyPulledFromSel, isSelPulledFromBuy);
 	}
 
 	public static List<Entry<Integer, RLOrder>> sortTBuys(ConcurrentMap<Integer, TRLOrder> buys, boolean isReversed) {
