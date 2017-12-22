@@ -5,12 +5,12 @@ import java.math.BigDecimal;
 public class LastAmount {
 
 	public final BigDecimal rate;
-	public final BigDecimal quantity;
+	public final BigDecimal trade;
 
-	public LastAmount(BigDecimal rate, BigDecimal quantity) {
+	public LastAmount(BigDecimal rate, BigDecimal trade) {
 		super();
 		this.rate = rate;
-		this.quantity = quantity;
+		this.trade = trade;
 	}
 
 }

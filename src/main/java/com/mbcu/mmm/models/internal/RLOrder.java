@@ -334,23 +334,53 @@ public final class RLOrder extends Base {
 		return res;
 	}
 
-	public static List<RLOrder> buildSeedPct(boolean isBuySeed, LastBuySellTuple last, int levels, BotConfig bot, Logger log) {				
-		BigDecimal mtp = MyUtils.bigSqrt(bot.getGridSpace());
-		BigDecimal startPrice		 = isBuySeed ? last.buy.rate : last.sel.rate;
-		BigDecimal startQuantity = isBuySeed ? last.buy.quantity : last.sel.rate;
-		int range = isBuySeed ? last.isBuyPulledFromSel ? 3 : 2 : last.isSelPulledFromBuy ? 3 : 2;
+	public static List<RLOrder> buildSeedPct(boolean isBuySeed, LastBuySellTuple last, int levels, BotConfig bot, Logger log) {		
 		MathContext D64 = MathContext.DECIMAL64;
+		BigDecimal mtp = MyUtils.bigSqrt(bot.getGridSpace());
+		BigDecimal startPrice	= isBuySeed ? last.buy.rate  : last.sel.rate;
+		BigDecimal startTrade = isBuySeed ? last.buy.trade : last.sel.trade;
+		
+		int range = isBuySeed ? last.isBuyPulledFromSel ? 3 : 2 : last.isSelPulledFromBuy ? 2 : 1;
 		List<RLOrder> res = IntStream
 				.range(range, levels + range)
 				.mapToObj(n -> {
 					BigDecimal rate = Collections.nCopies(n, BigDecimal.ONE).stream().reduce((x, y) -> x.multiply(mtp, D64)).get();					
 					BigDecimal newPri = isBuySeed ? startPrice.divide(rate, D64) : startPrice.multiply(rate, D64);
-					BigDecimal newQty = isBuySeed ? startQuantity.multiply(rate, D64): startQuantity.divide(rate, D64);
+					BigDecimal newQty = isBuySeed ? startTrade.multiply(rate, D64): startTrade.divide(rate, D64);
 					if (newPri.compareTo(BigDecimal.ZERO) <= 0) {
 						log.severe("RLOrder.buildBuySeedPct rate below zero. Check config for the pair " + bot.getPair());
 					}			
 					Amount newAmt		  = bot.base.add(newQty);
 					Amount totalPrice = RLOrder.amount(newPri, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
+					RLOrder buy = RLOrder.rateUnneeded(Direction.BUY, newAmt, totalPrice);		
+					return buy;
+			})
+	   .filter(o -> o.getQuantity().value().compareTo(BigDecimal.ZERO) > 0)
+	   .filter(o -> o.getTotalPrice().value().compareTo(BigDecimal.ZERO) > 0)
+	   .collect(Collectors.toList());
+		return res;
+	}
+	
+	public static List<RLOrder> buildSeedPct2(boolean isBuySeed, LastBuySellTuple last, int levels, BotConfig bot, Logger log) {			
+		MathContext D64 = MathContext.DECIMAL64;
+
+		BigDecimal mtp = MyUtils.bigSqrt(bot.getGridSpace());
+		BigDecimal startPrice		 = isBuySeed ? last.buy.rate : last.sel.rate;
+		BigDecimal lastBase = isBuySeed ? last.buy.trade : last.sel.trade.multiply(last.sel.rate, D64);
+		
+		int range = isBuySeed ? last.isBuyPulledFromSel ? 3 : 2 : last.isSelPulledFromBuy ? 2 : 1;
+		List<RLOrder> res = IntStream
+				.range(range, levels + range)
+				.mapToObj(n -> {
+					BigDecimal rate = Collections.nCopies(n, BigDecimal.ONE).stream().reduce((x, y) -> x.multiply(mtp, D64)).get();					
+//					BigDecimal newPri = isBuySeed ? startPrice.divide(rate, D64) : startPrice.multiply(rate, D64);
+					BigDecimal newTrade = isBuySeed ? startPrice.divide(rate, D64) : startPrice.multiply(rate, D64);
+					BigDecimal newBase  = isBuySeed ? lastBase.multiply(rate, D64): lastBase.divide(rate, D64);
+//					if (newPri.compareTo(BigDecimal.ZERO) <= 0) {
+//						log.severe("RLOrder.buildBuySeedPct rate below zero. Check config for the pair " + bot.getPair());
+//					}							
+					Amount newAmt		  = bot.base.add(newBase);
+					Amount totalPrice = RLOrder.amount(newTrade, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
 					RLOrder buy = RLOrder.rateUnneeded(Direction.BUY, newAmt, totalPrice);		
 					return buy;
 			})
@@ -425,9 +455,9 @@ public final class RLOrder extends Base {
 			RLOrder last;
 			if (buys.isEmpty()) {				
 				last = sortSels(sels, true).get(0).getValue();
-					lastBuy = last.quantity.value();
-					buyAm = last.getTotalPrice().value(); 
-					isBuyPulledFromSel = true;
+				lastBuy = last.quantity.value();
+				buyAm = last.getTotalPrice().value(); 
+				isBuyPulledFromSel = true;
 			} 
 			else {
 				sorted.addAll(sortBuys(buys, false));

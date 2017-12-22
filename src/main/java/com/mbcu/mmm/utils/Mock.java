@@ -42,7 +42,7 @@ public class Mock {
 	  BigDecimal b = Collections.nCopies(4, BigDecimal.ONE).stream().reduce((x, y) -> x.divide(a, MathContext.DECIMAL32)).get();
 	  System.out.println(b);
 	  
-	  BigDecimal c = Collections.nCopies(4, BigDecimal.ONE).stream().reduce((x, y) -> x.multiply(a, MathContext.DECIMAL32)).get();
+	  BigDecimal c = Collections.nCopies(5, BigDecimal.ONE).stream().reduce((x, y) -> x.multiply(a, MathContext.DECIMAL32)).get();
 	  System.out.println(c);
 	  
 		
