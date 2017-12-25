@@ -113,6 +113,10 @@ Strategy to be used. Refer to strategy section for valid names.
 
 ### Version History
 
+v.0604
+- total1 = sqrt * q0 / u1 test this
+
+
 v.0603
 - buy is correct
 - sell not correct

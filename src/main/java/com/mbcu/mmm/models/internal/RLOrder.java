@@ -336,23 +336,26 @@ public final class RLOrder extends Base {
 
 	public static List<RLOrder> buildSeedPct(boolean isBuySeed, LastBuySellTuple last, int levels, BotConfig bot, Logger log) {		
 		MathContext D64 = MathContext.DECIMAL64;
-		BigDecimal mtp = MyUtils.bigSqrt(bot.getGridSpace());
-		BigDecimal startPrice	= isBuySeed ? last.buy.rate  : last.sel.rate;
-		BigDecimal startTrade = isBuySeed ? last.buy.trade : last.sel.trade;
+		BigDecimal mtp = bot.getGridSpace();
+		BigDecimal startUnit	= isBuySeed ? last.buy.rate  : last.sel.rate;
+		BigDecimal startQuant = isBuySeed ? last.buy.trade : last.sel.trade;
 		
 		int range = isBuySeed ? last.isBuyPulledFromSel ? 3 : 2 : last.isSelPulledFromBuy ? 2 : 1;
 		List<RLOrder> res = IntStream
 				.range(range, levels + range)
 				.mapToObj(n -> {
-					BigDecimal rate = Collections.nCopies(n, BigDecimal.ONE).stream().reduce((x, y) -> x.multiply(mtp, D64)).get();					
-					BigDecimal newPri = isBuySeed ? startPrice.divide(rate, D64) : startPrice.multiply(rate, D64);
-					BigDecimal newQty = isBuySeed ? startTrade.multiply(rate, D64): startTrade.divide(rate, D64);
-					if (newPri.compareTo(BigDecimal.ZERO) <= 0) {
+					BigDecimal coeff = Collections.nCopies(n, BigDecimal.ONE).stream().reduce((x, y) -> x.multiply(mtp, D64)).get();					
+					BigDecimal newUnit = isBuySeed ? startUnit.divide(coeff, D64) : startUnit.multiply(coeff, D64);
+					BigDecimal sqrt  = MyUtils.bigSqrt(coeff);
+					BigDecimal newQty = isBuySeed ? startQuant.multiply(sqrt, D64): startQuant.divide(sqrt, D64);
+					if (newUnit.compareTo(BigDecimal.ZERO) <= 0) {
 						log.severe("RLOrder.buildBuySeedPct rate below zero. Check config for the pair " + bot.getPair());
 					}			
-					Amount newAmt		  = bot.base.add(newQty);
-					Amount totalPrice = RLOrder.amount(newPri, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
-					RLOrder buy = RLOrder.rateUnneeded(Direction.BUY, newAmt, totalPrice);		
+					
+					BigDecimal newTotal = newQty.divide(newUnit, D64);
+					Amount newQtyAmt		= bot.base.add(newQty);
+					Amount newTotalAmt  = RLOrder.amount(newTotal, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
+					RLOrder buy = RLOrder.rateUnneeded(Direction.BUY, newQtyAmt, newTotalAmt);		
 					return buy;
 			})
 	   .filter(o -> o.getQuantity().value().compareTo(BigDecimal.ZERO) > 0)
