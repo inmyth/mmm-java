@@ -81,7 +81,7 @@ public class Orderbook extends Base {
 								}
 							}
 							if (buyMatched || selMatched) {
-								LastBuySellTuple worstRates = RLOrder.nextTRates(buys, sels, start.buy.rate, start.sel.rate, botConfig);
+								LastBuySellTuple worstRates = RLOrder.nextTRates(buys, sels, start.buy.unitPrice, start.sel.unitPrice, botConfig);
 								start = worstRates;
 //								BuySellRateTuple worstRates = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
 //								worstBuy = worstRates.getBuyRate();
@@ -145,7 +145,7 @@ public class Orderbook extends Base {
 								}
 
 								if (isBelongToThisOrderbook) {
-									LastBuySellTuple worstRates = RLOrder.nextTRates(buys, sels, start.buy.rate, start.sel.rate, botConfig);
+									LastBuySellTuple worstRates = RLOrder.nextTRates(buys, sels, start.buy.unitPrice, start.sel.unitPrice, botConfig);
 									start = worstRates;
 //									BuySellRateTuple worstRates = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
 //									worstBuy = worstRates.getBuyRate();
@@ -161,7 +161,7 @@ public class Orderbook extends Base {
 								Optional<Boolean> pairMatched = pairMatched(event.ba.after);
 								if (pairMatched.isPresent()) {
 									update(event.ba.after, event.ba.befSeq.intValue(), event.newSeq.intValue(), pairMatched.get());
-									LastBuySellTuple worstRates = RLOrder.nextTRates(buys, sels, start.buy.rate, start.sel.rate, botConfig);
+									LastBuySellTuple worstRates = RLOrder.nextTRates(buys, sels, start.buy.unitPrice, start.sel.unitPrice, botConfig);
 									start = worstRates;
 //									BuySellRateTuple worstBuySel = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
 //									worstBuy = worstBuySel.getBuyRate();
@@ -171,7 +171,7 @@ public class Orderbook extends Base {
 								Common.OnOfferCanceled event = (Common.OnOfferCanceled) o;
 								Boolean pairMatched = remove(event.prevSeq.intValue());
 								if (pairMatched != null) {
-									LastBuySellTuple worstRates = RLOrder.nextTRates(buys, sels, start.buy.rate, start.sel.rate, botConfig);
+									LastBuySellTuple worstRates = RLOrder.nextTRates(buys, sels, start.buy.unitPrice, start.sel.unitPrice, botConfig);
 									start = worstRates;
 //									BuySellRateTuple worstBuySel = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
 //									worstBuy = worstBuySel.getBuyRate();
@@ -264,8 +264,8 @@ public class Orderbook extends Base {
 				res.addAll(RLOrder.buildSeedPct(direction == Direction.BUY, start, levels, botConfig, LOGGER));			
 			} 
 			else {
-				res.addAll(direction == Direction.BUY ? RLOrder.buildBuysSeed(start.buy.rate, levels, botConfig, super.LOGGER)
-						: RLOrder.buildSelsSeed(start.sel.rate, levels, botConfig));
+				res.addAll(direction == Direction.BUY ? RLOrder.buildBuysSeed(start.buy.unitPrice, levels, botConfig, super.LOGGER)
+						: RLOrder.buildSelsSeed(start.sel.unitPrice, levels, botConfig));
 			}
 		}
 		return res;

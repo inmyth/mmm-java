@@ -4,13 +4,13 @@ import java.math.BigDecimal;
 
 public class LastAmount {
 
-	public final BigDecimal rate;
-	public final BigDecimal trade;
+	public final BigDecimal unitPrice;
+	public final BigDecimal qty;
 
-	public LastAmount(BigDecimal rate, BigDecimal trade) {
+	public LastAmount(BigDecimal unitPrice, BigDecimal qty) {
 		super();
-		this.rate = rate;
-		this.trade = trade;
+		this.unitPrice = unitPrice;
+		this.qty = qty;
 	}
 
 }

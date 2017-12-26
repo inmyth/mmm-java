@@ -9,9 +9,9 @@ public class LastBuySellTuple {
 		public final boolean isSelPulledFromBuy;
 
 		
-		public LastBuySellTuple(BigDecimal buyRate, BigDecimal buyTrade, BigDecimal sellRate, BigDecimal selTrade, boolean isBuyPulledFromSel, boolean isSelPulledFromBuy){
-			LastAmount buy = new LastAmount(buyRate, buyTrade);
-			LastAmount sel = new LastAmount(sellRate, selTrade);
+		public LastBuySellTuple(BigDecimal buyUnitPrice, BigDecimal buyQty, BigDecimal selUnitPrice, BigDecimal selQty, boolean isBuyPulledFromSel, boolean isSelPulledFromBuy){
+			LastAmount buy = new LastAmount(buyUnitPrice, buyQty);
+			LastAmount sel = new LastAmount(selUnitPrice, selQty);
 			this.buy       = buy;
 			this.sel       = sel;		
 			this.isBuyPulledFromSel = isBuyPulledFromSel;

@@ -335,27 +335,36 @@ public final class RLOrder extends Base {
 	}
 
 	public static List<RLOrder> buildSeedPct(boolean isBuySeed, LastBuySellTuple last, int levels, BotConfig bot, Logger log) {		
-		MathContext D64 = MathContext.DECIMAL64;
+		MathContext mc = MathContext.DECIMAL64;
 		BigDecimal mtp = bot.getGridSpace();
-		BigDecimal startUnit	= isBuySeed ? last.buy.rate  : last.sel.rate;
-		BigDecimal startQuant = isBuySeed ? last.buy.trade : last.sel.trade;
-		
+		BigDecimal unitPrice0	= isBuySeed ? last.buy.unitPrice  : last.sel.unitPrice;
+		BigDecimal qty0 = isBuySeed ? last.buy.qty : last.sel.qty;
+		/*
+		 ell 	2.0000 	120.00 	
+Sell 	2.0100 	118.81 	
+Sell 	2.0200 	117.64 	
+Sell 	2.0301 	116.47 	
+Sell 	2.0402 	115.32 	
+Buy 	2.0606 	113.06 	
+Buy 	2.0709 	111.93 	
+Buy 	2.0812 	110.83 	
+		 */
+
 		int range = isBuySeed ? last.isBuyPulledFromSel ? 3 : 2 : last.isSelPulledFromBuy ? 2 : 1;
 		List<RLOrder> res = IntStream
 				.range(range, levels + range)
 				.mapToObj(n -> {
-					BigDecimal coeff = Collections.nCopies(n, BigDecimal.ONE).stream().reduce((x, y) -> x.multiply(mtp, D64)).get();					
-					BigDecimal newUnit = isBuySeed ? startUnit.divide(coeff, D64) : startUnit.multiply(coeff, D64);
-					BigDecimal sqrt  = MyUtils.bigSqrt(coeff);
-					BigDecimal newQty = isBuySeed ? startQuant.multiply(sqrt, D64): startQuant.divide(sqrt, D64);
-					if (newUnit.compareTo(BigDecimal.ZERO) <= 0) {
+					BigDecimal rate = Collections.nCopies(n, BigDecimal.ONE).stream().reduce((x, y) -> x.multiply(mtp, mc)).get();					
+					BigDecimal unitPrice1 = isBuySeed ? unitPrice0.divide(rate, mc) : unitPrice0.multiply(rate, mc);
+					BigDecimal sqrt  = MyUtils.bigSqrt(rate);
+					BigDecimal qty1 = isBuySeed ? qty0.multiply(sqrt, mc): qty0.divide(sqrt, mc);
+					if (unitPrice1.compareTo(BigDecimal.ZERO) <= 0) {
 						log.severe("RLOrder.buildBuySeedPct rate below zero. Check config for the pair " + bot.getPair());
 					}			
-					
-					BigDecimal newTotal = newQty.divide(newUnit, D64);
-					Amount newQtyAmt		= bot.base.add(newQty);
-					Amount newTotalAmt  = RLOrder.amount(newTotal, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
-					RLOrder buy = RLOrder.rateUnneeded(Direction.BUY, newQtyAmt, newTotalAmt);		
+					BigDecimal total1 = qty1.multiply(unitPrice1, mc);
+					Amount qtyAmount1		= bot.base.add(qty1);
+					Amount totalAmount1  = RLOrder.amount(total1, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
+					RLOrder buy = RLOrder.rateUnneeded(Direction.BUY, qtyAmount1, totalAmount1);		
 					return buy;
 			})
 	   .filter(o -> o.getQuantity().value().compareTo(BigDecimal.ZERO) > 0)
@@ -363,36 +372,7 @@ public final class RLOrder extends Base {
 	   .collect(Collectors.toList());
 		return res;
 	}
-	
-	public static List<RLOrder> buildSeedPct2(boolean isBuySeed, LastBuySellTuple last, int levels, BotConfig bot, Logger log) {			
-		MathContext D64 = MathContext.DECIMAL64;
-
-		BigDecimal mtp = MyUtils.bigSqrt(bot.getGridSpace());
-		BigDecimal startPrice		 = isBuySeed ? last.buy.rate : last.sel.rate;
-		BigDecimal lastBase = isBuySeed ? last.buy.trade : last.sel.trade.multiply(last.sel.rate, D64);
 		
-		int range = isBuySeed ? last.isBuyPulledFromSel ? 3 : 2 : last.isSelPulledFromBuy ? 2 : 1;
-		List<RLOrder> res = IntStream
-				.range(range, levels + range)
-				.mapToObj(n -> {
-					BigDecimal rate = Collections.nCopies(n, BigDecimal.ONE).stream().reduce((x, y) -> x.multiply(mtp, D64)).get();					
-//					BigDecimal newPri = isBuySeed ? startPrice.divide(rate, D64) : startPrice.multiply(rate, D64);
-					BigDecimal newTrade = isBuySeed ? startPrice.divide(rate, D64) : startPrice.multiply(rate, D64);
-					BigDecimal newBase  = isBuySeed ? lastBase.multiply(rate, D64): lastBase.divide(rate, D64);
-//					if (newPri.compareTo(BigDecimal.ZERO) <= 0) {
-//						log.severe("RLOrder.buildBuySeedPct rate below zero. Check config for the pair " + bot.getPair());
-//					}							
-					Amount newAmt		  = bot.base.add(newBase);
-					Amount totalPrice = RLOrder.amount(newTrade, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
-					RLOrder buy = RLOrder.rateUnneeded(Direction.BUY, newAmt, totalPrice);		
-					return buy;
-			})
-	   .filter(o -> o.getQuantity().value().compareTo(BigDecimal.ZERO) > 0)
-	   .filter(o -> o.getTotalPrice().value().compareTo(BigDecimal.ZERO) > 0)
-	   .collect(Collectors.toList());
-		return res;
-	}
-	
 //	public static List<RLOrder> buildSelsSeedPct(LastAmount last, int levels, BotConfig bot, boolean isBlankStart) {			
 //		BigDecimal mtp = MyUtils.bigSqrt(bot.getGridSpace());
 ////		BigDecimal botQuantity = bot.getSellOrderQuantity();
@@ -445,8 +425,14 @@ public final class RLOrder extends Base {
 		return nextRates(TRLOrder.origins(buys), TRLOrder.origins(sels), worstBuy, worstSel, botConfig);
 	}
 	
+	/**
+	 * Routes last orders in orderbook or config to quantity and unit price
+	 */
 	public static LastBuySellTuple nextRates(ConcurrentMap<Integer, RLOrder> buys, ConcurrentMap<Integer, RLOrder> sels, BigDecimal lastBuy, BigDecimal lastSel, BotConfig botConfig) {
+		MathContext mc = MathContext.DECIMAL64;
 		BigDecimal selAm, buyAm;
+		BigDecimal selUnPr = lastSel;
+		BigDecimal buyUnPr = lastBuy;
 		boolean isBuyPulledFromSel = false;
 		boolean isSelPulledFromBuy = false;
 		if (buys.isEmpty() && sels.isEmpty()) {		
@@ -458,32 +444,33 @@ public final class RLOrder extends Base {
 			RLOrder last;
 			if (buys.isEmpty()) {				
 				last = sortSels(sels, true).get(0).getValue();
-				lastBuy = last.quantity.value();
 				buyAm = last.getTotalPrice().value(); 
+				buyUnPr = last.getQuantity().value().divide(buyAm, mc);
 				isBuyPulledFromSel = true;
 			} 
 			else {
 				sorted.addAll(sortBuys(buys, false));
 				Collections.reverse(sorted);
 				last = sorted.get(0).getValue();
-				lastBuy = last.getTotalPrice().value();
 				buyAm   = last.getQuantity().value();
+				buyUnPr = last.getTotalPrice().value().divide(buyAm, mc);
 			}		
 			sorted.clear();
 			if (sels.isEmpty()) {
 				last = sortBuys(buys, false).get(0).getValue();
-				lastSel = last.totalPrice.value();
 				selAm   = last.quantity.value();
+				selUnPr = last.totalPrice.value().divide(selAm, mc);
 				isSelPulledFromBuy = true;
 			} 
 			else {				
-				sorted.addAll(sortSels(sels, true));
+				sorted.addAll(sortSels(sels, false));
 				last = sorted.get(0).getValue();			
-				lastSel = BigDecimal.ONE.divide(last.getRate(), MathContext.DECIMAL64);
+//				lastSel = BigDecimal.ONE.divide(last.getRate(), MathContext.DECIMAL64);
 				selAm   = last.getTotalPrice().value();
+				selUnPr = last.quantity.value().divide(selAm, mc);
 			}		
 		}	
-		return new LastBuySellTuple(lastBuy, buyAm, lastSel, selAm, isBuyPulledFromSel, isSelPulledFromBuy);
+		return new LastBuySellTuple(buyUnPr, buyAm, selUnPr, selAm, isBuyPulledFromSel, isSelPulledFromBuy);
 	}
 
 	public static List<Entry<Integer, RLOrder>> sortTBuys(ConcurrentMap<Integer, TRLOrder> buys, boolean isReversed) {

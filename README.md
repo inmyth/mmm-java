@@ -113,6 +113,10 @@ Strategy to be used. Refer to strategy section for valid names.
 
 ### Version History
 
+v.0605
+- fixed orderbook seed generator (tested on both ways)
+
+
 v.0604
 - total1 = sqrt * q0 / u1 test this
 
@@ -457,6 +461,9 @@ v.001
 - [x] fix XRP too small
 - [x] fix account_offers for more than 200 orders
 - [x] add percentage counter 
+- [] fix static counter
+- [] test counter. the range between buys and sells != gridspace
+
  
 ### NOTES
 RESPONSE
