@@ -35,7 +35,6 @@ import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 
 public class Orderbook extends Base {
-	// private final int seedMidThreshold = 8;
 
 	private final BotConfig botConfig;
 	private final ConcurrentHashMap<Integer, TRLOrder> buys = new ConcurrentHashMap<>();
@@ -47,15 +46,12 @@ public class Orderbook extends Base {
 	private final AtomicInteger lastBalanced = new AtomicInteger(0);
 	private final AtomicInteger ledgerValidated = new AtomicInteger(0);
 	private final AtomicInteger ledgerClosed = new AtomicInteger(0);
-//	private BigDecimal worstSel, worstBuy;
 	private LastBuySellTuple start; 
 
 	private Orderbook(Config config, BotConfig botConfig) {
 		super(MyLogger.getLogger(String.format(Txc.class.getName())), config);
 		this.botConfig = botConfig;
 		this.start    = new LastBuySellTuple(botConfig.getStartMiddlePrice(), botConfig.getBuyOrderQuantity(), botConfig.getStartMiddlePrice(), botConfig.getSellOrderQuantity(), false, false);
-//		this.worstBuy = botConfig.getStartMiddlePrice();
-//		this.worstSel = botConfig.getStartMiddlePrice();
 
 		accountOffersDispo
 				.add(bus.toObservable().subscribeOn(Schedulers.newThread()).subscribeWith(new DisposableObserver<Object>() {
@@ -83,9 +79,6 @@ public class Orderbook extends Base {
 							if (buyMatched || selMatched) {
 								LastBuySellTuple worstRates = RLOrder.nextTRates(buys, sels, start.buy.unitPrice, start.sel.unitPrice, botConfig);
 								start = worstRates;
-//								BuySellRateTuple worstRates = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
-//								worstBuy = worstRates.getBuyRate();
-//								worstSel = worstRates.getSelRate();
 							}
 						}
 					}
@@ -133,8 +126,14 @@ public class Orderbook extends Base {
 										else if (ba.source == null){
 											if(ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0) { // fully consumed
 												TRLOrder entry = pairMatched.get() ? buys.get(ba.befSeq.intValue()) : sels.get(ba.befSeq.intValue());
-												preFullCounters.add(entry.getOrigin());
-												remove(ba.befSeq.intValue());
+												if (entry != null){
+													preFullCounters.add(entry.getOrigin());
+													remove(ba.befSeq.intValue());
+												}
+												else{
+													log("Orderbook Trying to remove already gone :" + ba.befSeq.intValue(), Level.SEVERE);
+												}
+
 											}
 											else {
 												prePartialCounters.add(ba.after);
@@ -147,9 +146,6 @@ public class Orderbook extends Base {
 								if (isBelongToThisOrderbook) {
 									LastBuySellTuple worstRates = RLOrder.nextTRates(buys, sels, start.buy.unitPrice, start.sel.unitPrice, botConfig);
 									start = worstRates;
-//									BuySellRateTuple worstRates = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
-//									worstBuy = worstRates.getBuyRate();
-//									worstSel = worstRates.getSelRate();
 								}	
 								
 								if (!preFullCounters.isEmpty()){
@@ -163,9 +159,6 @@ public class Orderbook extends Base {
 									update(event.ba.after, event.ba.befSeq.intValue(), event.newSeq.intValue(), pairMatched.get());
 									LastBuySellTuple worstRates = RLOrder.nextTRates(buys, sels, start.buy.unitPrice, start.sel.unitPrice, botConfig);
 									start = worstRates;
-//									BuySellRateTuple worstBuySel = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
-//									worstBuy = worstBuySel.getBuyRate();
-//									worstSel = worstBuySel.getSelRate();
 								}
 							} else if (base instanceof Common.OnOfferCanceled) {
 								Common.OnOfferCanceled event = (Common.OnOfferCanceled) o;
@@ -173,9 +166,6 @@ public class Orderbook extends Base {
 								if (pairMatched != null) {
 									LastBuySellTuple worstRates = RLOrder.nextTRates(buys, sels, start.buy.unitPrice, start.sel.unitPrice, botConfig);
 									start = worstRates;
-//									BuySellRateTuple worstBuySel = RLOrder.worstTRates(buys, sels, worstBuy, worstSel, botConfig);
-//									worstBuy = worstBuySel.getBuyRate();
-//									worstSel = worstBuySel.getSelRate();
 								}
 							} else if (base instanceof State.BroadcastPendings) {
 								BroadcastPendings event = (BroadcastPendings) o;
@@ -318,11 +308,15 @@ public class Orderbook extends Base {
 	}
 
 	private void update(RLOrder now, int oldSeq, int newSeq, Boolean isAligned){
-		ConcurrentHashMap<Integer, TRLOrder> orders = isAligned ? buys : sels;
-		if (orders.containsKey(oldSeq)){
-			orders.put(newSeq, orders.get(oldSeq).updatedWith(now));
+//		ConcurrentHashMap<Integer, TRLOrder> orders = isAligned ? buys : sels;
+		if (buys.containsKey(oldSeq)){
+			buys.put(newSeq, buys.get(oldSeq).updatedWith(now));
 			remove(oldSeq);
-		}
+		} 
+		else if (sels.contains(oldSeq)){
+			sels.put(newSeq, sels.get(oldSeq).updatedWith(now));
+			remove(oldSeq);
+		}	
 		else {
 			log("Update orderbook " + botConfig.getPair() + " failed, seq " + oldSeq +  " not found" , Level.WARNING);
 		}			

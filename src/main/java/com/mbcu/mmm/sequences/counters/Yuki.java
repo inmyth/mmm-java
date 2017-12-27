@@ -174,7 +174,9 @@ public class Yuki extends Base implements Counter {
 	 * @return
 	 */
 	private RLOrder yukiPct(RLOrder source, BotConfig botConfig, boolean isCounteringSell) {
-		BigDecimal mtp 	 		 = MyUtils.bigSqrt(botConfig.getGridSpace());
+		MathContext mc        = MathContext.DECIMAL64;
+		BigDecimal mtp 	 		 = botConfig.getGridSpace();
+		BigDecimal sqrt      = MyUtils.bigSqrt(botConfig.getGridSpace());
     Amount srcQuantity 	 = source.getQuantity();
     Amount srcTotalPrice = source.getTotalPrice();
 		BigDecimal newRate = null;
@@ -182,16 +184,14 @@ public class Yuki extends Base implements Counter {
 
 		if (isCounteringSell){
 			newRate = source.getRate().multiply(mtp, MathContext.DECIMAL64);
-			Amount totalPrice = RLOrder.amount(srcQuantity.value().multiply(newRate), srcTotalPrice.currency(), srcTotalPrice.issuer());
-//			Amount quantity   = srcQuantity.divide(mtp);
-			res  = RLOrder.rateUnneeded(Direction.SELL, srcQuantity, totalPrice);
+			Amount quantity = srcQuantity.divide(sqrt);
+			Amount totalPrice = RLOrder.amount(quantity.value().multiply(newRate), srcTotalPrice.currency(), srcTotalPrice.issuer());
+			res  = RLOrder.rateUnneeded(Direction.SELL, quantity, totalPrice);
 		} 
 		else {
 			newRate = BigDecimal.ONE.divide(source.getRate(), MathContext.DECIMAL64).divide(mtp, MathContext.DECIMAL64);
-			Amount quantity 	= srcTotalPrice.multiply(mtp);
-//			Amount quantity          = srcTotalPrice;
-//			Amount totalPrice = srcQuantity.divide(mtp);
-			Amount totalPrice = RLOrder.amount(srcTotalPrice.value().multiply(newRate), srcQuantity.currency(), srcQuantity.issuer());
+			Amount quantity 	= srcTotalPrice.multiply(sqrt);
+			Amount totalPrice = RLOrder.amount(quantity.value().multiply(newRate, mc), srcQuantity.currency(), srcQuantity.issuer());
 			res  = RLOrder.rateUnneeded(Direction.BUY, quantity, totalPrice);
 		}
 		
