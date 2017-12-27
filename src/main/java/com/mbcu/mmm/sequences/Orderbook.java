@@ -313,7 +313,7 @@ public class Orderbook extends Base {
 			buys.put(newSeq, buys.get(oldSeq).updatedWith(now));
 			remove(oldSeq);
 		} 
-		else if (sels.contains(oldSeq)){
+		else if (sels.containsKey(oldSeq)){
 			sels.put(newSeq, sels.get(oldSeq).updatedWith(now));
 			remove(oldSeq);
 		}	

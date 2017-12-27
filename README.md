@@ -113,11 +113,14 @@ Strategy to be used. Refer to strategy section for valid names.
 
 ### Version History
 
+v.0607
+- partial consume removes the order from orderbook
+
 v.0606
 - both ways work
 - testing error : log.rhXCRgFH7xdCfDBrpQSjUTfCnoiSUWeTMc.2017_12_27_13_22_45_997.txt 5538 -> 9565
 - edit may not find sequence so obsolete sequence is left dangling in orderbook becoming anchor for seed. 
-- attempt fix : edit on both sides everytime (failed)
+- attempt fix : edit on both sides everytime 
 
 v.0605
 - fixed orderbook seed generator (tested on both ways)
