@@ -113,6 +113,10 @@ Strategy to be used. Refer to strategy section for valid names.
 
 ### Version History
 
+v.0608
+- edit can change the direction (buy <-> sell)
+- dangling order didn't get removed (log.missed_remove_order.txt.0)
+
 v.0607
 - partial consume removes the order from orderbook
 

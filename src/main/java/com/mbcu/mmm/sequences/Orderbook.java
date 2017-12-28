@@ -308,18 +308,24 @@ public class Orderbook extends Base {
 	}
 
 	private void update(RLOrder now, int oldSeq, int newSeq, Boolean isAligned){
-//		ConcurrentHashMap<Integer, TRLOrder> orders = isAligned ? buys : sels;
-		if (buys.containsKey(oldSeq)){
-			buys.put(newSeq, buys.get(oldSeq).updatedWith(now));
-			remove(oldSeq);
+		ConcurrentHashMap<Integer, TRLOrder> orders = isAligned ? buys : sels;
+		if (orders.containsKey(oldSeq)){
+			TRLOrder oldOrder = orders.get(oldSeq);
+			remove(oldSeq); // remove comes first then put !
+			orders.put(newSeq, oldOrder.updatedWith(now));
 		} 
-		else if (sels.containsKey(oldSeq)){
-			sels.put(newSeq, sels.get(oldSeq).updatedWith(now));
-			remove(oldSeq);
-		}	
 		else {
-			log("Update orderbook " + botConfig.getPair() + " failed, seq " + oldSeq +  " not found" , Level.WARNING);
-		}			
+			orders = isAligned ? sels : buys;
+			if (orders.containsKey(oldSeq)){
+				log("Orderbook " + botConfig.getPair() + " Edit is changing direction , seq " + oldSeq +  " not found" , Level.WARNING);
+				TRLOrder oldOrder = orders.get(oldSeq);
+				remove(oldSeq); // remove comes first then put !
+				orders.put(newSeq, oldOrder.updatedWith(now));
+			}
+			else{
+				log("Orderbook " + botConfig.getPair() + " update failed ot find , seq " + oldSeq +  " not found" , Level.WARNING);
+			}			
+    }		
 	}
 
 	private void insert(RLOrder source, RLOrder now, int seq, Boolean isAligned) {	
