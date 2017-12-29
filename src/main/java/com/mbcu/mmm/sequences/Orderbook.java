@@ -317,7 +317,7 @@ public class Orderbook extends Base {
 		else {
 			orders = isAligned ? sels : buys;
 			if (orders.containsKey(oldSeq)){
-				log("Orderbook " + botConfig.getPair() + " Edit is changing direction , seq " + oldSeq +  " not found" , Level.WARNING);
+				log("Orderbook " + botConfig.getPair() + " Edit is changing direction , seq " + oldSeq, Level.WARNING);
 				TRLOrder oldOrder = orders.get(oldSeq);
 				remove(oldSeq); // remove comes first then put !
 				orders.put(newSeq, oldOrder.updatedWith(now));
