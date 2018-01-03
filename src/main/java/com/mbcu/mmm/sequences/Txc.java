@@ -119,7 +119,7 @@ public class Txc extends Base {
 
 								disposables.dispose();
 								bus.send(new State.RequestRemoveCreate(seq));
-								bus.send(new Notifier.RequestEmailNotice(er, outbound.getCpair().getFw(), System.currentTimeMillis()));
+								bus.send(new Emailer.SendEmailError(er, outbound.getCpair().getFw(), System.currentTimeMillis()));
 								// bus.send(new State.OnOrderReady(outbound, hash, "retry " +
 								// er));
 							}

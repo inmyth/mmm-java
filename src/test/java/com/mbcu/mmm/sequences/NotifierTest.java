@@ -8,23 +8,23 @@ import java.util.Map;
 
 import org.junit.Test;
 
-import com.mbcu.mmm.sequences.Notifier.RequestEmailNotice;
+import com.mbcu.mmm.sequences.Emailer.SendEmailError;
 
 public class NotifierTest {
 
 	@Test
 	public void testRequestEmailNotice() {
 		long tsa = System.currentTimeMillis();
-		Notifier.RequestEmailNotice a = new RequestEmailNotice("aaa", "XRP/JPY", tsa);
-		Notifier.RequestEmailNotice b = new RequestEmailNotice("aaa", "XRP/JPY", tsa);
+		Emailer.SendEmailError a = new SendEmailError("aaa", "XRP/JPY", tsa);
+		Emailer.SendEmailError b = new SendEmailError("aaa", "XRP/JPY", tsa);
 
 		assertEquals(a, b);
-		Map<RequestEmailNotice, Long> map = new HashMap<>();
+		Map<SendEmailError, Long> map = new HashMap<>();
 		map.put(a, 1L);
 		map.put(b, 2l);
 		assertEquals(map.size(), 1);
 
-		Notifier.RequestEmailNotice c = new RequestEmailNotice("cc", "XRP/JPY", tsa);
+		Emailer.SendEmailError c = new SendEmailError("cc", "XRP/JPY", tsa);
 
 		assertFalse(a.equals(c));
 		map.clear();

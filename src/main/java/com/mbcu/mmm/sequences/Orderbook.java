@@ -105,7 +105,8 @@ public class Orderbook extends Base {
 								ledgerClosed.set(event.ledgerEvent.getClosed());
 								ledgerValidated.set(event.ledgerEvent.getValidated());
 								requestPendings();
-							} else if (base instanceof Common.OnDifference) {
+							} 
+							else if (base instanceof Common.OnDifference) {
 								Common.OnDifference event = (Common.OnDifference) o;
 								boolean isBelongToThisOrderbook = false;
 								
@@ -133,7 +134,6 @@ public class Orderbook extends Base {
 												else{
 													log("Orderbook Trying to remove already gone :" + ba.befSeq.intValue(), Level.SEVERE);
 												}
-
 											}
 											else {
 												prePartialCounters.add(ba.after);
@@ -152,7 +152,8 @@ public class Orderbook extends Base {
 									bus.send(new OnOrderFullConsumed(preFullCounters));
 								}
 								
-							} else if (base instanceof Common.OnOfferEdited) {
+							} 
+							else if (base instanceof Common.OnOfferEdited) {
 								Common.OnOfferEdited event = (Common.OnOfferEdited) o;
 								Optional<Boolean> pairMatched = pairMatched(event.ba.after);
 								if (pairMatched.isPresent()) {
@@ -160,10 +161,14 @@ public class Orderbook extends Base {
 									LastBuySellTuple worstRates = RLOrder.nextTRates(buys, sels, start.buy.unitPrice, start.sel.unitPrice, botConfig);
 									start = worstRates;
 								}
-							} else if (base instanceof Common.OnOfferCanceled) {
+							} 
+							else if (base instanceof Common.OnOfferCanceled) {
 								Common.OnOfferCanceled event = (Common.OnOfferCanceled) o;
 								Boolean pairMatched = remove(event.prevSeq.intValue());
 								if (pairMatched != null) {
+									if (event.lognum == LogNum.CANCELED_UNFUNDED) {
+										bus.send(new Emailer.SendEmailError("Order " + event.previousTxnId + " " + event.prevSeq + " canceled, unfunded", botConfig.getPair(), System.currentTimeMillis()));
+									}
 									LastBuySellTuple worstRates = RLOrder.nextTRates(buys, sels, start.buy.unitPrice, start.sel.unitPrice, botConfig);
 									start = worstRates;
 								}
@@ -315,16 +320,7 @@ public class Orderbook extends Base {
 			orders.put(newSeq, oldOrder.updatedWith(now));
 		} 
 		else {
-			orders = isAligned ? sels : buys;
-			if (orders.containsKey(oldSeq)){
-				log("Orderbook " + botConfig.getPair() + " Edit is changing direction , seq " + oldSeq, Level.WARNING);
-				TRLOrder oldOrder = orders.get(oldSeq);
-				remove(oldSeq); // remove comes first then put !
-				orders.put(newSeq, oldOrder.updatedWith(now));
-			}
-			else{
-				log("Orderbook " + botConfig.getPair() + " update failed ot find , seq " + oldSeq +  " not found" , Level.WARNING);
-			}			
+			log("Orderbook " + botConfig.getPair() + " update failed cannot find , seq " + oldSeq , Level.WARNING);
     }		
 	}
 

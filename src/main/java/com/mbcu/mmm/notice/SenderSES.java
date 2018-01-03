@@ -12,7 +12,7 @@ import com.amazonaws.services.simpleemail.model.Destination;
 import com.amazonaws.services.simpleemail.model.Message;
 import com.amazonaws.services.simpleemail.model.SendEmailRequest;
 import com.mbcu.mmm.models.internal.Config;
-import com.mbcu.mmm.sequences.Notifier;
+import com.mbcu.mmm.sequences.Emailer;
 
 public class SenderSES {
 
@@ -32,7 +32,7 @@ public class SenderSES {
 		});
 	}
 
-	public void sendBotError(Notifier.RequestEmailNotice e) {
+	public void sendBotError(Emailer.SendEmailError e) {
 		String body = bodyBotError(e);
 		String title = titleBotError(config);
 		config.getEmails().forEach(to -> {
@@ -56,7 +56,7 @@ public class SenderSES {
 		}
 	}
 
-	private static String bodyBotError(Notifier.RequestEmailNotice e) {
+	private static String bodyBotError(Emailer.SendEmailError e) {
 		StringBuilder sb = new StringBuilder("Currency Pair : ");
 		sb.append(e.pair);
 		sb.append("\n");

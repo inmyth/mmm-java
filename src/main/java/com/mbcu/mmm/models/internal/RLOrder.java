@@ -350,7 +350,7 @@ Buy 	2.0709 	111.93
 Buy 	2.0812 	110.83 	
 		 */
 
-		int range = isBuySeed ? last.isBuyPulledFromSel ? 3 : 2 : last.isSelPulledFromBuy ? 2 : 1;
+		int range = isBuySeed ? last.isBuyPulledFromSel ? 3 : 2 : last.isSelPulledFromBuy ? 3 : 2;
 		List<RLOrder> res = IntStream
 				.range(range, levels + range)
 				.mapToObj(n -> {
@@ -364,7 +364,8 @@ Buy 	2.0812 	110.83
 					BigDecimal total1 = qty1.multiply(unitPrice1, mc);
 					Amount qtyAmount1		= bot.base.add(qty1);
 					Amount totalAmount1  = RLOrder.amount(total1, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
-					RLOrder buy = RLOrder.rateUnneeded(Direction.BUY, qtyAmount1, totalAmount1);		
+					Direction direction1 = isBuySeed ? Direction.BUY: Direction.SELL;
+					RLOrder buy = RLOrder.rateUnneeded(direction1, qtyAmount1, totalAmount1);		
 					return buy;
 			})
 	   .filter(o -> o.getQuantity().value().compareTo(BigDecimal.ZERO) > 0)

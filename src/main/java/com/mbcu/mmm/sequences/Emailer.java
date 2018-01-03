@@ -11,14 +11,14 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 
-public class Notifier extends Base {
+public class Emailer extends Base {
 	private final CompositeDisposable disposables = new CompositeDisposable();
-	private final ConcurrentHashMap<RequestEmailNotice, Long> notices = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<SendEmailError, Long> notices = new ConcurrentHashMap<>();
 	private final long GAP_MS = 1000 * 60 * 30; // 30 mins
 	private SenderSES sender;
 
-	public Notifier(Config config) {
-		super(MyLogger.getLogger(Notifier.class.getName()), config);
+	public Emailer(Config config) {
+		super(MyLogger.getLogger(Emailer.class.getName()), config);
 		sender = new SenderSES(config, LOGGER);
 
 		disposables
@@ -28,8 +28,8 @@ public class Notifier extends Base {
 					public void onNext(Object o) {
 						BusBase base = (BusBase) o;
 
-						if (base instanceof RequestEmailNotice) {
-							check((RequestEmailNotice) base);
+						if (base instanceof SendEmailError) {
+							check((SendEmailError) base);
 						}
 					}
 
@@ -48,7 +48,7 @@ public class Notifier extends Base {
 				}));
 	}
 
-	private void check(RequestEmailNotice r) {
+	private void check(SendEmailError r) {
 		long now = System.currentTimeMillis();
 		Long lastInserted = notices.get(r);
 		if (lastInserted != null && lastInserted + GAP_MS > now) {
@@ -58,21 +58,21 @@ public class Notifier extends Base {
 		sender.sendBotError(r);
 	}
 
-	public static Notifier newInstance(Config config) {
-		Notifier res = new Notifier(config);
+	public static Emailer newInstance(Config config) {
+		Emailer res = new Emailer(config);
 		return res;
 	}
 
-	public static class RequestEmailNotice extends BusBase {
-		public String error;
-		public String pair;
-		public long ts;
+	public static class SendEmailError extends BusBase {
+		public final String error;
+		public final String pair;
+		public final long millis;
 
-		public RequestEmailNotice(String error, String pair, long ts) {
+		public SendEmailError(String error, String pair, long millis) {
 			super();
 			this.error = error;
 			this.pair = pair;
-			this.ts = ts;
+			this.millis = millis;
 		}
 
 		@Override
@@ -84,9 +84,9 @@ public class Notifier extends Base {
 		public boolean equals(Object o) {
 			if (o == null)
 				return false;
-			if (!(o instanceof RequestEmailNotice))
+			if (!(o instanceof SendEmailError))
 				return false;
-			RequestEmailNotice t = (RequestEmailNotice) o;
+			SendEmailError t = (SendEmailError) o;
 			if (t.pair.equals(pair) && t.error.equals(error)) {
 				return true;
 			}

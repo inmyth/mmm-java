@@ -23,14 +23,19 @@ import com.ripple.core.coretypes.AccountID;
 import com.ripple.core.coretypes.Amount;
 import com.ripple.core.coretypes.STObject;
 import com.ripple.core.coretypes.hash.Hash256;
+import com.ripple.core.coretypes.uint.UInt;
 import com.ripple.core.coretypes.uint.UInt32;
 import com.ripple.core.fields.Field;
+import com.ripple.core.fields.UInt16Field;
+import com.ripple.core.fields.UInt32Field;
 import com.ripple.core.serialized.enums.EngineResult;
+import com.ripple.core.serialized.enums.LedgerEntryType;
 import com.ripple.core.types.known.sle.LedgerEntry;
 import com.ripple.core.types.known.sle.entries.Offer;
 import com.ripple.core.types.known.tx.Transaction;
 import com.ripple.core.types.known.tx.result.AffectedNode;
 import com.ripple.core.types.known.tx.result.TransactionMeta;
+import com.ripple.core.types.known.tx.txns.OfferCancel;
 
 import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
@@ -174,19 +179,65 @@ public class Common extends Base {
 			return;
 		}
 
-		ArrayList<AffectedNode> deletedNodes = new ArrayList<>();
-		ArrayList<Offer> offersExecuteds = new ArrayList<>();
+//		ArrayList<AffectedNode> deletedNodes 			= new ArrayList<>();
+		ArrayList<Offer> offersExecuteds		 			= new ArrayList<>();
+		ArrayList<OfferEdited> ofEditeds 					= new ArrayList<>();
+		
+		String txType = txn.get(Field.TransactionType).toString();
 
+		boolean offerCancelFlag = false;
+		if (txType.equals("OfferCancel") && txn.account().address.equals(this.config.getCredentials().getAddress())) {						
+			offerCancelFlag = true;
+		}
+		
+		UInt32 txnOfferSequence = txn.get(UInt32.OfferSequence); // Offer Edit flag, indicates old order's sequence
+		
 		for (AffectedNode node : meta.affectedNodes()) {
 			if (!node.isCreatedNode()) {
 				LedgerEntry asPrevious = (LedgerEntry) node.nodeAsPrevious();
+
 				if (node.isDeletedNode()) {
-					deletedNodes.add(node);
+					if (asPrevious instanceof Offer) {
+						AccountID nodeAccount  = asPrevious.get(AccountID.Account);
+						Hash256 previousTxnId  = asPrevious.get(Hash256.PreviousTxnID);
+						UInt32 prevSeq	 			 = asPrevious.get(UInt32.Sequence);
+						Offer o 							 = (Offer) asPrevious;
+						//FinalFields.Flag can be 0 or  131072, this is unclear
+						if (nodeAccount != null && nodeAccount.address.equals(this.config.getCredentials().getAddress()) && asPrevious.get(Field.LedgerEntryType) == LedgerEntryType.Offer) {
+					  	if (offerCancelFlag) {
+								log("OFFER CANCEL " + txn.sequence() + " " + txnHash + " canceling : " + previousTxnId + " " + txn.get(UInt32.OfferSequence));
+								bus.send(new OnOfferCanceled(txn.account(), prevSeq, txn.sequence(), previousTxnId, LogNum.CANCELED_OFFERCANCEL));
+								return;
+					  	}						
+							if (node.nested.get(Field.PreviousFields) != null) {
+								offersExecuteds.add(o);
+							}
+							else {
+					  		if (txnOfferSequence != null) {
+							  	ofEditeds.add(new OfferEdited(txnHash, previousTxnId, prevSeq, txnSequence));
+					  		}
+					  		else {
+									bus.send(new OnOfferCanceled(txn.account(), prevSeq, txn.sequence(), previousTxnId, LogNum.CANCELED_UNFUNDED));									
+					  		}
+							}
+						}
+					} 
+//					else {
+//						LedgerEntry le				 = (LedgerEntry) node.nodeAsFinal();
+//						AccountID nodeAccount  = le.get(AccountID.Account);
+//						Hash256 previousTxnId  = le.get(Hash256.PreviousTxnID);
+//						UInt32 prevSeq	 			 = le.get(UInt32.Sequence);
+//						if (nodeAccount != null && nodeAccount.address.equals(this.config.getCredentials().getAddress())	&& le.get(Field.LedgerEntryType) == LedgerEntryType.Offer && le.get(Field.Flags).toString().equals("0")) {
+//
+//					  
+//						} 
+//					}
+				}			
+				else if (node.isModifiedNode()) {
+					// unused
 				}
-				if (asPrevious instanceof Offer) {
-					offersExecuteds.add((Offer) asPrevious);
-				}
-			} else {
+			} 
+			else { // createdNode goes here
 				LedgerEntry asFinal = (LedgerEntry) node.nodeAsPrevious();
 				if (asFinal instanceof Offer) {
 					Offer offer = (Offer) asFinal;
@@ -195,36 +246,7 @@ public class Common extends Base {
 			}
 		}
 
-		Hash256 previousTxnId = null;
-		UInt32 previousSeq = null;
-		for (AffectedNode deletedNode : deletedNodes) {
-			LedgerEntry le = (LedgerEntry) deletedNode.nodeAsFinal();
-			AccountID nodeAccount = le.get(AccountID.Account);
-			UInt32 testPreviousSeq = le.get(UInt32.Sequence);
-			Hash256 testPreviousTxnId = le.get(Hash256.PreviousTxnID);
-			if (nodeAccount != null && nodeAccount.address.equals(this.config.getCredentials().getAddress())) {
-				previousTxnId = testPreviousTxnId;
-				previousSeq = testPreviousSeq;
-				if (previousTxnId != null) {
-					break;
-				}
-			} else if (nodeAccount == null && testPreviousSeq == null && testPreviousTxnId != null) {
-				log("Possible EXCEPTION : FALSE EDIT (04001), txnId : " + txn.hash());
-			}
-		}
-
-		String txType = txn.get(Field.TransactionType).toString();
-		if (txType.equals("OfferCancel")) {
-			if (txn.account().address.equals(this.config.getCredentials().getAddress())) {
-				if (previousTxnId == null) {
-					log("CANCELED already canceled: " + txn.sequence() + " " + txnHash);
-				} else {
-					log("CANCELED Seq: " + previousSeq + "  prevTxnId: " + previousTxnId);
-					bus.send(new OnOfferCanceled(txn.account(), previousSeq, txn.sequence(), previousTxnId));
-				}
-			}
-			return;
-		}
+	
 		RLOrder ourOfferCreate = null;
 		if (txType.equals("OfferCreate")) {
 			RLOrder offerCreate = RLOrder.fromOfferCreate(txn);
@@ -237,17 +259,20 @@ public class Common extends Base {
 
 			if (offerCreated != null) {
 				AccountID ocAccId = offerCreated.account();
-				if (previousTxnId == null) {
+				if (ofEditeds.isEmpty()) {
 					if (ocAccId.address.equals(this.config.getCredentials().getAddress())) {
-						log("OFFER CREATED OCAccID " + ocAccId + " TxnID " + txnAccId + " OCPrevTxnId " + previousTxnId + " \n"	+ offerCreated.prettyJSON());
+						log("OFFER CREATED TxnID " + txnAccId + " " + txnSequence + "\n"+ offerCreated.prettyJSON());
 						bus.send(new OnOfferCreated(txnAccId, ocAccId, offerCreated.previousTxnID(), RLOrder.fromOfferCreated(offerCreated)));
 					}
-				} else {
-					if (ocAccId.address.equals(this.config.getCredentials().getAddress())) {
-						log("OFFER EDITED " + previousTxnId + " to " + txn.hash());
-						BefAf ba = RLOrder.toBA(offerCreated.takerPays(), offerCreated.takerGets(), txn.get(Amount.TakerPays), txn.get(Amount.TakerGets), previousSeq, txnHash, ourOfferCreate);
-						bus.send(new OnOfferEdited(ocAccId, txnHash, previousTxnId, previousSeq, txn.sequence(), ba));
+				} 
+				else {
+//					if (ocAccId.address.equals(this.config.getCredentials().getAddress())) {
+					for (OfferEdited o : ofEditeds) {
+						log("OFFER EDITED " + o.previousTxnId + " to " + txn.hash());
+						BefAf ba = RLOrder.toBA(offerCreated.takerPays(), offerCreated.takerGets(), txn.get(Amount.TakerPays), txn.get(Amount.TakerGets), o.prevSeq, txnHash, ourOfferCreate);
+						bus.send(new OnOfferEdited(ocAccId, txnHash, o.previousTxnId, o.prevSeq, txn.sequence(), ba));
 					}
+//					}
 				}
 			}
 			if (txn.account().address.equals(this.config.getCredentials().getAddress())) {
@@ -267,11 +292,11 @@ public class Common extends Base {
 				for (Offer offer : offersExecuteds) {
 					STObject finalFields = offer.get(STObject.FinalFields);
 					UInt32 affectedSeq = offer.get(UInt32.Sequence);
-					if (finalFields != null && isTakersExist(finalFields)	&& offer.account().address.equals(this.config.getCredentials().getAddress())) {
+					if (finalFields != null && isTakersExist(finalFields)) {
 						oes.add(RLOrder.fromOfferExecuted(offer, true));
 						ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), finalFields.get(Amount.TakerPays), finalFields.get(Amount.TakerGets), affectedSeq, txnHash, ourOfferCreate));
 					}
-					if (finalFields == null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
+					if (finalFields == null) {
 						ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), null, null, offer.sequence(), txnHash, ourOfferCreate));
 					}
 				}
@@ -283,11 +308,11 @@ public class Common extends Base {
 				STObject finalFields = offer.get(STObject.FinalFields);
 				UInt32 affectedSeq = offer.get(UInt32.Sequence);
 
-				if (finalFields != null && isTakersExist(finalFields) && offer.account().address.equals(this.config.getCredentials().getAddress())) {
+				if (finalFields != null && isTakersExist(finalFields)) {
 					oes.add(RLOrder.fromOfferExecuted(offer, true));
 					ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), finalFields.get(Amount.TakerPays), finalFields.get(Amount.TakerGets), affectedSeq, txnHash, ourOfferCreate));
 				}
-				if (finalFields == null && offer.account().address.equals(this.config.getCredentials().getAddress())) {
+				if (finalFields == null) {
 					ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), null, null, affectedSeq, txnHash, ourOfferCreate));
 				}
 			}
@@ -301,6 +326,23 @@ public class Common extends Base {
 			log(sb.toString());
 			bus.send(new OnOfferExecuted(oes));
 		}
+
+//		if (!oes.isEmpty() && !ors.isEmpty()) {
+//			final StringBuffer sb = new StringBuffer("OFFER EXECUTED\n");
+//			ors.forEach(or -> {
+//				if (or.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0) {
+//					sb.append("Fully Taken\n");
+//					sb.append(or.before.stringify());
+//				} else {
+//					sb.append("Partially Taken\n");
+//					sb.append(or.after.stringify());
+//				}
+//				sb.append("seq :  ");
+//				sb.append(or.befSeq.intValue());
+//			});
+//			log(sb.toString());
+//			bus.send(new OnOfferExecuted(oes));
+//		}
 
 		bus.send(new OnDifference(ors));
 	}
@@ -464,13 +506,15 @@ public class Common extends Base {
 		public final Hash256 previousTxnId;
 		public final UInt32 prevSeq;
 		public final UInt32 newSeq;
+		public final LogNum lognum;
 
-		public OnOfferCanceled(AccountID account, UInt32 prevSeq, UInt32 newSeq, Hash256 previousTxnId) {
+		public OnOfferCanceled(AccountID account, UInt32 prevSeq, UInt32 newSeq, Hash256 previousTxnId, LogNum lognum) {
 			super();
 			this.account = account;
 			this.previousTxnId = previousTxnId;
 			this.prevSeq = prevSeq;
 			this.newSeq = newSeq;
+			this.lognum = lognum;
 		}
 
 	}
@@ -502,26 +546,32 @@ public class Common extends Base {
 		}
 	}
 
-	public static class OnOfferEdited extends BusBase {
+	public static class OnOfferEdited extends OfferEdited {
 		public final AccountID ocAccount;
-		public final Hash256 newHash;
-		public final Hash256 previousTxnId;
-		public final UInt32 newSeq;
-		public final UInt32 prevSeq;
 		public final BefAf ba;
 
-		public OnOfferEdited(AccountID ocAccount, Hash256 newHash, Hash256 previousTxnId, UInt32 prevSeq, UInt32 newSeq,
-				BefAf ba) {
-			super();
+		public OnOfferEdited(AccountID ocAccount, Hash256 newHash, Hash256 previousTxnId, UInt32 prevSeq, UInt32 newSeq, BefAf ba) {
+			super(newHash, previousTxnId, prevSeq, newSeq);
 			this.ocAccount = ocAccount;
-			this.newHash = newHash;
-			this.previousTxnId = previousTxnId;
-			this.newSeq = newSeq;
-			this.prevSeq = prevSeq;
 			this.ba = ba;
 		}
 	}
 
+	public static class OfferEdited extends BusBase {
+		public final Hash256 newHash;
+		public final Hash256 previousTxnId;
+		public final UInt32 newSeq;
+		public final UInt32 prevSeq;
+
+		public OfferEdited(Hash256 newHash, Hash256 previousTxnId, UInt32 prevSeq, UInt32 newSeq) {
+			super();
+			this.newHash = newHash;
+			this.previousTxnId = previousTxnId;
+			this.newSeq = newSeq;
+			this.prevSeq = prevSeq;
+		}
+	}
+	
 	public static class OnOfferExecuted extends BusBase {
 		public List<RLOrder> oes;
 
