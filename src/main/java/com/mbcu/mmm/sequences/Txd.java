@@ -1,6 +1,5 @@
 package com.mbcu.mmm.sequences;
 
-import com.mbcu.mmm.main.WebSocketClient;
 import com.mbcu.mmm.models.internal.Cpair;
 import com.mbcu.mmm.rx.BusBase;
 import com.mbcu.mmm.rx.RxBus;
@@ -76,7 +75,7 @@ public class Txd extends Base {
 
 								if (er.equals(EngineResult.terINSUF_FEE_B.toString())) {
 									// no fund
-									bus.send(new WebSocketClient.WSRequestDisconnect());
+									bus.send(new Emailer.SendEmailBotError(EngineResult.terINSUF_FEE_B.human, cpair.getFw(), System.currentTimeMillis(), false));
 									return;
 								}
 

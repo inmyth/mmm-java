@@ -90,8 +90,7 @@ public class Yuki extends Base implements Counter {
 		.map(o -> {return new FullCounterWrap(o, config);})
 		.filter(wrap -> wrap.bcd.botConfig != null)
 		.filter(wrap -> wrap.bcd.botConfig.getStrategy() 		== Strategy.FULLFIXED 
-										|| wrap.bcd.botConfig.getStrategy() == Strategy.FULLRATEPCT 
-										|| wrap.bcd.botConfig.getStrategy() == Strategy.FULLRATESEEDPCT )
+										|| wrap.bcd.botConfig.getStrategy() == Strategy.PPT )
 		.map(this::buildFullCounter)
 		.filter(Optional::isPresent)
 		.map(Optional::get)
@@ -103,29 +102,12 @@ public class Yuki extends Base implements Counter {
 	 * taken order.
 	 */
 	public Optional<RLOrder> buildFullCounter(FullCounterWrap wrap) {
-		RLOrder						 res = null;
-		BotConfigDirection bcd = wrap.bcd;
-		RLOrder 			 	   src = wrap.origin;
-//		BefAf 						 ba  = wrap.ba;
+		RLOrder							 res = null;
+		BotConfigDirection 	bcd  = wrap.bcd;
+		RLOrder 			 	   	 src   = wrap.origin;
 		
 		switch (bcd.botConfig.getStrategy()){
-			case FULLRATEPCT : 
-			case FULLRATESEEDPCT : 
-//				BigDecimal rate = ba.before.getRate();
-				BigDecimal oldRate = src.getRate();
-				RLOrder origin;
-//				if (bcd.isDirectionMatch) {
-//					BigDecimal botQuantity = bcd.botConfig.getSellOrderQuantity();
-//					// subtract is used to conveniently preserve Amount issuer and currency
-////					Amount quantity = ba.after.getQuantity().subtract(botQuantity);
-//					Amount quantity  	= src.
-//					origin = RLOrder.fromWholeConsumed(Direction.BUY, quantity, ba.after.getTotalPrice(), rate);
-//				} 
-//				else {
-//					BigDecimal botQuantity = bcd.botConfig.getBuyOrderQuantity();
-//					Amount totalPrice = ba.after.getTotalPrice().subtract(botQuantity);
-//					origin = RLOrder.fromWholeConsumed(Direction.BUY, ba.before.getQuantity().multiply(new BigDecimal("-1")), totalPrice, rate);
-//				}
+			case PPT : 
 				res = yukiPct(src, bcd.botConfig, bcd.isDirectionMatch);
 				break;
 //			case FULLFIXED :

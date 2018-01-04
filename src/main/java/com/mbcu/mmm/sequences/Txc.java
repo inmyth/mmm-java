@@ -55,10 +55,7 @@ public class Txc extends Base {
 								}
 							} else if (base instanceof Common.OnLedgerClosed) {
 								OnLedgerClosed event = (OnLedgerClosed) o;
-								if (isTesSuccess && event.ledgerEvent.getValidated() > maxLedger) { // failed
-																																										// to
-																																										// enter
-																																										// ledger
+								if (isTesSuccess && event.ledgerEvent.getValidated() > maxLedger) { 
 									disposables.dispose();
 									bus.send(new State.RequestSequenceSync());
 									bus.send(new State.RequestRemoveCreate(seq));
@@ -79,7 +76,7 @@ public class Txc extends Base {
 
 								if (er.equals(EngineResult.terINSUF_FEE_B.toString())) {
 									// no fund
-									bus.send(new WebSocketClient.WSRequestDisconnect());
+									bus.send(new Emailer.SendEmailBotError(EngineResult.terINSUF_FEE_B.human, outbound.getCpair().getFw(), System.currentTimeMillis(), true));
 									return;
 								}
 
@@ -119,7 +116,7 @@ public class Txc extends Base {
 
 								disposables.dispose();
 								bus.send(new State.RequestRemoveCreate(seq));
-								bus.send(new Emailer.SendEmailError(er, outbound.getCpair().getFw(), System.currentTimeMillis()));
+								bus.send(new Emailer.SendEmailBotError(er, outbound.getCpair().getFw(), System.currentTimeMillis(), false));
 								// bus.send(new State.OnOrderReady(outbound, hash, "retry " +
 								// er));
 							}

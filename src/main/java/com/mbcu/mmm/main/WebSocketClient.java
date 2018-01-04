@@ -9,6 +9,7 @@ import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.rx.BusBase;
 import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
+import com.mbcu.mmm.sequences.Emailer;
 import com.mbcu.mmm.utils.MyLogger;
 import com.neovisionaries.ws.client.ThreadType;
 import com.neovisionaries.ws.client.WebSocket;
@@ -182,7 +183,7 @@ public class WebSocketClient {
 					@Override
 					public void handleCallbackError(WebSocket ws, Throwable e) {
 						LOGGER.severe(e.getMessage());
-
+						System.exit(-1);
 					}
 				});
 
@@ -196,8 +197,15 @@ public class WebSocketClient {
 				if (base instanceof WSRequestSendText) {
 					WSRequestSendText event = (WSRequestSendText) o;
 					ws.sendText(event.request);
-				} else if (base instanceof WSRequestDisconnect) {
-					ws.disconnect();
+				} 
+				else if (base instanceof WSError) {
+					WSError event = (WSError) base;
+					bus.send(new Emailer.SendEmailWSError(event));
+				}
+				else if (base instanceof WSRequestShutdown) {
+					ws.disconnect(1013); // try again later code
+					WSRequestShutdown event = (WSRequestShutdown) base;
+					System.exit(event.isUnexpected ? 1 : 0);
 				}
 			} catch (Exception e) {
 				MyLogger.exception(LOGGER, base.toString(), e);
@@ -216,8 +224,8 @@ public class WebSocketClient {
 	public static class WSDisconnected extends BusBase {
 	}
 
-	public static class WSError {
-		public Exception e;
+	public static class WSError extends BusBase {
+		public final Exception e;
 
 		public WSError(Exception e) {
 			super();
@@ -246,7 +254,12 @@ public class WebSocketClient {
 
 	}
 
-	public static class WSRequestDisconnect extends BusBase {
+	public static class WSRequestShutdown extends BusBase {
+		public final boolean isUnexpected;
+		
+		public WSRequestShutdown(boolean isUnexpected) {
+			this.isUnexpected = isUnexpected;
+		}
 	}
 
 }

@@ -30,16 +30,26 @@ public class SenderSES {
 		config.getEmails().forEach(to -> {
 			send(logger, title, body, to);
 		});
+		
 	}
 
-	public void sendBotError(Emailer.SendEmailError e) {
+	public void sendBotError(Emailer.SendEmailBotError e) {
 		String body = bodyBotError(e);
 		String title = titleBotError(config);
 		config.getEmails().forEach(to -> {
 			send(logger, title, body, to);
 		});
 	}
+	
+	public void sendWSError(Exception e) {
+		String title = "Websocket error";
+		String body  = e.getMessage();		
+		config.getEmails().forEach(to -> {
+			send(logger, title, body, to);
+		});
 
+	}
+	
 	private static final void send(Logger logger, String title, String body, String to) {
 		try {
 			AmazonSimpleEmailService client = AmazonSimpleEmailServiceClientBuilder.standard().withRegion(region).build();
@@ -56,7 +66,7 @@ public class SenderSES {
 		}
 	}
 
-	private static String bodyBotError(Emailer.SendEmailError e) {
+	private static String bodyBotError(Emailer.SendEmailBotError e) {
 		StringBuilder sb = new StringBuilder("Currency Pair : ");
 		sb.append(e.pair);
 		sb.append("\n");

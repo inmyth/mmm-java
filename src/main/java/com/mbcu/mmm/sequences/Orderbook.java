@@ -167,7 +167,7 @@ public class Orderbook extends Base {
 								Boolean pairMatched = remove(event.prevSeq.intValue());
 								if (pairMatched != null) {
 									if (event.lognum == LogNum.CANCELED_UNFUNDED) {
-										bus.send(new Emailer.SendEmailError("Order " + event.previousTxnId + " " + event.prevSeq + " canceled, unfunded", botConfig.getPair(), System.currentTimeMillis()));
+										bus.send(new Emailer.SendEmailBotError("Order " + event.previousTxnId + " " + event.prevSeq + " canceled, unfunded", botConfig.getPair(), System.currentTimeMillis(), false));
 									}
 									LastBuySellTuple worstRates = RLOrder.nextTRates(buys, sels, start.buy.unitPrice, start.sel.unitPrice, botConfig);
 									start = worstRates;
@@ -255,7 +255,7 @@ public class Orderbook extends Base {
 		}
 
 		if (levels > 0) {
-			if (botConfig.getStrategy() == Strategy.FULLRATEPCT || botConfig.getStrategy() == Strategy.FULLRATESEEDPCT ) {
+			if (botConfig.getStrategy() == Strategy.PPT ) {
 				res.addAll(RLOrder.buildSeedPct(direction == Direction.BUY, start, levels, botConfig, LOGGER));			
 			} 
 			else {

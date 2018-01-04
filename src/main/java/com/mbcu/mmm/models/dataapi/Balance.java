@@ -2,10 +2,10 @@ package com.mbcu.mmm.models.dataapi;
 
 import java.math.BigDecimal;
 
-import com.mbcu.mmm.models.Asset.Currency;
 import com.mbcu.mmm.models.internal.NameIssuer;
 import com.ripple.core.coretypes.AccountID;
 import com.ripple.core.coretypes.Amount;
+import com.ripple.core.coretypes.Currency;
 
 public class Balance {
 
@@ -41,7 +41,7 @@ public class Balance {
 		if (currency.equals(Currency.XRP.toString())) {
 			return new Amount(new BigDecimal(value));
 		}
-		return new Amount(new BigDecimal(value), com.ripple.core.coretypes.Currency.fromString(currency),
+		return new Amount(new BigDecimal(value), Currency.fromString(currency),
 				AccountID.fromAddress(counterparty));
 	}
 

@@ -1,7 +1,7 @@
 package com.mbcu.mmm.models.internal;
 
-import com.mbcu.mmm.models.Asset.Currency;
 import com.ripple.core.coretypes.Amount;
+import com.ripple.core.coretypes.Currency;
 
 public class NameIssuer {
 	String currency;

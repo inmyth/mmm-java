@@ -2,6 +2,8 @@ package com.mbcu.mmm.sequences;
 
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.mbcu.mmm.main.WebSocketClient;
+import com.mbcu.mmm.main.WebSocketClient.WSError;
 import com.mbcu.mmm.models.internal.Config;
 import com.mbcu.mmm.notice.SenderSES;
 import com.mbcu.mmm.rx.BusBase;
@@ -13,7 +15,7 @@ import io.reactivex.schedulers.Schedulers;
 
 public class Emailer extends Base {
 	private final CompositeDisposable disposables = new CompositeDisposable();
-	private final ConcurrentHashMap<SendEmailError, Long> notices = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<SendEmailBotError, Long> notices = new ConcurrentHashMap<>();
 	private final long GAP_MS = 1000 * 60 * 30; // 30 mins
 	private SenderSES sender;
 
@@ -28,8 +30,13 @@ public class Emailer extends Base {
 					public void onNext(Object o) {
 						BusBase base = (BusBase) o;
 
-						if (base instanceof SendEmailError) {
-							check((SendEmailError) base);
+						if (base instanceof SendEmailBotError) {
+							check((SendEmailBotError) base);
+						}
+						else if (base instanceof SendEmailWSError) {
+							SendEmailWSError event = (SendEmailWSError) base;
+							sender.sendWSError(event.e.e);
+							bus.send(new WebSocketClient.WSRequestShutdown(true));
 						}
 					}
 
@@ -48,7 +55,7 @@ public class Emailer extends Base {
 				}));
 	}
 
-	private void check(SendEmailError r) {
+	private void check(SendEmailBotError r) {
 		long now = System.currentTimeMillis();
 		Long lastInserted = notices.get(r);
 		if (lastInserted != null && lastInserted + GAP_MS > now) {
@@ -63,16 +70,17 @@ public class Emailer extends Base {
 		return res;
 	}
 
-	public static class SendEmailError extends BusBase {
+	public static class SendEmailBotError extends BusBase {
 		public final String error;
 		public final String pair;
 		public final long millis;
+		public final boolean shutDown;
 
-		public SendEmailError(String error, String pair, long millis) {
-			super();
+		public SendEmailBotError(String error, String pair, long millis, boolean shutDown) {
 			this.error = error;
 			this.pair = pair;
 			this.millis = millis;
+			this.shutDown = shutDown;
 		}
 
 		@Override
@@ -84,13 +92,23 @@ public class Emailer extends Base {
 		public boolean equals(Object o) {
 			if (o == null)
 				return false;
-			if (!(o instanceof SendEmailError))
+			if (!(o instanceof SendEmailBotError))
 				return false;
-			SendEmailError t = (SendEmailError) o;
+			SendEmailBotError t = (SendEmailBotError) o;
 			if (t.pair.equals(pair) && t.error.equals(error)) {
 				return true;
 			}
 			return false;
 		}
 	}
+	
+	public static class SendEmailWSError extends BusBase{
+		public final WSError e;
+
+		public SendEmailWSError(WSError e) {
+			super();
+			this.e = e;
+		}		
+	}
+	
 }

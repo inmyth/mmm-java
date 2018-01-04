@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-import com.mbcu.mmm.models.Asset;
 import com.mbcu.mmm.models.request.BookOffers;
 import com.mbcu.mmm.utils.MyUtils;
 import com.ripple.core.coretypes.AccountID;
@@ -35,8 +34,7 @@ public class BotConfig {
 	public enum Strategy {
 		PARTIAL,	
 		FULLFIXED,	
-		FULLRATEPCT,	
-		FULLRATESEEDPCT;	
+		PPT;	
 	}
 
 	public static HashMap<String, BotConfig> buildMap(Credentials credentials, ArrayList<BotConfig> bots) throws IOException {
@@ -53,7 +51,7 @@ public class BotConfig {
 			if (!MyUtils.isInEnum(bot.strategy, Strategy.class)){
 				throw new IOException(String.format("Strategy \"%s\" is not recognized", bot.strategy));
 			}		
-			if (bot.getStrategy().equals(BotConfig.Strategy.FULLRATEPCT) || bot.getStrategy().equals(BotConfig.Strategy.FULLRATESEEDPCT)) {
+			if (bot.getStrategy().equals(BotConfig.Strategy.PPT)) {
 				BigDecimal pct = new BigDecimal(bot.gridSpace);
 				pct = BigDecimal.ONE.add(pct.divide(new BigDecimal("100"), MathContext.DECIMAL64));
 				bot.gridSpace = pct.toPlainString();
@@ -72,7 +70,7 @@ public class BotConfig {
 		String currency = null;
 		String issuer = null;
 		String[] b = part.split("[.]");
-		if (!b[0].equals(Asset.Currency.XRP.text()) && b.length != 2) {
+		if (!b[0].equals(Currency.XRP.toString()) && b.length != 2) {
 			throw new IllegalArgumentException("currency pair not formatted in base.issuer/quote.issuer");
 		} else {
 			currency = b[0];
