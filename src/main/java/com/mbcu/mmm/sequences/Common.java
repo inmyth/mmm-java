@@ -160,10 +160,10 @@ public class Common extends Base {
 			return;
 		}
 
-		ArrayList<RLOrder>  oes = new ArrayList<>(); // Offer Executeds
-		ArrayList<BefAf> 		ors = new ArrayList<>(); // Before and After
+		ArrayList<RLOrder>  oes  = new ArrayList<>(); // Offer Executeds
+		ArrayList<BefAf> 	 ors  = new ArrayList<>(); // Before and After
 		Offer offerCreated 			= null;
-		JSONObject transaction = new JSONObject(raw);
+		JSONObject transaction 	= new JSONObject(raw);
 
 		JSONObject metaJSON = (JSONObject) transaction.remove("meta");
 		TransactionMeta meta = (TransactionMeta) STObject.fromJSONObject(metaJSON);
