@@ -1,5 +1,9 @@
 ## Version History
 
+v.0611
+- working on fullfixed and partial
+- RLORder.fromOfferCreate(Transaction txn) seemed to create wrong direction. I flipped it and also flipped yukiPct. 
+
 v.0610
 - websocket or network problem will cause system.exit(1) . This way supervisord will catch it and restart the bot. 
 

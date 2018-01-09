@@ -156,7 +156,7 @@ public final class RLOrder extends Base {
 	public static RLOrder fromOfferCreate(Transaction txn) {
 		Amount gets = txn.get(Amount.TakerPays);
 		Amount pays = txn.get(Amount.TakerGets);
-		Cpair cpair = Cpair.newInstance(gets, pays);
+		Cpair cpair = Cpair.newInstance(pays, gets); // flipped
 		RLOrder res = new RLOrder(Direction.BUY, gets, pays, null, cpair);
 		return res;
 	}
@@ -339,16 +339,6 @@ public final class RLOrder extends Base {
 		BigDecimal mtp = bot.getGridSpace();
 		BigDecimal unitPrice0	= isBuySeed ? last.buy.unitPrice  : last.sel.unitPrice;
 		BigDecimal qty0 = isBuySeed ? last.buy.qty : last.sel.qty;
-		/*
-		 ell 	2.0000 	120.00 	
-Sell 	2.0100 	118.81 	
-Sell 	2.0200 	117.64 	
-Sell 	2.0301 	116.47 	
-Sell 	2.0402 	115.32 	
-Buy 	2.0606 	113.06 	
-Buy 	2.0709 	111.93 	
-Buy 	2.0812 	110.83 	
-		 */
 
 		int range = isBuySeed ? last.isBuyPulledFromSel ? 3 : 2 : last.isSelPulledFromBuy ? 3 : 2;
 		List<RLOrder> res = IntStream
