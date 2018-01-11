@@ -18,7 +18,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import com.mbcu.mmm.models.Base;
-import com.mbcu.mmm.models.internal.BotConfig.Strategy;
 import com.mbcu.mmm.utils.MyUtils;
 import com.ripple.core.coretypes.AccountID;
 import com.ripple.core.coretypes.Amount;
@@ -307,11 +306,58 @@ public final class RLOrder extends Base {
 		return res;
 	}
 
-	public static List<RLOrder> buildBuysSeed(BigDecimal startRate, int levels, BotConfig bot, Logger log) {
+	public static List<RLOrder> buildBuysSeed(boolean isBuySeed, BigDecimal startRate, int levels, BotConfig bot, Logger log) {
+//		MathContext mc = MathContext.DECIMAL64;
+//		BigDecimal mtp = bot.getGridSpace();
+//		BigDecimal unitPrice0	= isBuySeed ? last.buy.unitPrice  : last.sel.unitPrice;
+//		BigDecimal qty0 = isBuySeed ? last.buy.qty : last.sel.qty;
+//
+//		int range = isBuySeed ? last.isBuyPulledFromSel ? 3 : 2 : last.isSelPulledFromBuy ? 3 : 2;
+//		List<RLOrder> res = IntStream
+//				.range(range, levels + range)
+//				.mapToObj(n -> {
+//					BigDecimal rate = Collections.nCopies(n, BigDecimal.ONE).stream().reduce((x, y) -> x.multiply(mtp, mc)).get();					
+//					BigDecimal unitPrice1 = isBuySeed ? unitPrice0.divide(rate, mc) : unitPrice0.multiply(rate, mc);
+//					BigDecimal sqrt  = MyUtils.bigSqrt(rate);
+//					BigDecimal qty1 = isBuySeed ? qty0.multiply(sqrt, mc): qty0.divide(sqrt, mc);
+//					if (unitPrice1.compareTo(BigDecimal.ZERO) <= 0) {
+//						log.severe("RLOrder.buildBuySeedPct rate below zero. Check config for the pair " + bot.getPair());
+//					}			
+//					BigDecimal total1 = qty1.multiply(unitPrice1, mc);
+//					Amount qtyAmount1		= bot.base.add(qty1);
+//					Amount totalAmount1  = RLOrder.amount(total1, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
+//					Direction direction1 = isBuySeed ? Direction.BUY: Direction.SELL;
+//					RLOrder buy = RLOrder.rateUnneeded(direction1, qtyAmount1, totalAmount1);		
+//					return buy;
+//			})
+//	   .filter(o -> o.getQuantity().value().compareTo(BigDecimal.ZERO) > 0)
+//	   .filter(o -> o.getTotalPrice().value().compareTo(BigDecimal.ZERO) > 0)
+//	   .collect(Collectors.toList());
+//		return res;
+		
+		MathContext mc = MathContext.DECIMAL64;
+			
 		ArrayList<RLOrder> res = new ArrayList<>();
-		BigDecimal margin = bot.getGridSpace();
+		BigDecimal rate = bot.getGridSpace();
 		Queue<Integer> buyLevels = getLevels(levels);
+		
+		IntStream
+		.range(1, levels + 1)
+		.mapToObj(n -> {
+			
+			BigDecimal f = rate.multiply(new BigDecimal(n), mc);
+			BigDecimal newRate = isBuySeed ? startRate.subtract(f, mc) : startRate.add(f, mc);
+			return newRate; 
+			
 
+		})
+		.filter(o -> o.compareTo(BigDecimal.ZERO) > 0)
+		.
+	  .filter(o -> o.getQuantity().value().compareTo(BigDecimal.ZERO) > 0)
+	  .filter(o -> o.getTotalPrice().value().compareTo(BigDecimal.ZERO) > 0)
+	  .collect(Collectors.toList());
+		
+		
 		while (true) {
 			if (buyLevels.isEmpty()) {
 				break;
