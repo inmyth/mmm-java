@@ -1,5 +1,9 @@
 ## Version History
 
+v.0612
+- fullfixed refactored, tested
+- ppt tested 
+
 v.0611
 - working on fullfixed and partial
 - RLORder.fromOfferCreate(Transaction txn) seemed to create wrong direction. I flipped it and also flipped yukiPct. 

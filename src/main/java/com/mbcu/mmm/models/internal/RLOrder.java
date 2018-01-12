@@ -6,11 +6,9 @@ import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentMap;
 import java.util.logging.Logger;
@@ -298,85 +296,30 @@ public final class RLOrder extends Base {
 		return in;
 	}
 
-	private static Queue<Integer> getLevels(int max) {
-		Queue<Integer> res = new LinkedList<>();
-		IntStream.range(1, max + 1).forEach(a -> {
-			res.add(a);
-		});
-		return res;
-	}
-
-	public static List<RLOrder> buildBuysSeed(boolean isBuySeed, BigDecimal startRate, int levels, BotConfig bot, Logger log) {
-//		MathContext mc = MathContext.DECIMAL64;
-//		BigDecimal mtp = bot.getGridSpace();
-//		BigDecimal unitPrice0	= isBuySeed ? last.buy.unitPrice  : last.sel.unitPrice;
-//		BigDecimal qty0 = isBuySeed ? last.buy.qty : last.sel.qty;
-//
-//		int range = isBuySeed ? last.isBuyPulledFromSel ? 3 : 2 : last.isSelPulledFromBuy ? 3 : 2;
-//		List<RLOrder> res = IntStream
-//				.range(range, levels + range)
-//				.mapToObj(n -> {
-//					BigDecimal rate = Collections.nCopies(n, BigDecimal.ONE).stream().reduce((x, y) -> x.multiply(mtp, mc)).get();					
-//					BigDecimal unitPrice1 = isBuySeed ? unitPrice0.divide(rate, mc) : unitPrice0.multiply(rate, mc);
-//					BigDecimal sqrt  = MyUtils.bigSqrt(rate);
-//					BigDecimal qty1 = isBuySeed ? qty0.multiply(sqrt, mc): qty0.divide(sqrt, mc);
-//					if (unitPrice1.compareTo(BigDecimal.ZERO) <= 0) {
-//						log.severe("RLOrder.buildBuySeedPct rate below zero. Check config for the pair " + bot.getPair());
-//					}			
-//					BigDecimal total1 = qty1.multiply(unitPrice1, mc);
-//					Amount qtyAmount1		= bot.base.add(qty1);
-//					Amount totalAmount1  = RLOrder.amount(total1, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
-//					Direction direction1 = isBuySeed ? Direction.BUY: Direction.SELL;
-//					RLOrder buy = RLOrder.rateUnneeded(direction1, qtyAmount1, totalAmount1);		
-//					return buy;
-//			})
-//	   .filter(o -> o.getQuantity().value().compareTo(BigDecimal.ZERO) > 0)
-//	   .filter(o -> o.getTotalPrice().value().compareTo(BigDecimal.ZERO) > 0)
-//	   .collect(Collectors.toList());
-//		return res;
-		
-		MathContext mc = MathContext.DECIMAL64;
-			
-		ArrayList<RLOrder> res = new ArrayList<>();
+	public static List<RLOrder> buildSeed(boolean isBuySeed, LastBuySellTuple last, int levels, BotConfig bot, Logger log) {	
+		MathContext mc = MathContext.DECIMAL64;			
+		BigDecimal startRate = isBuySeed ? last.buy.unitPrice : last.sel.unitPrice; 
 		BigDecimal rate = bot.getGridSpace();
-		Queue<Integer> buyLevels = getLevels(levels);
+		int range = isBuySeed ? last.isBuyPulledFromSel ? 2 : 1 : last.isSelPulledFromBuy ? 2 : 1;
 		
-		IntStream
-		.range(1, levels + 1)
-		.mapToObj(n -> {
-			
+		List<RLOrder> res = IntStream
+		.range(range, levels + range)
+		.mapToObj(n -> {			
 			BigDecimal f = rate.multiply(new BigDecimal(n), mc);
 			BigDecimal newRate = isBuySeed ? startRate.subtract(f, mc) : startRate.add(f, mc);
-			return newRate; 
-			
-
+			return newRate; 			
 		})
 		.filter(o -> o.compareTo(BigDecimal.ZERO) > 0)
-		.
+		.map(newRate -> {
+			Amount quantity = bot.base.add(isBuySeed ? bot.getBuyOrderQuantity() : bot.getSellOrderQuantity());
+			BigDecimal totalAmount1 = quantity.value().multiply(newRate, mc);
+			Amount total1 = RLOrder.amount(totalAmount1, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
+			RLOrder order = RLOrder.rateUnneeded(isBuySeed ? Direction.BUY : Direction.SELL, quantity, total1);		
+			return order;		
+		})
 	  .filter(o -> o.getQuantity().value().compareTo(BigDecimal.ZERO) > 0)
 	  .filter(o -> o.getTotalPrice().value().compareTo(BigDecimal.ZERO) > 0)
 	  .collect(Collectors.toList());
-		
-		
-		while (true) {
-			if (buyLevels.isEmpty()) {
-				break;
-			}
-			if (!buyLevels.isEmpty()) {
-				Amount quantity = bot.base.add(bot.getBuyOrderQuantity());
-				BigDecimal rate = startRate
-						.subtract(margin.multiply(new BigDecimal(buyLevels.remove()), MathContext.DECIMAL64));
-				if (rate.compareTo(BigDecimal.ZERO) <= 0) {
-					log.severe("RLOrder.buildBuySeed rate below zero. Check config for the pair " + bot.getPair());
-				} else {
-					BigDecimal totalPriceValue = quantity.value().multiply(rate, MathContext.DECIMAL64);
-					Amount totalPrice = RLOrder.amount(totalPriceValue, Currency.fromString(bot.quote.currencyString()),
-							AccountID.fromAddress(bot.quote.issuerString()));
-					RLOrder buy = RLOrder.rateUnneeded(Direction.BUY, quantity, totalPrice);
-					res.add(buy);
-				}
-			}
-		}
 		return res;
 	}
 
@@ -410,54 +353,6 @@ public final class RLOrder extends Base {
 		return res;
 	}
 		
-//	public static List<RLOrder> buildSelsSeedPct(LastAmount last, int levels, BotConfig bot, boolean isBlankStart) {			
-//		BigDecimal mtp = MyUtils.bigSqrt(bot.getGridSpace());
-////		BigDecimal botQuantity = bot.getSellOrderQuantity();
-//		BigDecimal startPrice = last.rate;
-//		BigDecimal startQuantity = last.quantity;
-//		int range = isBlankStart ? 2 : 3;
-//		List<RLOrder> res = IntStream
-//				.range(range, levels + range)
-//				.mapToObj(n -> {
-//					BigDecimal rate = Collections.nCopies(n, BigDecimal.ONE).stream().reduce((x, y) -> x.multiply(mtp, MathContext.DECIMAL64)).get();					
-//					BigDecimal newPri = startPrice.multiply(rate, MathContext.DECIMAL64);
-//					BigDecimal newQty = startQuantity.divide(rate, MathContext.DECIMAL64);
-//
-//					Amount newAmt		  = bot.base.add(newQty);
-//					Amount totalPrice = RLOrder.amount(newPri, Currency.fromString(bot.quote.currencyString()), AccountID.fromAddress(bot.quote.issuerString()));
-//					RLOrder buy = RLOrder.rateUnneeded(Direction.SELL, newAmt, totalPrice);		
-//					return buy;
-//			})
-//	   .filter(o -> o.getQuantity().value().compareTo(BigDecimal.ZERO) > 0)
-//	   .filter(o -> o.getTotalPrice().value().compareTo(BigDecimal.ZERO) > 0)
-//	   .collect(Collectors.toList());
-//		return res;
-//	}
-
-	public static List<RLOrder> buildSelsSeed(BigDecimal startRate, int levels, BotConfig bot) {
-		ArrayList<RLOrder> res 		= new ArrayList<>();
-		BigDecimal margin 				= bot.getGridSpace();
-		Queue<Integer> sellLevels = getLevels(levels);
-
-		while (true) {
-			if (sellLevels.isEmpty()) {
-				break;
-			}
-			if (!sellLevels.isEmpty()) {
-				Amount quantity = bot.base.add(bot.getSellOrderQuantity());
-				BigDecimal rate = startRate.add(margin.multiply(new BigDecimal(sellLevels.remove()), MathContext.DECIMAL64));
-				BigDecimal totalPriceValue = quantity.value().multiply(rate, MathContext.DECIMAL64);
-				Amount totalPrice = RLOrder.amount(totalPriceValue, Currency.fromString(bot.quote.currencyString()),
-						AccountID.fromAddress(bot.quote.issuerString()));
-				RLOrder sell = RLOrder.rateUnneeded(Direction.SELL, quantity, totalPrice);
-				res.add(sell);
-			}
-		}
-		return res;
-	}
-
-
-
 	public static LastBuySellTuple nextTRates(ConcurrentMap<Integer, TRLOrder> buys, ConcurrentMap<Integer, TRLOrder> sels, BigDecimal worstBuy, BigDecimal worstSel, BotConfig botConfig) {
 		return nextRates(TRLOrder.origins(buys), TRLOrder.origins(sels), worstBuy, worstSel, botConfig);
 	}

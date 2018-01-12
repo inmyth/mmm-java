@@ -259,8 +259,7 @@ public class Orderbook extends Base {
 				res.addAll(RLOrder.buildSeedPct(direction == Direction.BUY, start, levels, botConfig, LOGGER));			
 			} 
 			else {
-				res.addAll(direction == Direction.BUY ? RLOrder.buildBuysSeed(start.buy.unitPrice, levels, botConfig, super.LOGGER)
-						: RLOrder.buildSelsSeed(start.sel.unitPrice, levels, botConfig));
+				res.addAll(RLOrder.buildSeed(direction == Direction.BUY, start, levels, botConfig, LOGGER));
 			}
 		}
 		return res;

@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 
-import com.mbcu.mmm.models.internal.BefAf;
 import com.mbcu.mmm.models.internal.BotConfig;
 import com.mbcu.mmm.models.internal.BotConfig.Strategy;
 import com.mbcu.mmm.models.internal.Config;
@@ -16,10 +15,8 @@ import com.mbcu.mmm.rx.BusBase;
 import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.sequences.Base;
-import com.mbcu.mmm.sequences.Common;
 import com.mbcu.mmm.sequences.Orderbook;
 import com.mbcu.mmm.sequences.Orderbook.OnOrderFullConsumed;
-import com.mbcu.mmm.sequences.Common.OnOfferExecuted;
 import com.mbcu.mmm.sequences.state.State;
 import com.mbcu.mmm.sequences.state.State.OnOrderReady.Source;
 import com.mbcu.mmm.utils.MyLogger;
