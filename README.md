@@ -52,6 +52,9 @@ For sell direction p1 = (1 + gridSpace / 100) * p0 and q1 = q0 / (1 + gridSpace 
 For buy direction p1 = p0  / (1 + gridSpace / 100) and q1 = q0 * (1 + gridSpace / 100)^0.5
 
 
+#### Attention
+The bot uses the initial offerCreate as reference for next order either as seed or counter. Preferably the bot should start when orderbook is empty. If not then it will assume any order in the orderbook as the original offerCreate. If you start the bot this way, *make sure partially filled orders in the orderbook are deleted* for they don't reflect their offerCreates.  
+
 ## Config
 
 #### General configuration
