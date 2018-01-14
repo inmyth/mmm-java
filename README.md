@@ -35,11 +35,11 @@ In general the principle of grid spacing is simple. Seed orderbook with orders s
 The IOU to trade, number of orders, grid space, amount, etc are defined in the config. The following strategies determine order countering:
 
 
-#### Partial `partial`
+#### Fixed Partial `partial`
 
 Any order consumed will be immediately countered with new order equals to the amount that consumed it. The new unit price is spaced statically by gridSpace, e.g. if a buy order with price X is consumed then a new sell order with price X + gridSpace will be created. 
 
-####  `fullfixed`
+#### Fixed Full `fullfixed`
 
 The bot will counter only if the order is fully consumed. The new unit price is spaced statically by gridSpace. The counter amount will obey sellOrderQuantity and buyOrderQuantity set in config.
 

@@ -16,7 +16,7 @@ import com.mbcu.mmm.rx.RxBus;
 import com.mbcu.mmm.rx.RxBusProvider;
 import com.mbcu.mmm.sequences.Base;
 import com.mbcu.mmm.sequences.Orderbook;
-import com.mbcu.mmm.sequences.Orderbook.OnOrderFullConsumed;
+import com.mbcu.mmm.sequences.Orderbook.OnOrderConsumed;
 import com.mbcu.mmm.sequences.state.State;
 import com.mbcu.mmm.sequences.state.State.OnOrderReady.Source;
 import com.mbcu.mmm.utils.MyLogger;
@@ -46,20 +46,10 @@ public class Yuki extends Base implements Counter {
 			public void onNext(Object o) {
 				BusBase base = (BusBase) o;
 				try {
-					if (o instanceof Orderbook.OnOrderFullConsumed){
-						OnOrderFullConsumed event = (OnOrderFullConsumed) o;
-						counterFull(event.origins);
+					if (base instanceof Orderbook.OnOrderConsumed){
+						OnOrderConsumed event = (OnOrderConsumed) o;
+						counter(event.origins);
 					}
-					
-					
-//					if (o instanceof Common.OnOfferExecuted) {
-//						OnOfferExecuted event = (OnOfferExecuted) o;
-//						counterPartial(event.oes);
-//					} 
-//					else if (o instanceof Common.OnDifference) {
-//						Common.OnDifference event = (Common.OnDifference) o;		
-//						counterFull(event.bas);
-//					}
 				} catch (Exception e) {
 					MyLogger.exception(LOGGER, base.toString(), e);
 					throw e;
@@ -82,23 +72,41 @@ public class Yuki extends Base implements Counter {
 	
 	
 //  change this to List<RLOrder> for incoming original orders
-	public void counterFull(List<RLOrder> origins) {
+	public void counter(List<RLOrder> origins) {
 		origins.stream()
 		.map(o -> {return new FullCounterWrap(o, config);})
 		.filter(wrap -> wrap.bcd.botConfig != null)
-		.filter(wrap -> wrap.bcd.botConfig.getStrategy() 		== Strategy.FULLFIXED 
-										|| wrap.bcd.botConfig.getStrategy() == Strategy.PPT )
-		.map(this::buildFullCounter)
+//		.filter(wrap -> wrap.bcd.botConfig.getStrategy() 		== Strategy.FULLFIXED 
+//										|| wrap.bcd.botConfig.getStrategy() == Strategy.PPT )
+		.map(this::buildCounter)
 		.filter(Optional::isPresent)
 		.map(Optional::get)
 		.forEach(this::onCounterReady);
 	}
 
+//	public void counterPartial(List<RLOrder> origins) {
+//		origins.stream()
+//		.map(o -> {return new FullCounterWrap(o, config);})
+//		.filter(wrap -> wrap.bcd.botConfig != null)
+//		.map(this::buildCounter)
+//		.filter(Optional::isPresent)
+//		.map(Optional::get)
+//		.forEach(this::onCounterReady);
+//
+//		
+////		oes.stream()
+////		.map(this::buildBotDirection)
+////		.filter(Optional::isPresent)
+////		.filter(optBcd  -> optBcd.get().botConfig.getStrategy() == Strategy.PARTIAL)
+////		.map(optBcd -> yuki(optBcd.get()))
+////		.forEach(this::onCounterReady);
+//	}
+	
 	/*
 	 * This part can be configured so instead of countering, the bot will replace
 	 * taken order.
 	 */
-	public Optional<RLOrder> buildFullCounter(FullCounterWrap wrap) {
+	public Optional<RLOrder> buildCounter(FullCounterWrap wrap) {
 		RLOrder							 res = null;
 		BotConfigDirection 	bcd  = wrap.bcd;
 		RLOrder 			 	   	 src   = wrap.origin;
@@ -108,6 +116,7 @@ public class Yuki extends Base implements Counter {
 				res = yukiPct(src, bcd.botConfig, bcd.isDirectionMatch);
 				break;
 			case FULLFIXED :
+			case PARTIAL:
 				res = yuki(src, bcd.botConfig, bcd.isDirectionMatch);
 				break;
 //				rate = ba.before.getRate();
@@ -227,14 +236,7 @@ public class Yuki extends Base implements Counter {
 		return res;
 	}
 
-	public void counterPartial(List<RLOrder> oes) {
-//		oes.stream()
-//		.map(this::buildBotDirection)
-//		.filter(Optional::isPresent)
-//		.filter(optBcd  -> optBcd.get().botConfig.getStrategy() == Strategy.PARTIAL)
-//		.map(optBcd -> yuki(optBcd.get()))
-//		.forEach(this::onCounterReady);
-	}
+
 
 	private static class BotConfigDirection {
 		boolean isDirectionMatch = true;

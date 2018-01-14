@@ -12,9 +12,6 @@ The most important element in a response is probably DeletedNode. DeletedNode te
 - our offer takes or is taken by other's offer. 
 - DeletedNode has nested.PreviousFields
 
-### Offer Create
-- if placed whole will only create a CreatedNode
-
 ### Offer Edited
 - modifying or editing an order will cancel it and replace it with a new one
 - txn is offerCreate and has offerSequence from the old order
@@ -23,7 +20,12 @@ The most important element in a response is probably DeletedNode. DeletedNode te
 ### Offer Canceled
 - if canceled by OfferCreate then txn will have type OfferCreate
 - orders may be automatically canceled if no longer funded. This happens when new order is created. In this case txn contains OfferCreate
-- DeletedNodes contain canceled orders
+
+## ModifiedNodes
+- partially filled order goes here
+
+## CreatedNode
+- full order creation goes here
 
 ### Samples
 - partial filled, unfunded E356B7AA6ADBB90CB4BA280AA1FF6E92E6054A76192E40980F95C118629B4E15, E8378AEBC3B1B78CE0AE8219B603DBD6A18420004B615981A99F125332FC3702

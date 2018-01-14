@@ -110,25 +110,24 @@ public class Orderbook extends Base {
 								Common.OnDifference event = (Common.OnDifference) o;
 								boolean isBelongToThisOrderbook = false;
 								
-								List<RLOrder> preFullCounters 	 = new ArrayList<>();
-								List<RLOrder> prePartialCounters = new ArrayList<>();
+								List<RLOrder> preCounters 	 = new ArrayList<>();
 								for (BefAf ba : event.bas) {
 									Optional<Boolean> pairMatched = pairMatched(ba.after);
 									if (pairMatched.isPresent()) {
 										isBelongToThisOrderbook = true;
 										if (ba.source != null){											
-											if (ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) != 0){ 
-												insert(ba.before, ba.after, ba.befSeq.intValue(), pairMatched.get());
+											if (ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0){ 
+												preCounters.add(ba.source);
 											} 
 											else {
-												preFullCounters.add(ba.source);
+												insert(ba.before, ba.after, ba.befSeq.intValue(), pairMatched.get());
 											}				
 										}
 										else if (ba.source == null){
 											if(ba.after.getQuantity().value().compareTo(BigDecimal.ZERO) == 0) { // fully consumed
 												TRLOrder entry = pairMatched.get() ? buys.get(ba.befSeq.intValue()) : sels.get(ba.befSeq.intValue());
-												if (entry != null){
-													preFullCounters.add(entry.getOrigin());
+												if (entry != null){		
+												  preCounters.add(botConfig.getStrategy() == Strategy.PARTIAL ? RLOrder.toPartial(ba) : entry.getOrigin());										
 													remove(ba.befSeq.intValue());
 												}
 												else{
@@ -136,7 +135,7 @@ public class Orderbook extends Base {
 												}
 											}
 											else {
-												prePartialCounters.add(ba.after);
+												preCounters.add(RLOrder.toPartial(ba));
 												update(ba.after, ba.befSeq.intValue(), ba.befSeq.intValue(), pairMatched.get()); // partially consumed
 											}
 										}
@@ -148,10 +147,9 @@ public class Orderbook extends Base {
 									start = worstRates;
 								}	
 								
-								if (!preFullCounters.isEmpty()){
-									bus.send(new OnOrderFullConsumed(preFullCounters));
-								}
-								
+								if (!preCounters.isEmpty()){
+									bus.send(new OnOrderConsumed(preCounters));
+								}								
 							} 
 							else if (base instanceof Common.OnOfferEdited) {
 								Common.OnOfferEdited event = (Common.OnOfferEdited) o;
@@ -398,21 +396,21 @@ public class Orderbook extends Base {
 		return sb.toString();
 	}
 
-	public static class OnOrderFullConsumed extends BusBase {
+	public static class OnOrderConsumed extends BusBase {
 		public final List<RLOrder> origins;
 
-		public OnOrderFullConsumed(List<RLOrder> origins) {
+		public OnOrderConsumed(List<RLOrder> origins) {
 			this.origins = origins;
 		}
 	}
 	
-	public static class OnOrderPartialConsumed extends BusBase {
-		public final List<RLOrder> orders;
-
-		public OnOrderPartialConsumed(List<RLOrder> orders) {
-			this.orders = orders;
-		}
-	}
+//	public static class OnOrderPartialConsumed extends BusBase {
+//		public final List<RLOrder> orders;
+//
+//		public OnOrderPartialConsumed(List<RLOrder> orders) {
+//			this.orders = orders;
+//		}
+//	}
 	
 	public static Orderbook newInstance(BotConfig botConfig, Config config) {
 		Orderbook res = new Orderbook(config, botConfig);

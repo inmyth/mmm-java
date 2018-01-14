@@ -139,8 +139,7 @@ public final class RLOrder extends Base {
 	 * @return
 	 */
 	public static RLOrder rateUnneeded(Direction direction, Amount quantity, Amount totalPrice) {
-		Cpair cpair = direction == Direction.BUY ? Cpair.newInstance(totalPrice, quantity)
-				: Cpair.newInstance(quantity, totalPrice);
+		Cpair cpair = direction == Direction.BUY ? Cpair.newInstance(totalPrice, quantity) : Cpair.newInstance(quantity, totalPrice);
 		return new RLOrder(direction, quantity, totalPrice, null, cpair);
 	}
 
@@ -180,6 +179,13 @@ public final class RLOrder extends Base {
 		Cpair cpair = Cpair.newInstance(isOCOwn ? got : paid, isOCOwn ? paid : got);
 		RLOrder res = new RLOrder(Direction.BUY, rlGot, rlPaid, ask, cpair);
 		return res;
+	}
+	
+	public static RLOrder toPartial(BefAf ba) {
+		Direction d = ba.after.direction.equals(Direction.BUY.text) ? Direction.BUY : Direction.SELL;
+		Amount q 		= ba.before.quantity.abs().subtract(ba.after.quantity.abs());
+		Amount t 	  = ba.before.totalPrice.abs().subtract(ba.after.totalPrice.abs());
+		return rateUnneeded(d, q, t);	
 	}
 
 	public static BefAf toBA(Amount bTakerPays, Amount bTakerGets, Amount aTakerPays, Amount aTakerGets, UInt32 seq,
@@ -226,15 +232,13 @@ public final class RLOrder extends Base {
 			Amount oeGot = oeExecuted.get(Amount.TakerGets);
 			if (!isXRPGotInMajority) {
 				Amount oePaidRef = oeExecutedMinor.get(Amount.TakerPays);
-				Amount newPaid = new Amount(oePaid.value().multiply(refAsk, MathContext.DECIMAL64), oePaidRef.currency(),
-						oePaidRef.issuer());
+				Amount newPaid = new Amount(oePaid.value().multiply(refAsk, MathContext.DECIMAL64), oePaidRef.currency(), oePaidRef.issuer());
 				Cpair cpair = Cpair.newInstance(newPaid, oeGot);
 				Amount oeGotPositive = new Amount(oeGot.value(), oeGot.currency(), oeGot.issuer());
 				res.add(new RLOrder(direction, oeGotPositive, newPaid, newAsk, cpair));
 			} else {
 				Amount oeGotRef = oeExecutedMinor.get(Amount.TakerGets);
-				Amount newGot = new Amount(oeGot.value().divide(refAsk, MathContext.DECIMAL64), oeGotRef.currency(),
-						oeGotRef.issuer());
+				Amount newGot = new Amount(oeGot.value().divide(refAsk, MathContext.DECIMAL64), oeGotRef.currency(), oeGotRef.issuer());
 				Amount oePaidPositive = new Amount(oePaid.value(), oePaid.currency(), oePaid.issuer());
 				Cpair cpair = Cpair.newInstance(oePaid, newGot);
 				res.add(new RLOrder(direction, newGot, oePaidPositive, newAsk, cpair));
@@ -307,6 +311,9 @@ public final class RLOrder extends Base {
 		.mapToObj(n -> {			
 			BigDecimal f = rate.multiply(new BigDecimal(n), mc);
 			BigDecimal newRate = isBuySeed ? startRate.subtract(f, mc) : startRate.add(f, mc);
+			if (newRate.compareTo(BigDecimal.ZERO) <=0) {
+				log.severe("RLOrder.buildBuySeedPct rate below zero. Check config for the pair " + bot.getPair());
+			}
 			return newRate; 			
 		})
 		.filter(o -> o.compareTo(BigDecimal.ZERO) > 0)

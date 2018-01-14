@@ -1,5 +1,11 @@
 ## Version History
 
+v.0613 pre-merged, summary
+- parser bug fixed (deletednode, creatednode, modifiednode)
+- strategies rearranged
+- network or websocket error will do system exit with error signal  
+- RLORder.fromOfferCreate
+
 v.0612
 - fullfixed refactored, tested
 - ppt tested 
@@ -16,7 +22,7 @@ v.0609
 - amended 0608. No automatic edit event changes direction. This is side effect from the above error. 
 
 v.0608
-- edit can change the direction (buy <-> sell)
+- edit can change the direction (buy <-> sell) (false)
 - dangling order didn't get removed (log.missed_remove_order.txt.0)
 
 v.0607

@@ -233,8 +233,15 @@ public class Common extends Base {
 //						} 
 //					}
 				}			
-				else if (node.isModifiedNode()) {
-					// unused
+				else if (node.isModifiedNode()) { // partially filled 
+					if (asPrevious instanceof Offer) {
+						LedgerEntry le = (LedgerEntry) node.nodeAsFinal();
+						AccountID nodeAccount = le.get(AccountID.Account);
+						Offer o = (Offer) asPrevious;
+						if (nodeAccount != null && nodeAccount.address.equals(this.config.getCredentials().getAddress()) && le.get(Field.LedgerEntryType) == LedgerEntryType.Offer) {
+							offersExecuteds.add(o);
+						}
+					}
 				}
 			} 
 			else { // createdNode goes here
@@ -324,7 +331,7 @@ public class Common extends Base {
 				sb.append(oe.stringify());
 			});
 			log(sb.toString());
-			bus.send(new OnOfferExecuted(oes));
+//			bus.send(new OnOfferExecuted(oes));
 		}
 
 //		if (!oes.isEmpty() && !ors.isEmpty()) {
