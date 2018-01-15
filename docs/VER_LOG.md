@@ -1,5 +1,9 @@
 ## Version History
 
+v.070
+- merged with master
+- readme fix
+
 v.0613 pre-merged, summary
 - parser bug fixed (deletednode, creatednode, modifiednode)
 - strategies rearranged
