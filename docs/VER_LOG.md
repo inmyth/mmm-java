@@ -22,7 +22,7 @@ v.0610
 - websocket or network problem will cause system.exit(1) . This way supervisord will catch it and restart the bot. 
 
 v.0609
-- found errors in how DeletedNode was interpreted. DeletedNodes may contain orders which are canceled after they became unfunded. These orders are not OfferCancel. This is the cause of orders not removed from orderbook and therefore causing a lot of doubles (06001 to 06008). 
+- found errors in how DeletedNode was interpreted. DeletedNodes may contain orders which are canceled after they became unfunded. These orders are not OfferCancel. This is the chttp://marketplace.eclipse.org/marketplace-client-intro?mpc_install=2566102ause of orders not removed from orderbook and therefore causing a lot of doubles (06001 to 06008). 
 - amended 0608. No automatic edit event changes direction. This is side effect from the above error. 
 
 v.0608
