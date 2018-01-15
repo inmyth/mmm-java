@@ -1,6 +1,5 @@
 package com.mbcu.mmm.sequences;
 
-import com.mbcu.mmm.main.WebSocketClient;
 import com.mbcu.mmm.models.internal.RLOrder;
 import com.mbcu.mmm.rx.BusBase;
 import com.mbcu.mmm.rx.RxBus;

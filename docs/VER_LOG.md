@@ -4,7 +4,7 @@ v.0613 pre-merged, summary
 - parser bug fixed (deletednode, creatednode, modifiednode)
 - strategies rearranged
 - network or websocket error will do system exit with error signal  
-- RLORder.fromOfferCreate
+- RLORder.fromOfferCreate direction fixed
 
 v.0612
 - fullfixed refactored, tested

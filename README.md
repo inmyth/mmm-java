@@ -37,11 +37,11 @@ The IOU to trade, number of orders, grid space, amount, etc are defined in the c
 
 #### Fixed Partial `partial`
 
-Any order consumed will be immediately countered with new order equals to the amount that consumed it. The new unit price is spaced statically by gridSpace, e.g. if a buy order with price X is consumed then a new sell order with price X + gridSpace will be created. 
+Any order consumed will be immediately countered with new order equals to the amount that consumed it. The new unit price is spaced rigidly by gridSpace, e.g. if a buy order with price X is consumed then a new sell order selling the same quantity with price X + gridSpace will be created. 
 
 #### Fixed Full `fullfixed`
 
-The bot will counter only if the order is fully consumed. The new unit price is spaced statically by gridSpace. The counter amount will obey sellOrderQuantity and buyOrderQuantity set in config.
+The same as fixed partial but the bot will counter only if the order is fully consumed. 
 
 #### Proportional `ppt`
 
@@ -112,5 +112,24 @@ Amount of seed and counter order. This value is used for any strategy beside *pa
 `strategy` : *String*
 
 Strategy to be used. Refer to strategy section for valid names. 
+
+## When Error Happens
+
+### Error by Rippled 
+
+As a blockchain rippled does not guarantee each order sent to be included in the ledger. The bot will act depending response from the server. In general responses are categorized into :  
+- Quasi-success: tesSUCCESS, ter_ (i.e. terQUEUED and terPRE_SEQ) are orders that have the chance to get into the ledger. If successful, server will send stream data about the order on the subscribed channel up to the order's maxledger. If maxledger is passed without any such data, the bot will resubmit the same order. 
+- Immediate-fail : tefPAST_SEQ and errors indicating that the order was ok, but submitted with wrong sequence number or under a circumstance that otherwise would be fine at different time. Such order is immediately resubmitted after bot's sequence number is synchronized. 
+- Fund-related fail : if the wallet no longer has enough fund to push an order then the order will be discarded. One dangerous error is terINSUF_FEE_B in which the bot no longer has enough XRP. The bot will not stop although no further order can be created. 
+
+### Error by Network
+
+Any network error and websocket disconnect will cause system exit with signal 1. A process control system like supervisord may catch this signal and restart the bot. 
+
+
+
+
+
+
 
 
