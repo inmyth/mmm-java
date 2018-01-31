@@ -1,6 +1,5 @@
 package com.mbcu.mmm.sequences;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -23,11 +22,8 @@ import com.ripple.core.coretypes.AccountID;
 import com.ripple.core.coretypes.Amount;
 import com.ripple.core.coretypes.STObject;
 import com.ripple.core.coretypes.hash.Hash256;
-import com.ripple.core.coretypes.uint.UInt;
 import com.ripple.core.coretypes.uint.UInt32;
 import com.ripple.core.fields.Field;
-import com.ripple.core.fields.UInt16Field;
-import com.ripple.core.fields.UInt32Field;
 import com.ripple.core.serialized.enums.EngineResult;
 import com.ripple.core.serialized.enums.LedgerEntryType;
 import com.ripple.core.types.known.sle.LedgerEntry;
@@ -35,7 +31,6 @@ import com.ripple.core.types.known.sle.entries.Offer;
 import com.ripple.core.types.known.tx.Transaction;
 import com.ripple.core.types.known.tx.result.AffectedNode;
 import com.ripple.core.types.known.tx.result.TransactionMeta;
-import com.ripple.core.types.known.tx.txns.OfferCancel;
 
 import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
@@ -86,7 +81,7 @@ public class Common extends Base {
 		if (raw.contains("response")) {
 			filterResponse(raw);
 		} else if (raw.contains("transaction")) {
-			filterStream2(raw);
+			filterStream2(raw, this.config.getCredentials().getAddress());
 		} else if (raw.contains("ledgerClosed")) {
 			filterLedgerClosed(raw);
 		}
@@ -148,8 +143,8 @@ public class Common extends Base {
 		}
 	}
 
-	public void filterStream2(String raw) {
-		if (!raw.contains(config.getCredentials().getAddress())) {
+	public void filterStream2(String raw, String myAddress) {
+		if (!raw.contains(myAddress)) {
 			log("Not related to our order : " + raw, Level.WARNING);
 			return;
 		}
@@ -186,7 +181,7 @@ public class Common extends Base {
 		String txType = txn.get(Field.TransactionType).toString();
 
 		boolean offerCancelFlag = false;
-		if (txType.equals("OfferCancel") && txn.account().address.equals(this.config.getCredentials().getAddress())) {						
+		if (txType.equals("OfferCancel") && txn.account().address.equals(myAddress)) {						
 			offerCancelFlag = true;
 		}
 		
@@ -203,15 +198,19 @@ public class Common extends Base {
 						UInt32 prevSeq	 			 = asPrevious.get(UInt32.Sequence);
 						Offer o 							 = (Offer) asPrevious;
 						//FinalFields.Flag can be 0 or  131072, this is unclear
-						if (nodeAccount != null && nodeAccount.address.equals(this.config.getCredentials().getAddress()) && asPrevious.get(Field.LedgerEntryType) == LedgerEntryType.Offer) {
+						
+						// if txn account = myaddress then all of deleted nodes and modified nodes (partial filled are significant) canceled due to lack of fund
+						// if txn != myaddress then pay attention to my address only
+						if (node.nested.get(Field.PreviousFields) != null) {
+							offersExecuteds.add(o);
+						}
+						if (nodeAccount != null && nodeAccount.address.equals(myAddress) && asPrevious.get(Field.LedgerEntryType) == LedgerEntryType.Offer) {
 					  	if (offerCancelFlag) {
 								log("OFFER CANCEL " + txn.sequence() + " " + txnHash + " canceling : " + previousTxnId + " " + txn.get(UInt32.OfferSequence));
 								bus.send(new OnOfferCanceled(txn.account(), prevSeq, txn.sequence(), previousTxnId, LogNum.CANCELED_OFFERCANCEL));
 								return;
 					  	}						
-							if (node.nested.get(Field.PreviousFields) != null) {
-								offersExecuteds.add(o);
-							}
+
 							else {
 					  		if (txnOfferSequence != null) {
 							  	ofEditeds.add(new OfferEdited(txnHash, previousTxnId, prevSeq, txnSequence));
@@ -227,7 +226,7 @@ public class Common extends Base {
 //						AccountID nodeAccount  = le.get(AccountID.Account);
 //						Hash256 previousTxnId  = le.get(Hash256.PreviousTxnID);
 //						UInt32 prevSeq	 			 = le.get(UInt32.Sequence);
-//						if (nodeAccount != null && nodeAccount.address.equals(this.config.getCredentials().getAddress())	&& le.get(Field.LedgerEntryType) == LedgerEntryType.Offer && le.get(Field.Flags).toString().equals("0")) {
+//						if (nodeAccount != null && nodeAccount.address.equals(myAddress)	&& le.get(Field.LedgerEntryType) == LedgerEntryType.Offer && le.get(Field.Flags).toString().equals("0")) {
 //
 //					  
 //						} 
@@ -238,7 +237,7 @@ public class Common extends Base {
 						LedgerEntry le = (LedgerEntry) node.nodeAsFinal();
 						AccountID nodeAccount = le.get(AccountID.Account);
 						Offer o = (Offer) asPrevious;
-						if (nodeAccount != null && nodeAccount.address.equals(this.config.getCredentials().getAddress()) && le.get(Field.LedgerEntryType) == LedgerEntryType.Offer) {
+						if (nodeAccount != null && le.get(Field.LedgerEntryType) == LedgerEntryType.Offer) {
 							offersExecuteds.add(o);
 						}
 					}
@@ -259,7 +258,7 @@ public class Common extends Base {
 			RLOrder offerCreate = RLOrder.fromOfferCreate(txn);
 			log("OFFER CREATE Account: " + txnAccId + " Hash " + txnHash + " Sequence " + txnSequence + "\n" + offerCreate.stringify());
 			// OnOfferCreate event is only needed to increment sequence.
-			if (txn.account().address.equals(this.config.getCredentials().getAddress())) {
+			if (txn.account().address.equals(myAddress)) {
 				ourOfferCreate = offerCreate;
 				bus.send(new OnOfferCreate(txnAccId, txnHash, txnSequence));
 			}
@@ -267,13 +266,13 @@ public class Common extends Base {
 			if (offerCreated != null) {
 				AccountID ocAccId = offerCreated.account();
 				if (ofEditeds.isEmpty()) {
-					if (ocAccId.address.equals(this.config.getCredentials().getAddress())) {
+					if (ocAccId.address.equals(myAddress)) {
 						log("OFFER CREATED TxnID " + txnAccId + " " + txnSequence + "\n"+ offerCreated.prettyJSON());
 						bus.send(new OnOfferCreated(txnAccId, ocAccId, offerCreated.previousTxnID(), RLOrder.fromOfferCreated(offerCreated)));
 					}
 				} 
 				else {
-//					if (ocAccId.address.equals(this.config.getCredentials().getAddress())) {
+//					if (ocAccId.address.equals(myAddress)) {
 					for (OfferEdited o : ofEditeds) {
 						log("OFFER EDITED " + o.previousTxnId + " to " + txn.hash());
 						BefAf ba = RLOrder.toBA(offerCreated.takerPays(), offerCreated.takerGets(), txn.get(Amount.TakerPays), txn.get(Amount.TakerGets), o.prevSeq, txnHash, ourOfferCreate);
@@ -282,7 +281,7 @@ public class Common extends Base {
 //					}
 				}
 			}
-			if (txn.account().address.equals(this.config.getCredentials().getAddress())) {
+			if (txn.account().address.equals(myAddress)) {
 				FilterAutobridged fa = new FilterAutobridged();
 				for (Offer offer : offersExecuteds) {
 					STObject finalFields = offer.get(STObject.FinalFields);
@@ -299,7 +298,7 @@ public class Common extends Base {
 				for (Offer offer : offersExecuteds) {
 					STObject finalFields = offer.get(STObject.FinalFields);
 					UInt32 affectedSeq = offer.get(UInt32.Sequence);
-					if (finalFields != null && isTakersExist(finalFields)) {
+					if (finalFields != null && isTakersExist(finalFields) && offer.account().address.equals(myAddress)) {
 						oes.add(RLOrder.fromOfferExecuted(offer, true));
 						ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), finalFields.get(Amount.TakerPays), finalFields.get(Amount.TakerGets), affectedSeq, txnHash, ourOfferCreate));
 					}

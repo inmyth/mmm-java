@@ -24,8 +24,10 @@ java -jar <the_build>.jar <path_to_config_file>
 ```
 
 Documentations:
+
 [Parsing pattern](docs/PARSING_PATTERN)
-[Version log](docs/VER_LOG)
+
+[Version log](docs/VERSIONS)
 
 
 ## Strategies
