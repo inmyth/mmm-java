@@ -314,11 +314,11 @@ public class Common extends Base {
 				STObject finalFields = offer.get(STObject.FinalFields);
 				UInt32 affectedSeq = offer.get(UInt32.Sequence);
 
-				if (finalFields != null && isTakersExist(finalFields)) {
+				if (finalFields != null && isTakersExist(finalFields)  && offer.account().address.equals(myAddress)) {
 					oes.add(RLOrder.fromOfferExecuted(offer, true));
 					ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), finalFields.get(Amount.TakerPays), finalFields.get(Amount.TakerGets), affectedSeq, txnHash, ourOfferCreate));
 				}
-				if (finalFields == null) {
+				if (finalFields == null && offer.account().address.equals(myAddress)) {
 					ors.add(RLOrder.toBA(offer.takerPays(), offer.takerGets(), null, null, affectedSeq, txnHash, ourOfferCreate));
 				}
 			}
