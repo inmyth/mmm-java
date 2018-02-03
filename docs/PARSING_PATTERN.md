@@ -5,7 +5,7 @@ Always use https://xrpcharts.ripple.com/#/transactions to get a clear descriptio
 The most important element in a response is probably DeletedNode. DeletedNode tells if an order was executed, modified, canceled due to OfferCancel or lack of fund. 
 
 ### The Summary
-Any request for transaction history either by websocket's account_tx or Data Api's /transactions command will return all transactions involving owner's account. For the sake of perspective I will refer to owner as our. 
+Any request for transaction history either by websocket's account_tx or Data Api's /transactions command will return all transactions involving owner's account. For the sake of perspective I will refer to owner as us. 
 
 Basically such transaction response consists of **tx** and **meta**. 
 
