@@ -25,9 +25,9 @@ java -jar <the_build>.jar <path_to_config_file>
 
 Documentations:
 
-[Parsing pattern](docs/PARSING_PATTERN)
+[Parsing pattern](docs/PARSING_PATTERN.md)
 
-[Version log](docs/VERSIONS)
+[Version log](docs/VERSIONS.md)
 
 
 ## Strategies

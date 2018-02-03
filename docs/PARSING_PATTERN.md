@@ -4,28 +4,50 @@ Always use https://xrpcharts.ripple.com/#/transactions to get a clear descriptio
 
 The most important element in a response is probably DeletedNode. DeletedNode tells if an order was executed, modified, canceled due to OfferCancel or lack of fund. 
 
+### The Summary
+Any request for transaction history either by websocket's account_tx or Data Api's /transactions command will return all transactions involving owner's account. For the sake of perspective I will refer to owner as our. 
+
+Basically such transaction response consists of **tx** and **meta**. 
+
+tx consists of original [https://ripple.com/build/transactions/]transaction request.
+
+meta consists of information of how this transaction affects own and other people's orders, balance, and blockchain's ledger. 
+
+Since the focus of this bot project is trade, the breakdown is this:
+
+1. The only transactions affecting orders are : OfferCreate, OfferCancel, and Payment.
+
+2. If we are the creator of offer then our address will be in tx.Account and tx.TransactionType will be OfferCreate or OfferCancel. 
+All transactions that happen in meta are significant. Other people's transaction that are consumed by ours may appear in DeletedNodes as fully-filled order or ModifiedNodes as partially-filled order. If our account shows up in meta's CreatedNodes then it is the order that will be recorded in the ledger and orderbook. If our account shows up in DeletedNode that means some other orders become unfunded by this new order and are automatically canceled. 
+
+3. If we are not the creator of the transaction then tx.Account will not have our address. We pay attention to OfferCreate and Payment. In meta, only transactions (in DeletedNodes or ModifiedNodes) with our address are important to us. These are our orders which are consumed. Transactions not with our address affect other people's orders. 
+
 ## DeletedNodes 
-- For the bot, only consider offer with Account equals our address
-- Only consider LedgerEntryType="Offer"
+- Only pay attention to node with LedgerEntryType="Offer"
+- if tx.Account == our Address, all nodes are important. If tx.Account != our address, only consider the ones with our address. 
 
 ### Offer Executed
-- our offer takes or is taken by other's offer. 
 - DeletedNode has nested.PreviousFields
+- if tx.Account == our Address, all DeletedNodes with other people's address are their filled orders. If it has our address read the part about "Offer Canceled Not By OfferCance". 
+If tx.Account != our address, then all DeletedNodes with our address are our filled orders. 
+- check also ModifiedNodes for partially filled orders with the same rules.  
 
 ### Offer Edited
+- tx.Account is our address
 - modifying or editing an order will cancel it and replace it with a new one
-- txn is offerCreate and has offerSequence from the old order
+- tx.TransactionType is offerCreate and has key "OfferSequence" containing the old order's sequence
 - DeletedNode contains old order
 
-### Offer Canceled
-- if canceled by OfferCreate then txn will have type OfferCreate
-- orders may be automatically canceled if no longer funded. This happens when new order is created. In this case txn contains OfferCreate
+### Offer Canceled Not By OfferCancel
+- orders may be automatically canceled if no longer funded. This happens when new order is created.
+- if canceled by OfferCreate then tx.TransactionType will have type OfferCreate
 
 ## ModifiedNodes
 - partially filled order goes here
+- changes in balance go here
 
 ## CreatedNode
-- full order creation goes here
+-  created order goes here and appears in the ledger. The amount will be equal to or be left over of original offerCreate if it consumes existing orders. 
 
 ### Samples
 - partial filled, unfunded E356B7AA6ADBB90CB4BA280AA1FF6E92E6054A76192E40980F95C118629B4E15, E8378AEBC3B1B78CE0AE8219B603DBD6A18420004B615981A99F125332FC3702
