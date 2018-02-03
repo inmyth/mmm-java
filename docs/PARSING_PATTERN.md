@@ -9,7 +9,7 @@ Any request for transaction history either by websocket's account_tx or Data Api
 
 Basically such transaction response consists of **tx** and **meta**. 
 
-tx consists of original [https://ripple.com/build/transactions/]transaction request.
+tx consists of original [https://ripple.com/build/transactions/](transaction) request.
 
 meta consists of information of how this transaction affects own and other people's orders, balance, and blockchain's ledger. 
 
