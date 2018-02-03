@@ -28,7 +28,7 @@ All transactions that happen in meta are significant. Other people's transaction
 
 ### Offer Executed
 - DeletedNode has nested.PreviousFields
-- if tx.Account == our Address, all DeletedNodes with other people's address are their filled orders. If it has our address read the part about "Offer Canceled Not By OfferCance". 
+- if tx.Account == our Address, all DeletedNodes with other people's address are their filled orders. If it has our address read the part about "Offer Canceled Not By OfferCancel". 
 If tx.Account != our address, then all DeletedNodes with our address are our filled orders. 
 - check also ModifiedNodes for partially filled orders with the same rules.  
 
@@ -59,6 +59,10 @@ If tx.Account != our address, then all DeletedNodes with our address are our fil
 - offercreate, partial : 7931DC82FB680321C5A3949EC8B81CEE088A7928BBC170BE5816C39EEE716AF7  (txn has original request, one created node has offer and the remaining amount that enters the orderbook) 
 - offerCreate, other, fully consumed : 568F82829CE9EEE5223ABC22AC63DF8550FA2E1F18A990A880466401D5CF6FB9 
 
+
+
+
+# RANDOM NOTES
 
 ## RESPONSE
 - response contains hash so it can be used as key. This hash should be stored in "deleted" node. 
