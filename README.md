@@ -4,7 +4,7 @@ An automated program to market make on Ripple network with grid method.
 
 The bot prioritizes speed: any order will be pushed immediately to the ledger and retried if needed until it's in.
 
-Requires [ripple-lib-java](https://github.com/ripple/ripple-lib-java ) to build. 
+Requires [ripple-lib-java: ripple-core](https://github.com/ripple/ripple-lib-java) to build. 
 
 
 Principal elements:
