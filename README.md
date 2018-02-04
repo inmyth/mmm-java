@@ -43,6 +43,8 @@ Any order consumed will be immediately countered with new order equals to the am
 
 #### Fixed Full `fullfixed`
 
+[Youtube Demo](https://www.youtube.com/watch?v=dth4D28p4zk)
+
 The same as fixed partial but the bot will counter only if the order is fully consumed. 
 
 #### Proportional `ppt`
@@ -55,7 +57,7 @@ For buy direction p1 = p0  / (1 + gridSpace / 100) and q1 = q0 * (1 + gridSpace 
 
 
 #### Attention
-The bot uses the initial offerCreate as reference for next order either as seed or counter. Preferably the bot should start when orderbook is empty. If not then it will assume any order in the orderbook as the original offerCreate. If you start the bot this way, *make sure partially filled orders in the orderbook are deleted* for they don't reflect their offerCreates.  
+The bot uses the initial offerCreate as reference for next order either as seed or counter. Preferably the bot should start when orderbook is empty. If not then it will assume any order in the orderbook as the original offerCreate. If you start the bot this way, **make sure partially filled orders in the orderbook are deleted** for they don't reflect their offerCreates.  
 
 ## Config
 
