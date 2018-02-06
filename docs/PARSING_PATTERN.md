@@ -32,14 +32,13 @@ All transactions that happen in meta are significant. Other people's transaction
 If tx.Account != our address, then all DeletedNodes with our address are our filled orders. 
 - check also ModifiedNodes for partially filled orders with the same rules.  
 
-### Offer Edited
 - tx.Account is our address
 - modifying or editing an order will cancel it and replace it with a new one
 - tx.TransactionType is offerCreate and has key "OfferSequence" containing the old order's sequence
 - DeletedNode contains old order
 
 ### Offer Canceled Not By OfferCancel
-- orders may be automatically canceled if no longer funded. This happens when new order is created.
+- existing orders may be automatically canceled if no longer funded. This may happen when a new order is created.
 - if canceled by OfferCreate then tx.TransactionType will have type OfferCreate
 
 ## ModifiedNodes
@@ -69,7 +68,7 @@ If tx.Account != our address, then all DeletedNodes with our address are our fil
 - Final field in stream indicates executed offer.
 -- hash -> DeletedNodes.FinalFields.PreviousTxnID (old hash), hash (new hash) 
 - offer create for RJP/JPY may not have PreviousFields. This causes parse error for FinalFields. It looks creating new offer also cancels some tx which results in this situation. We can safely ignore it and use transaction information instead. 
-- payment and OC belonging to others will result in many OEs. Find only those belonging for us
+- payment and OC belonging to others will result in many OEs. Find only those belonging to us
 - do not instantiate Amount directly. Use RLOrder#amount
 - pair in Config determines the unit of rate and gridSpace
 - ter errors including terQUEUED and terPRE_SEQ behave like tesSUCCESS https://www.xrpchat.com/topic/2654-transaction-failed-with-terpre_seq-but-still-executed/?page=2
