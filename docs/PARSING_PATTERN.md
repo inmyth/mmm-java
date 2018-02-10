@@ -39,7 +39,7 @@ If tx.Account != our address, then all DeletedNodes with our address are our fil
 
 ### Offer Canceled Not By OfferCancel
 - existing orders may be automatically canceled if no longer funded. This may happen when a new offer is created.
-- in this particular case tx.TransactionType has OfferCreate, not OfferCancel
+- in this case tx.Account == our address and tx.TransactionType == OfferCreate. deletedNodes are the offers that get canceled
 
 ## ModifiedNodes
 - contain partially filled orders
