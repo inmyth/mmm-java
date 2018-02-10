@@ -32,14 +32,14 @@ Documentations:
 
 ## Strategies
 
-In general the principle of grid spacing is simple. Seed orderbook with orders spaced by price ("seed"). If an order is consumed, place a new order with a new rate calculated from the consumed rate ("counter"). As we want profit, when a buy order is consumed, sell it back at higher price, when a sell order is consumed, buy it back at lower price. Every a few ledgers, the bot will check the orderbook and add missing orders on either side. 
+In general the principle of grid trading is simple. Seed orderbook with orders spaced by price ("seed"). If an order is consumed, place a new order with a new rate calculated from the consumed rate ("counter"). As we want profit, when a buy order is consumed, sell it back at higher price, when a sell order is consumed, buy it back at lower price. Every a few ledgers, the bot will check the orderbook and add necessary orders on either side. 
 
 The IOU to trade, number of orders, grid space, amount, etc are defined in the config. The following strategies determine order countering:
 
 
 #### Fixed Partial `partial`
 
-Any order consumed will be immediately countered with new order equals to the amount that consumed it. The new unit price is spaced rigidly by gridSpace, e.g. if a buy order with price X is consumed then a new sell order selling the same quantity with price X + gridSpace will be created. 
+Any order consumed will be immediately countered with new order equals to the amount that consumed it. The new unit price is spaced rigidly by gridSpace, e.g. if a buy order with price X is consumed then a new sell order selling the same quantity with price X + gridSpace will be created. If a sell order with price Y is consumed then a buy order with the same quantity and price Y - gridSpace will be created. 
 
 #### Fixed Full `fullfixed`
 
@@ -57,7 +57,7 @@ For buy direction p1 = p0  / (1 + gridSpace / 100) and q1 = q0 * (1 + gridSpace 
 
 
 #### Attention
-The bot uses the initial offerCreate as reference for next order either as seed or counter. Preferably the bot should start when orderbook is empty. If not then it will assume any order in the orderbook as the original offerCreate. If you start the bot this way, **make sure partially filled orders in the orderbook are deleted** for they don't reflect their offerCreates.  
+The bot uses the initial offerCreate as reference for next order either as seed or counter. Preferably the bot should start when orderbook is empty. If not then it will assume any order in the orderbook as the original offerCreate. If you start the bot this way, **make sure partially filled orders in the orderbook are deleted** because they don't reflect their original offerCreates.  
 
 ## Config
 
@@ -121,7 +121,7 @@ Strategy to be used. Refer to strategy section for valid names.
 
 ### Error by Rippled 
 
-As a blockchain rippled does not guarantee each order sent to be included in the ledger. The bot will act depending response from the server. In general responses are categorized into :  
+As a blockchain rippled does not guarantee each order sent to it to be included in the ledger. The bot will act depending response from the server. In general responses are categorized into :  
 - Quasi-success: tesSUCCESS, ter_ (i.e. terQUEUED and terPRE_SEQ) are orders that have the chance to get into the ledger. If successful, server will send stream data about the order on the subscribed channel up to the order's maxledger. If maxledger is passed without any such data, the bot will resubmit the same order. 
 - Immediate-fail : tefPAST_SEQ and errors indicating that the order was ok, but submitted with wrong sequence number or under a circumstance that otherwise would be fine at different time. Such order is immediately resubmitted after bot's sequence number is synchronized. 
 - Fund-related fail : if the wallet no longer has enough fund to push an order then the order will be discarded. One dangerous error is terINSUF_FEE_B in which the bot no longer has enough XRP. The bot will not stop although no further order can be created. 
