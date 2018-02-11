@@ -17,13 +17,13 @@
 	"bots": [
 	    {
             "pair": "XRP/JPY.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
-            "startMiddlePrice": 23.4,
-            "gridSpace": 1,
+            "startMiddlePrice": 100,
+            "gridSpace": 0.5,
             "buyGridLevels": 2,
             "sellGridLevels": 2,
-            "buyOrderQuantity": 2,
+            "buyOrderQuantity": 1,
             "sellOrderQuantity": 1,
-            "strategy" : "fullrateseedpct"
+            "strategy" : "ppt"
         },
         {
             "pair": "XRP/USD.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
@@ -44,40 +44,8 @@
             "sellGridLevels": 3,
             "buyOrderQuantity": 2,
             "sellOrderQuantity": 1,
-            "strategy" : "fullrateseedpct"
+            "strategy" : "fullfixed"
        
-        },
-        {
-            "pair": "XRP/ETH.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
-            "startMiddlePrice": 0.000621879,
-            "gridSpace": 1,
-            "buyGridLevels": 2,
-            "sellGridLevels": 2,
-            "buyOrderQuantity": 2,
-            "sellOrderQuantity": 1.5,
-            "strategy" : "fullratepct"
-        
-        },
-    	{
-            "pair": "XRP/ETC.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
-            "startMiddlePrice": 0.0127,
-            "gridSpace": 1,
-            "buyGridLevels": 2,
-            "sellGridLevels": 2,
-            "buyOrderQuantity": 2,
-            "sellOrderQuantity": 1,
-            "strategy" : "fullrateseedpct"      
-        },
-        {
-            "pair": "XRP/BTC.rB3gZey7VWHYRqJHLoHDEJXJ2pEPNieKiS",
-            "startMiddlePrice": 0.0000296,
-            "gridSpace": 1,
-            "buyGridLevels": 2,
-            "sellGridLevels": 2,
-            "buyOrderQuantity": 2,
-            "sellOrderQuantity": 1,
-            "strategy" : "fullrateseedpct"
-       
-        }       
+        }     
 	]
 }
