@@ -1,5 +1,9 @@
 ## Version History
 
+v.071
+- fixed partial countering on full strategies
+- some logic in deletednode (unfunded cancel, etc) was affected regardless of tx.account
+
 v.07
 - Common#filterStream2 all deletedNodes and modifiedNodes are first saved. If txn.account == myAddress then all these are significant (canceled offer due to lack of fund), if txn.account != myAddress, filter out offers which don't belong to myAddress 
 

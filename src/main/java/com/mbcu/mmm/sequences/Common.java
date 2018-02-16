@@ -159,12 +159,14 @@ public class Common extends Base {
 		ArrayList<BefAf> 	 ors  = new ArrayList<>(); // Before and After
 		Offer offerCreated 			= null;
 		JSONObject transaction 	= new JSONObject(raw);
+		boolean isMyTx						= false;
 
 		JSONObject metaJSON = (JSONObject) transaction.remove("meta");
 		TransactionMeta meta = (TransactionMeta) STObject.fromJSONObject(metaJSON);
 
 		Transaction txn = (Transaction) STObject.fromJSONObject(transaction.getJSONObject("transaction"));
 		AccountID txnAccId = txn.account();
+		isMyTx = txn.account().address.equals(myAddress);
 		Hash256 txnHash = txn.hash();
 		UInt32 txnSequence = txn.sequence();
 
@@ -181,7 +183,7 @@ public class Common extends Base {
 		String txType = txn.get(Field.TransactionType).toString();
 
 		boolean offerCancelFlag = false;
-		if (txType.equals("OfferCancel") && txn.account().address.equals(myAddress)) {						
+		if (txType.equals("OfferCancel") && isMyTx) {						
 			offerCancelFlag = true;
 		}
 		
@@ -204,33 +206,22 @@ public class Common extends Base {
 						if (node.nested.get(Field.PreviousFields) != null) {
 							offersExecuteds.add(o);
 						}
-						if (nodeAccount != null && nodeAccount.address.equals(myAddress) && asPrevious.get(Field.LedgerEntryType) == LedgerEntryType.Offer) {
-					  	if (offerCancelFlag) {
+						if (isMyTx && nodeAccount != null && nodeAccount.address.equals(myAddress) && asPrevious.get(Field.LedgerEntryType) == LedgerEntryType.Offer) {
+						  	if (offerCancelFlag) {
 								log("OFFER CANCEL " + txn.sequence() + " " + txnHash + " canceling : " + previousTxnId + " " + txn.get(UInt32.OfferSequence));
 								bus.send(new OnOfferCanceled(txn.account(), prevSeq, txn.sequence(), previousTxnId, LogNum.CANCELED_OFFERCANCEL));
 								return;
-					  	}						
-
+						  	}						
 							else {
-					  		if (txnOfferSequence != null) {
-							  	ofEditeds.add(new OfferEdited(txnHash, previousTxnId, prevSeq, txnSequence));
-					  		}
-					  		else {
+						  		if (txnOfferSequence != null) {
+								  	ofEditeds.add(new OfferEdited(txnHash, previousTxnId, prevSeq, txnSequence));
+						  		}
+						  		else {
 									bus.send(new OnOfferCanceled(txn.account(), prevSeq, txn.sequence(), previousTxnId, LogNum.CANCELED_UNFUNDED));									
-					  		}
+						  		}
 							}
 						}
 					} 
-//					else {
-//						LedgerEntry le				 = (LedgerEntry) node.nodeAsFinal();
-//						AccountID nodeAccount  = le.get(AccountID.Account);
-//						Hash256 previousTxnId  = le.get(Hash256.PreviousTxnID);
-//						UInt32 prevSeq	 			 = le.get(UInt32.Sequence);
-//						if (nodeAccount != null && nodeAccount.address.equals(myAddress)	&& le.get(Field.LedgerEntryType) == LedgerEntryType.Offer && le.get(Field.Flags).toString().equals("0")) {
-//
-//					  
-//						} 
-//					}
 				}			
 				else if (node.isModifiedNode()) { // partially filled 
 					if (asPrevious instanceof Offer) {

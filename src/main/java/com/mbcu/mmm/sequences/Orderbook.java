@@ -135,7 +135,9 @@ public class Orderbook extends Base {
 												}
 											}
 											else {
-												preCounters.add(RLOrder.toPartial(ba));
+												if (botConfig.getStrategy() == Strategy.PARTIAL) {
+													preCounters.add(RLOrder.toPartial(ba));
+												}
 												update(ba.after, ba.befSeq.intValue(), ba.befSeq.intValue(), pairMatched.get()); // partially consumed
 											}
 										}
